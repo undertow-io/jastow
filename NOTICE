@@ -1,0 +1,24 @@
+JBoss Web
+Copyright 2006-2012 Red Hat Middleware, LLC. All rights reserved.
+
+Apache Tomcat
+Copyright 1999-2012 The Apache Software Foundation
+
+Servlet API 3.0
+Copyright 1997-2009 Sun Microsystems, Inc
+
+This product includes software developed by
+The Apache Software Foundation (http://www.apache.org/).
+
+Java compilation software for JSP pages is provided by Eclipse, 
+which is open source software. The orginal software and 
+related infomation is available at http://www.eclipse.org.
+
+org.apache.tomcat.util.json
+Copyright 2002 JSON.org
+
+org.apache.tomcat.bayeux
+Copyright 2007 Dojo Foundation
+Copyright 2007-2008 Guy Molinari
+Copyright 2007-2008 Filip Hanik
+Copyright 2007 Mort Bay Consulting Pty. Ltd.
