@@ -31,9 +31,9 @@
         <version>7</version>
     </parent>
 
-    <groupId>org.jboss.web</groupId>
+    <groupId>io.undertow</groupId>
     <artifactId>jastow</artifactId>
-    <version>7.2.0.Alpha2</version>
+    <version>1.0.0.Alpha1-SNAPSHOT</version>
 
     <name>Jastow</name>
     <description>JSP 2.2 container</description>
