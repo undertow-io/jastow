@@ -31,7 +31,7 @@
         <version>7</version>
     </parent>
 
-    <groupId>io.undertow</groupId>
+    <groupId>io.undertow.jastow</groupId>
     <artifactId>jastow</artifactId>
     <version>1.0.0.Alpha1-SNAPSHOT</version>
 
