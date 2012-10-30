@@ -42,6 +42,7 @@ import javax.servlet.jsp.el.ScopedAttributeELResolver;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.el.ELContextImpl;
+import org.apache.jasper.el.JasperELResolver;
 
 /**
  * Implementation of JspApplicationContext
@@ -119,18 +120,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 	private ELResolver createELResolver() {
 		this.instantiated = true;
 		if (this.resolver == null) {
-			CompositeELResolver r = new CompositeELResolver();
-			r.add(new ImplicitObjectELResolver());
-			for (Iterator itr = this.resolvers.iterator(); itr.hasNext();) {
-				r.add((ELResolver) itr.next());
-			}
-			r.add(new MapELResolver());
-			r.add(new ResourceBundleELResolver());
-			r.add(new ListELResolver());
-			r.add(new ArrayELResolver());	
-			r.add(new BeanELResolver());
-			r.add(new ScopedAttributeELResolver());
-			this.resolver = r;
+			this.resolver = new JasperELResolver(this.resolvers);
 		}
 		return this.resolver;
 	}
