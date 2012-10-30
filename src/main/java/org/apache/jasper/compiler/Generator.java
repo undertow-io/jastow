@@ -3146,7 +3146,7 @@ class Generator {
             } else if (c == Long.class) {
                 return JspUtil.coerceToLong(s, isNamedAttribute);
             } else if (c == Object.class) {
-                return "new String(" + quoted + ")";
+                return quoted;
             } else {
                 String className = JspUtil.getCanonicalName(c);
                 return "("
