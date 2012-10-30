@@ -100,10 +100,12 @@ class PageInfo {
     private ArrayList<String> includeCoda;
     private Vector pluginDcls;      // Id's for tagplugin declarations
 
+    private boolean isTagFile = false;
 
-    PageInfo(BeanRepository beanRepository, String jspFile) {
+    PageInfo(BeanRepository beanRepository, String jspFile, boolean isTagFile) {
 
         this.jspFile = jspFile;
+        this.isTagFile = isTagFile;
         this.beanRepository = beanRepository;
         this.varInfoNames = new HashSet<String>();
         this.taglibsMap = new HashMap();
@@ -120,6 +122,10 @@ class PageInfo {
         // Enter standard imports
         for(int i = 0; i < Constants.STANDARD_IMPORTS.length; i++)
             imports.add(Constants.STANDARD_IMPORTS[i]);
+    }
+
+    public boolean isTagFile() {
+        return isTagFile;
     }
 
     /**
