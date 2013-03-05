@@ -249,7 +249,6 @@ public class ReflectionUtil {
         return match;
     }
 
-    @SuppressWarnings("null")
     private static Method resolveAmbiguousMethod(Set<Method> candidates,
             Class<?>[] paramTypes) {
         // Identify which parameter isn't an exact match
@@ -264,6 +263,11 @@ public class ReflectionUtil {
                 nonMatchClass = paramTypes[i];
                 break;
             }
+        }
+
+        if (nonMatchClass == null) {
+            // Null will always be ambiguous
+            return null;
         }
 
         for (Method c : candidates) {
@@ -293,6 +297,12 @@ public class ReflectionUtil {
 
     // src will always be an object
     private static boolean isAssignableFrom(Class<?> src, Class<?> target) {
+        // Short-cut. null is always assignable to an object and in EL null
+        // can always be coerced to a valid value for a primitive
+        if (src == null) {
+            return true;
+        }
+
         Class<?> targetClass;
         if (target.isPrimitive()) {
             if (target == Boolean.TYPE) {
@@ -333,7 +343,11 @@ public class ReflectionUtil {
         if (types != null) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < types.length; i++) {
-                sb.append(types[i].getName()).append(", ");
+                if (types[i] == null) {
+                    sb.append("null, ");
+                } else {
+                    sb.append(types[i].getName()).append(", ");
+                }
             }
             if (sb.length() > 2) {
                 sb.setLength(sb.length() - 2);
