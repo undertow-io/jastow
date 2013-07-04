@@ -781,4 +781,7 @@ public interface JasperMessages {
     @Message(id = 4247, value = "Unexpected internal error during &lt;import&gt: Target servlet called getOutputStream(), then getWriter()")
     IllegalStateException usedWriterAfterOutputStream();
 
+    @Message(id = 4248, value = "JSPs only permit GET POST or HEAD")
+    String forbiddenHttpMethod();
+
 }
