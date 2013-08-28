@@ -21,24 +21,15 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import javax.el.ArrayELResolver;
-import javax.el.BeanELResolver;
-import javax.el.CompositeELResolver;
 import javax.el.ELContextEvent;
 import javax.el.ELContextListener;
 import javax.el.ELResolver;
 import javax.el.ExpressionFactory;
-import javax.el.ListELResolver;
-import javax.el.MapELResolver;
-import javax.el.ResourceBundleELResolver;
 import javax.servlet.ServletContext;
 import javax.servlet.jsp.JspApplicationContext;
 import javax.servlet.jsp.JspContext;
-import javax.servlet.jsp.el.ImplicitObjectELResolver;
-import javax.servlet.jsp.el.ScopedAttributeELResolver;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.el.ELContextImpl;
@@ -120,7 +111,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 	private ELResolver createELResolver() {
 		this.instantiated = true;
 		if (this.resolver == null) {
-			this.resolver = new JasperELResolver(this.resolvers);
+			this.resolver = new JasperELResolver(this.resolvers, expressionFactory.getStreamELResolver());
 		}
 		return this.resolver;
 	}
