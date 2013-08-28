@@ -26,6 +26,7 @@ import javax.el.BeanELResolver;
 import javax.el.CompositeELResolver;
 import javax.el.ELContext;
 import javax.el.ELException;
+import javax.el.ELManager;
 import javax.el.ELResolver;
 import javax.el.ExpressionFactory;
 import javax.el.ListELResolver;
@@ -47,7 +48,7 @@ public final class ELResolverImpl extends ELResolver {
     private final static ELResolver DefaultResolver = new CompositeELResolver();
 
     static {
-        ((CompositeELResolver) DefaultResolver).add(ExpressionFactory.newInstance().getStreamELResolver());
+        ((CompositeELResolver) DefaultResolver).add(ELManager.getExpressionFactory().getStreamELResolver());
         ((CompositeELResolver) DefaultResolver).add(new StaticFieldELResolver());
         ((CompositeELResolver) DefaultResolver).add(new MapELResolver());
         ((CompositeELResolver) DefaultResolver).add(new ResourceBundleELResolver());
