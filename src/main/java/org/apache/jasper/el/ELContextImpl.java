@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.el.ELContext;
 import javax.el.ELResolver;
+import javax.el.ExpressionFactory;
 import javax.el.FunctionMapper;
 import javax.el.ValueExpression;
 import javax.el.VariableMapper;
@@ -67,8 +68,8 @@ public final class ELContextImpl extends ELContext {
 
     private VariableMapper variableMapper;
 
-    public ELContextImpl() {
-        this(ELResolverImpl.getDefaultResolver());
+    public ELContextImpl(ExpressionFactory factory) {
+        this(ELResolverImpl.getDefaultResolver(factory));
         if (ELResolverImpl.NEW_RESOLVER_INSTANCE && Constants.IS_SECURITY_ENABLED) {
             functionMapper = new FunctionMapper() {
                 public Method resolveFunction(String prefix, String localName) {

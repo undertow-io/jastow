@@ -27,11 +27,13 @@ import javax.el.CompositeELResolver;
 import javax.el.ELContext;
 import javax.el.ELException;
 import javax.el.ELResolver;
+import javax.el.ExpressionFactory;
 import javax.el.ListELResolver;
 import javax.el.MapELResolver;
 import javax.el.PropertyNotFoundException;
 import javax.el.PropertyNotWritableException;
 import javax.el.ResourceBundleELResolver;
+import javax.el.StaticFieldELResolver;
 import javax.servlet.jsp.el.VariableResolver;
 
 import org.apache.jasper.Constants;
@@ -45,6 +47,8 @@ public final class ELResolverImpl extends ELResolver {
     private final static ELResolver DefaultResolver = new CompositeELResolver();
 
     static {
+        ((CompositeELResolver) DefaultResolver).add(ExpressionFactory.newInstance().getStreamELResolver());
+        ((CompositeELResolver) DefaultResolver).add(new StaticFieldELResolver());
         ((CompositeELResolver) DefaultResolver).add(new MapELResolver());
         ((CompositeELResolver) DefaultResolver).add(new ResourceBundleELResolver());
         ((CompositeELResolver) DefaultResolver).add(new ListELResolver());
@@ -53,9 +57,11 @@ public final class ELResolverImpl extends ELResolver {
     }
 
     private final VariableResolver variableResolver;
+    private final ExpressionFactory factory;
 
-    public ELResolverImpl(VariableResolver variableResolver) {
+    public ELResolverImpl(VariableResolver variableResolver, ExpressionFactory factory) {
         this.variableResolver = variableResolver;
+        this.factory = factory;
     }
 
     public Object getValue(ELContext context, Object base, Object property)
@@ -78,7 +84,7 @@ public final class ELResolverImpl extends ELResolver {
         }
 
         if (!context.isPropertyResolved()) {
-            return getDefaultResolver().getValue(context, base, property);
+            return getDefaultResolver(factory).getValue(context, base, property);
         }
         return null;
     }
@@ -104,7 +110,7 @@ public final class ELResolverImpl extends ELResolver {
         }
 
         if (!context.isPropertyResolved()) {
-            return getDefaultResolver().getType(context, base, property);
+            return getDefaultResolver(factory).getType(context, base, property);
         }
         return null;
     }
@@ -123,7 +129,7 @@ public final class ELResolverImpl extends ELResolver {
         }
 
         if (!context.isPropertyResolved()) {
-            getDefaultResolver().setValue(context, base, property, value);
+            getDefaultResolver(factory).setValue(context, base, property, value);
         }
     }
 
@@ -138,23 +144,25 @@ public final class ELResolverImpl extends ELResolver {
             return true;
         }
 
-        return getDefaultResolver().isReadOnly(context, base, property);
+        return getDefaultResolver(factory).isReadOnly(context, base, property);
     }
 
     public Iterator<java.beans.FeatureDescriptor> getFeatureDescriptors(ELContext context, Object base) {
-        return getDefaultResolver().getFeatureDescriptors(context, base);
+        return getDefaultResolver(factory).getFeatureDescriptors(context, base);
     }
 
     public Class<?> getCommonPropertyType(ELContext context, Object base) {
         if (base == null) {
             return String.class;
         }
-        return getDefaultResolver().getCommonPropertyType(context, base);
+        return getDefaultResolver(factory).getCommonPropertyType(context, base);
     }
 
-    public static ELResolver getDefaultResolver() {
+    public static ELResolver getDefaultResolver(ExpressionFactory factory) {
         if (NEW_RESOLVER_INSTANCE && Constants.IS_SECURITY_ENABLED) {
             CompositeELResolver defaultResolver = new CompositeELResolver();
+            defaultResolver.add(factory.getStreamELResolver());
+            defaultResolver.add(new StaticFieldELResolver());
             defaultResolver.add(new MapELResolver());
             defaultResolver.add(new ResourceBundleELResolver());
             defaultResolver.add(new ListELResolver());

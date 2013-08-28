@@ -121,6 +121,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>${version.org.glassfish.javax.el}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.jboss.spec.javax.servlet</groupId>
             <artifactId>jboss-servlet-api_3.0_spec</artifactId>
             <version>${version.org.jboss.spec.javax.servlet}</version>
@@ -131,13 +138,6 @@
             <groupId>org.jboss.spec.javax.servlet.jsp</groupId>
             <artifactId>jboss-jsp-api_2.2_spec</artifactId>
             <version>${version.org.jboss.spec.javax.servlet.jsp}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
-            <version>${version.org.glassfish.javax.el}</version>
             <scope>provided</scope>
         </dependency>
 

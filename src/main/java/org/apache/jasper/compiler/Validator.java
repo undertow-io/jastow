@@ -1184,7 +1184,7 @@ class Validator {
                                                 attrs.getQName(i), attrs.getURI(i), 
                                                 attrs.getLocalName(i),
                                                 attrs.getValue(i), false, el, false);
-                                        ELContextImpl ctx = new ELContextImpl();
+                                        ELContextImpl ctx = new ELContextImpl(expressionFactory);
                                         ctx.setFunctionMapper(getFunctionMapper(el));
                                         try {
                                             jspAttrs[i].validateEL(this.pageInfo.getExpressionFactory(), ctx);
@@ -1355,7 +1355,7 @@ class Validator {
                         result = new Node.JspAttribute(tai, qName, uri,
                                 localName, value, false, el, dynamic);
 
-                        ELContextImpl ctx = new ELContextImpl();
+                        ELContextImpl ctx = new ELContextImpl(expressionFactory);
                         ctx.setFunctionMapper(getFunctionMapper(el));
 
                         try {
@@ -1534,7 +1534,7 @@ class Validator {
             validateFunctions(el, n);
 
             // test it out
-            ELContextImpl ctx = new ELContextImpl();
+            ELContextImpl ctx = new ELContextImpl(expressionFactory);
             ctx.setFunctionMapper(this.getFunctionMapper(el));
             ExpressionFactory ef = this.pageInfo.getExpressionFactory();
             try {
