@@ -695,10 +695,13 @@ class Parser implements TagConstants {
      * ELExpressionBody (following "${" to first unquoted "}") // XXX add formal
      * production and confirm implementation against it, // once it's decided
      */
-    private void parseELExpression(Node parent, char type) throws JasperException {
+    private void parseELExpression(Node parent, char type)
+            throws JasperException {
         start = reader.mark();
         Mark last = null;
-        boolean singleQuoted = false, doubleQuoted = false;
+        boolean singleQuoted = false;
+        boolean doubleQuoted = false;
+        int nesting = 0;
         int currentChar;
         do {
             // XXX could move this logic to JspReader
@@ -711,13 +714,24 @@ class Parser implements TagConstants {
             }
             if (currentChar == -1)
                 err.jspError(start, MESSAGES.unterminatedTag(type + "{"));
-            if (currentChar == '"' && !singleQuoted)
+            if (currentChar == '"' && !singleQuoted) {
                 doubleQuoted = !doubleQuoted;
-            if (currentChar == '\'' && !doubleQuoted)
+            } else if (currentChar == '\'' && !doubleQuoted) {
                 singleQuoted = !singleQuoted;
-        } while (currentChar != '}' || (singleQuoted || doubleQuoted));
+            } else if (currentChar == '{' && !doubleQuoted && !singleQuoted) {
+                nesting++;
+            } else if (currentChar =='}' && !doubleQuoted && !singleQuoted) {
+                // Note: This also matches the terminating '}' at which point
+                //       nesting will be set to -1 - hence the test for
+                //       while (currentChar != '}' || nesting > -1 ||...) below
+                //       to continue the loop until the final '}' is detected
+                nesting--;
+            }
+        } while (currentChar != '}' || singleQuoted || doubleQuoted || nesting > -1);
 
-        new Node.ELExpression(type, reader.getText(start, last), start, parent);
+        @SuppressWarnings("unused")
+        Node unused = new Node.ELExpression(
+                type, reader.getText(start, last), start, parent);
     }
 
     /*
