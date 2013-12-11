@@ -48,7 +48,7 @@ public class JasperELResolver extends CompositeELResolver {
     public JasperELResolver(List<ELResolver> appResolvers, ELResolver streamResolver) {
         appResolversSize = appResolvers.size();
         resolvers = new ELResolver[appResolversSize + STANDARD_RESOLVERS_COUNT];
-        size = resolvers.length;
+        size = 0;
 
         add(new ImplicitObjectELResolver());
         for (ELResolver appResolver : appResolvers) {
