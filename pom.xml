@@ -48,6 +48,8 @@
         <version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>1.0.0.Final</version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>
         <version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>1.0.0.Beta1</version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>
         <version.org.eclipse.jdt.core.compiler.ecj>4.2.2</version.org.eclipse.jdt.core.compiler.ecj>
+        <version.io.undertow>1.0.0.Beta27</version.io.undertow>
+        <version.org.apache.httpcomponents>4.2.5</version.org.apache.httpcomponents>
         <version.junit>4.11</version.junit>
         <!-- Build configuration -->
         <maven.compiler.source>1.6</maven.compiler.source>
@@ -55,6 +57,19 @@
     </properties>
 
     <build>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <directory>src/test/java</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </testResource>
+        </testResources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -154,6 +169,36 @@
             <artifactId>ecj</artifactId>
             <version>${version.org.eclipse.jdt.core.compiler.ecj}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-servlet</artifactId>
+            <version>${version.io.undertow}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${version.io.undertow}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-servlet</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${version.io.undertow}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <scope>test</scope>
+            <version>${version.org.apache.httpcomponents}</version>
         </dependency>
 
         <!-- JUnit -->
