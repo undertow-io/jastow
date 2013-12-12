@@ -21,6 +21,9 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -29,6 +32,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import io.undertow.server.handlers.resource.ResourceChangeEvent;
+import io.undertow.server.handlers.resource.ResourceChangeListener;
 import org.apache.jasper.Constants;
 import org.apache.jasper.EmbeddedServletOptions;
 import org.apache.jasper.JasperLogger;
@@ -53,7 +58,7 @@ import org.apache.tomcat.PeriodicEventListener;
  * @author Kin-man Chung
  * @author Glenn Nielsen
  */
-public class JspServlet extends HttpServlet implements PeriodicEventListener {
+public class JspServlet extends HttpServlet implements PeriodicEventListener, ResourceChangeListener {
 
     private ServletContext context;
     private ServletConfig config;
@@ -323,4 +328,12 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener {
     }
 
 
+    @Override
+    public void handleChanges(Collection<ResourceChangeEvent> changes) {
+        final Set<String> changedResource = new HashSet<String>();
+        for(ResourceChangeEvent event : changes) {
+            changedResource.add(event.getResource());
+        }
+        rctxt.handleFileChange(changedResource);
+    }
 }

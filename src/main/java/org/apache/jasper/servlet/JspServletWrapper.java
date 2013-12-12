@@ -19,6 +19,7 @@ package org.apache.jasper.servlet;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
@@ -507,4 +508,8 @@ public class JspServletWrapper {
         }
     }
 
+    public void jspFileChanged() {
+        firstTime = true;
+        reload = true;
+    }
 }

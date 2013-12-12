@@ -30,6 +30,7 @@ import java.security.Policy;
 import java.security.cert.Certificate;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
@@ -429,4 +430,13 @@ public final class JspRuntimeContext {
     }
 
 
+    public void handleFileChange(Set<String> changedResource) {
+        for(String resource : changedResource) {
+            String slashResource = resource.startsWith("/") ? resource : "/" + resource;
+            JspServletWrapper wrapper = jsps.get(slashResource);
+            if(wrapper != null) {
+                wrapper.jspFileChanged();
+            }
+        }
+    }
 }
