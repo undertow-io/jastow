@@ -150,6 +150,9 @@ public class PageContextImpl extends PageContext {
 
 		// initialize the initial out ...
 		depth = -1;
+        if (bufferSize == JspWriter.DEFAULT_BUFFER) {
+            bufferSize = Constants.DEFAULT_BUFFER_SIZE;
+        }
 		if (this.baseOut == null) {
 			this.baseOut = new JspWriterImpl(response, bufferSize, autoFlush);
 		} else {
