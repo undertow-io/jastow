@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,31 +25,30 @@ import org.apache.jasper.compiler.ELNode.Text;
 
 /**
  * This class implements a parser for EL expressions.
- * 
+ *
  * It takes strings of the form xxx${..}yyy${..}zzz etc, and turn it into a
  * ELNode.Nodes.
- * 
+ *
  * Currently, it only handles text outside ${..} and functions in ${ ..}.
- * 
+ *
  * @author Kin-man Chung
  */
 
 public class ELParser {
 
-    private Token curToken; // current token
+    private Token curToken;  // current token
     private Token prevToken; // previous token
+    private StringBuilder whiteSpace = new StringBuilder();
 
-    private ELNode.Nodes expr;
+    private final ELNode.Nodes expr;
 
     private ELNode.Nodes ELexpr;
 
     private int index; // Current index of the expression
 
-    private String expression; // The EL expression
-    
-    private char type;
+    private final String expression; // The EL expression
 
-    private boolean escapeBS; // is '\' an escape char in text outside EL?
+    private char type;
 
     private final boolean isDeferredSyntaxAllowedAsLiteral;
 
@@ -66,7 +65,7 @@ public class ELParser {
 
     /**
      * Parse an EL expression
-     * 
+     *
      * @param expression
      *            The input expression string of the form Char* ('${' Char*
      *            '}')* Char*
@@ -76,7 +75,8 @@ public class ELParser {
      */
     public static ELNode.Nodes parse(String expression,
             boolean isDeferredSyntaxAllowedAsLiteral) {
-        ELParser parser = new ELParser(expression, isDeferredSyntaxAllowedAsLiteral);
+        ELParser parser = new ELParser(expression,
+                isDeferredSyntaxAllowedAsLiteral);
         while (parser.hasNextChar()) {
             String text = parser.skipUntilEL();
             if (text.length() > 0) {
@@ -91,23 +91,26 @@ public class ELParser {
     }
 
     /**
-     * Parse an EL expression string '${...}'
-     * 
-     * @return An ELNode.Nodes representing the EL expression TODO: Currently
-     *         only parsed into functions and text strings. This should be
-     *         rewritten for a full parser.
+     * Parse an EL expression string '${...}'. Currently only separates the EL
+     * into functions and everything else.
+     *
+     * @return An ELNode.Nodes representing the EL expression
+     *
+     * TODO: Can this be refactored to use the standard EL implementation?
      */
     private ELNode.Nodes parseEL() {
 
         StringBuilder buf = new StringBuilder();
         ELexpr = new ELNode.Nodes();
+        curToken = null;
+        prevToken = null;
         while (hasNext()) {
             curToken = nextToken();
             if (curToken instanceof Char) {
                 if (curToken.toChar() == '}') {
                     break;
                 }
-                buf.append(curToken.toChar());
+                buf.append(curToken.toString());
             } else {
                 // Output whatever is in buffer
                 if (buf.length() > 0) {
@@ -118,6 +121,9 @@ public class ELParser {
                     ELexpr.add(new ELNode.ELText(curToken.toString()));
                 }
             }
+        }
+        if (curToken != null) {
+            buf.append(curToken.getWhiteSpace());
         }
         if (buf.length() > 0) {
             ELexpr.add(new ELNode.ELText(buf.toString()));
@@ -138,8 +144,9 @@ public class ELParser {
         }
         String s1 = null; // Function prefix
         String s2 = curToken.toString(); // Function name
+        Token original = curToken;
         if (hasNext()) {
-            int mark = getIndex();
+            int mark = getIndex() - whiteSpace.length();
             curToken = nextToken();
             if (curToken.toChar() == ':') {
                 if (hasNext()) {
@@ -154,10 +161,10 @@ public class ELParser {
                 }
             }
             if (curToken.toChar() == '(') {
-                ELexpr.add(new ELNode.Function(s1, s2));
+                ELexpr.add(new ELNode.Function(s1.trim(), s2.trim()));
                 return true;
             }
-            curToken = prevToken;
+            curToken = original;
             setIndex(mark);
         }
         return false;
@@ -187,7 +194,7 @@ public class ELParser {
     /**
      * Skip until an EL expression ('${' || '#{') is reached, allowing escape
      * sequences '\\' and '\$' and '\#'.
-     * 
+     *
      * @return The text string up to the EL expression
      */
     private String skipUntilEL() {
@@ -199,13 +206,14 @@ public class ELParser {
                 prev = 0;
                 if (ch == '\\') {
                     buf.append('\\');
-                    if (!escapeBS)
-                        prev = '\\';
-                } else if (ch == '$' || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
+                    prev = '\\';
+                } else if (ch == '$'
+                        || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
                     buf.append(ch);
                 }
                 // else error!
-            } else if (prev == '$' || (!isDeferredSyntaxAllowedAsLiteral && prev == '#')) {
+            } else if (prev == '$'
+                    || (!isDeferredSyntaxAllowedAsLiteral && prev == '#')) {
                 if (ch == '{') {
                     this.type = prev;
                     prev = 0;
@@ -215,7 +223,7 @@ public class ELParser {
                 prev = 0;
             }
             if (ch == '\\' || ch == '$'
-                || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
+                    || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
                 prev = ch;
             } else {
                 buf.append(ch);
@@ -236,6 +244,12 @@ public class ELParser {
         return hasNextChar();
     }
 
+    private String getAndResetWhiteSpace() {
+        String result = whiteSpace.toString();
+        whiteSpace = new StringBuilder();
+        return result;
+    }
+
     /*
      * @return The next token in the EL expression buffer.
      */
@@ -247,19 +261,20 @@ public class ELParser {
             if (Character.isJavaIdentifierStart(ch)) {
                 StringBuilder buf = new StringBuilder();
                 buf.append(ch);
-                while ((ch = peekChar()) != -1
-                        && Character.isJavaIdentifierPart(ch)) {
+                while (index < expression.length() &&
+                        Character.isJavaIdentifierPart(
+                                ch = expression.charAt(index))) {
                     buf.append(ch);
                     nextChar();
                 }
-                return new Id(buf.toString());
+                return new Id(getAndResetWhiteSpace(), buf.toString());
             }
 
             if (ch == '\'' || ch == '"') {
                 return parseQuotedChars(ch);
             } else {
                 // For now...
-                return new Char(ch);
+                return new Char(getAndResetWhiteSpace(), ch);
             }
         }
         return null;
@@ -287,7 +302,7 @@ public class ELParser {
                 buf.append(ch);
             }
         }
-        return new QuotedString(buf.toString());
+        return new QuotedString(getAndResetWhiteSpace(), buf.toString());
     }
 
     /*
@@ -297,8 +312,10 @@ public class ELParser {
 
     private void skipSpaces() {
         while (hasNextChar()) {
-            if (expression.charAt(index) > ' ')
+            char c = expression.charAt(index);
+            if (c > ' ')
                 break;
+            whiteSpace.append(c);
             index++;
         }
     }
@@ -314,13 +331,6 @@ public class ELParser {
         return expression.charAt(index++);
     }
 
-    private char peekChar() {
-        if (index >= expression.length()) {
-            return (char) -1;
-        }
-        return expression.charAt(index);
-    }
-
     private int getIndex() {
         return index;
     }
@@ -334,12 +344,23 @@ public class ELParser {
      */
     private static class Token {
 
+        protected final String whiteSpace;
+
+        Token(String whiteSpace) {
+            this.whiteSpace = whiteSpace;
+        }
+
         char toChar() {
             return 0;
         }
 
+        @Override
         public String toString() {
-            return "";
+            return whiteSpace;
+        }
+
+        String getWhiteSpace() {
+            return whiteSpace;
         }
     }
 
@@ -349,12 +370,14 @@ public class ELParser {
     private static class Id extends Token {
         String id;
 
-        Id(String id) {
+        Id(String whiteSpace, String id) {
+            super(whiteSpace);
             this.id = id;
         }
 
+        @Override
         public String toString() {
-            return id;
+            return whiteSpace + id;
         }
     }
 
@@ -365,16 +388,19 @@ public class ELParser {
 
         private char ch;
 
-        Char(char ch) {
+        Char(String whiteSpace, char ch) {
+            super(whiteSpace);
             this.ch = ch;
         }
 
+        @Override
         char toChar() {
             return ch;
         }
 
+        @Override
         public String toString() {
-            return (new Character(ch)).toString();
+            return whiteSpace + ch;
         }
     }
 
@@ -385,18 +411,21 @@ public class ELParser {
 
         private String value;
 
-        QuotedString(String v) {
+        QuotedString(String whiteSpace, String v) {
+            super(whiteSpace);
             this.value = v;
         }
 
+        @Override
         public String toString() {
-            return value;
+            return whiteSpace + value;
         }
     }
 
     public char getType() {
         return type;
     }
+
 
     protected static class TextBuilder extends ELNode.Visitor {
 

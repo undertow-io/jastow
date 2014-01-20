@@ -124,7 +124,7 @@ class Validator {
                     }
                 } else if ("extends".equals(attr)) {
                     if (pageInfo.getExtends(false) == null) {
-                        pageInfo.setExtends(value, n);
+                        pageInfo.setExtends(value);
                     } else if (!pageInfo.getExtends(false).equals(value)) {
                         err.jspError(n.getStart(), MESSAGES.invalidConflictingPageDirectiveAttribute
                                 (attr, pageInfo.getExtends(false), value));
