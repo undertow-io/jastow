@@ -113,16 +113,18 @@ abstract class ELNode {
      */
     public static class Function extends ELNode {
 
-	private String prefix;
-	private String name;
+        private final String prefix;
+        private final String name;
+        private final String originalText;
 	private String uri;
 	private FunctionInfo functionInfo;
 	private String methodName;
 	private String[] parameters;
 
-	Function(String prefix, String name) {
+	Function(String prefix, String name, String originalText) {
 	    this.prefix = prefix;
 	    this.name = name;
+        this.originalText = originalText;
 	}
 
 	public void accept(Visitor v) throws JasperException {
@@ -137,7 +139,11 @@ abstract class ELNode {
 	    return name;
 	}
 
-	public void setUri(String uri) {
+    public String getOriginalText() {
+        return originalText;
+    }
+
+    public void setUri(String uri) {
 	    this.uri = uri;
 	}
 
