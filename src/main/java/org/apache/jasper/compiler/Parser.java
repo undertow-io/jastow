@@ -77,7 +77,9 @@ class Parser implements TagConstants {
 
     private static final String JAVAX_BODY_CONTENT_TEMPLATE_TEXT = "JAVAX_BODY_CONTENT_TEMPLATE_TEXT";
 
-    private static final boolean OPTIMIZE_JSP_SCRIPLETS = System.getProperty("org.apache.jasper.optimise_jsp_scriptlets") == null ? false: Boolean.parseBoolean( System.getProperty("org.apache.jasper.optimise_jsp_scriptlets"));
+    private static final boolean OPTIMIZE_SCRIPTLETS = Boolean.valueOf(
+            System.getProperty("org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS",
+                    "false")).booleanValue();
 
     /**
      * The constructor
