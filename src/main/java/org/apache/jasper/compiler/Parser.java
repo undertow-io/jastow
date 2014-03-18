@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.servlet.jsp.tagext.TagAttributeInfo;
 import javax.servlet.jsp.tagext.TagFileInfo;
@@ -38,7 +39,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * This class implements a parser for a JSP page (non-xml view). JSP page
  * grammar is included here for reference. The token '#' that appears in the
  * production indicates the current input token location in the production.
- * 
+ *
  * @author Kin-man Chung
  * @author Shawn Bayern
  * @author Mark Roth
@@ -76,6 +77,10 @@ class Parser implements TagConstants {
 
     private static final String JAVAX_BODY_CONTENT_TEMPLATE_TEXT = "JAVAX_BODY_CONTENT_TEMPLATE_TEXT";
 
+    private static final boolean OPTIMIZE_SCRIPTLETS = Boolean.valueOf(
+            System.getProperty("org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS",
+                    "false")).booleanValue();
+
     /**
      * The constructor
      */
@@ -96,7 +101,7 @@ class Parser implements TagConstants {
 
     /**
      * The main entry for Parser
-     * 
+     *
      * @param pc
      *            The ParseController, use for getting other objects in compiler
      *            and for parsing included pages
@@ -244,12 +249,12 @@ class Parser implements TagConstants {
         String ret = null;
         try {
             char quote = watch.charAt(watch.length() - 1);
-            
+
             // If watch is longer than 1 character this is a scripting
             // expression and EL is always ignored
             boolean isElIgnored =
                 pageInfo.isELIgnored() || watch.length() > 1;
-            
+
             ret = AttributeParser.getUnquoted(reader.getText(start, stop),
                     quote, isElIgnored,
                     pageInfo.isDeferredSyntaxAllowedAsLiteral());
@@ -649,8 +654,59 @@ class Parser implements TagConstants {
             err.jspError(start, MESSAGES.unterminatedTag("&lt;%="));
         }
 
-        new Node.Expression(parseScriptText(reader.getText(start, stop)),
-                start, parent);
+        String expression = reader.getText(start, stop);
+        // check for string concatenation inside expressions, separating from expression allows for optimizations later on
+        if(!OPTIMIZE_JSP_SCRIPLETS){
+            new Node.Expression(parseScriptText(expression),
+                    start, parent);
+        }
+        else {
+            if (!matchesConcat(expression)) {
+                new Node.Expression(parseScriptText(expression),
+                        start, parent);
+            } else {
+                //need to separate expressions being concatenated
+                expression = expression.replaceAll("\\+\\s*\"", "\\+ \"").replaceAll("\"\\s*\\+", "\" \\+");
+                String[] tokens = expression.split("((?=\\+\\s\")|(?<=\"\\s\\+))");
+                if (tokens.length > 1) {
+                    for (String token : tokens) {
+                        if (matchesStringLiteral(token) && !matchesStringParam(token)) {
+                            //maybe evaluate the expression here before storing as text node?
+                            new Node.TemplateText(cleanTextToken(token),
+                                    start, parent);
+                        } else {
+                            new Node.Expression(parseScriptText(cleanExprToken(token)),
+                                    start, parent);
+                        }
+                    }
+                } else {
+                    //only have one token, therefore there is no string concatenation occurring and string literal is being used as part of expression
+                    new Node.Expression(parseScriptText(tokens[0]),
+                            start, parent);
+
+                }
+            }
+        }
+    }
+
+    private boolean matchesStringLiteral(String token) {
+        return Pattern.compile("\"").matcher(token).find() || "".equals(token.trim());
+    }
+
+    private boolean matchesStringParam(String token) {
+        return Pattern.compile("\"\\s*\\)|\\(\\s*\"").matcher(token).find();
+    }
+
+    private boolean matchesConcat(String token) {
+        return Pattern.compile("\\+\\s*\"|\"\\s*\\+").matcher(token).find();
+    }
+
+    private String cleanTextToken(String token) {
+        return cleanExprToken(token.trim().replaceAll("(?<!\\\\)\"|\t|\n|\r", "").replaceAll("\\\\\"","\""));
+    }
+
+    private String cleanExprToken(String token) {
+        return token.trim().replaceAll("^\\+|\\+$","").trim();
     }
 
     /*
@@ -975,7 +1031,7 @@ class Parser implements TagConstants {
     /**
      * Attempts to parse 'JspAttributeAndBody' production. Returns true if it
      * matched, or false if not. Assumes EmptyBody is okay as well.
-     * 
+     *
      * JspAttributeAndBody ::= ( '>' # S? ( '<jsp:attribute' NamedAttributes )? '<jsp:body' (
      * JspBodyBody | <TRANSLATION_ERROR> ) S? ETag )
      */
