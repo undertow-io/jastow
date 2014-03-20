@@ -77,7 +77,7 @@ class Parser implements TagConstants {
 
     private static final String JAVAX_BODY_CONTENT_TEMPLATE_TEXT = "JAVAX_BODY_CONTENT_TEMPLATE_TEXT";
 
-    private static final boolean OPTIMIZE_SCRIPTLETS = Boolean.valueOf(
+    private static final boolean OPTIMIZE_JSP_SCRIPTLETS = Boolean.valueOf(
             System.getProperty("org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS",
                     "false")).booleanValue();
 
@@ -656,7 +656,7 @@ class Parser implements TagConstants {
 
         String expression = reader.getText(start, stop);
         // check for string concatenation inside expressions, separating from expression allows for optimizations later on
-        if(!OPTIMIZE_JSP_SCRIPLETS){
+        if(!OPTIMIZE_JSP_SCRIPTLETS){
             new Node.Expression(parseScriptText(expression),
                     start, parent);
         }
