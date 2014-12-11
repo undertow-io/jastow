@@ -25,9 +25,11 @@ import java.io.FilePermission;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.CodeSource;
+import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.cert.Certificate;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -364,8 +366,22 @@ public final class JspRuntimeContext {
                 }
                 File contextDir = new File(codeBase);
                 URL url = contextDir.getCanonicalFile().toURL();
-                codeSource = new CodeSource(url,(Certificate[])null);
+
+                URL providedCodeSource = (URL) context.getAttribute(Constants.CODE_SOURCE_ATTRIBUTE_NAME);
+                if(providedCodeSource != null) {
+                    codeSource = new CodeSource(providedCodeSource, (Certificate[]) null);
+                } else {
+                    codeSource = new CodeSource(url, (Certificate[]) null);
+                }
                 permissionCollection = policy.getPermissions(codeSource);
+
+                PermissionCollection userPermissions = (PermissionCollection) context.getAttribute(Constants.PERMISSION_COLLECTION_ATTRIBUTE_NAME);
+                if(userPermissions != null) {
+                    Enumeration<Permission> elements = userPermissions.elements();
+                    while (elements.hasMoreElements()) {
+                        permissionCollection.add(elements.nextElement());
+                    }
+                }
 
                 // Create a file read permission for web app context directory
                 if (!docBase.endsWith(File.separator)){

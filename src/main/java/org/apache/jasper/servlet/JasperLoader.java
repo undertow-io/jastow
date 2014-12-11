@@ -171,4 +171,6 @@ public class JasperLoader extends URLClassLoader {
     public final PermissionCollection getPermissions(CodeSource codeSource) {
         return permissionCollection;
     }
+
+
 }

@@ -180,4 +180,7 @@ public class Constants {
      */
     public static final String SESSION_PARAMETER_NAME = System.getProperty("org.apache.catalina.jsessionid", "jsessionid");
 
+    public static final String PERMISSION_COLLECTION_ATTRIBUTE_NAME = "org.apache.jasper.Constants.PERMISSION_COLLECTION_ATTRIBUTE_NAME";
+    public static final String CODE_SOURCE_ATTRIBUTE_NAME = "org.apache.jasper.Constants.CODE_SOURCE_ATTRIBUTE_NAME";
+
 }
