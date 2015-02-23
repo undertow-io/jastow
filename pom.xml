@@ -46,14 +46,14 @@
         <version.org.glassfish.javax.el>3.0.0</version.org.glassfish.javax.el>
 
         <version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>1.0.0.Final</version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>
-        <version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>1.0.0.Final</version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>
+        <version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>1.0.1.Final</version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>
         <version.org.eclipse.jdt.core.compiler.ecj>4.4.1</version.org.eclipse.jdt.core.compiler.ecj>
-        <version.io.undertow>1.0.1.Final</version.io.undertow>
+        <version.io.undertow>1.1.1.Final</version.io.undertow>
         <version.org.apache.httpcomponents>4.2.5</version.org.apache.httpcomponents>
         <version.junit>4.11</version.junit>
         <!-- Build configuration -->
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
 
     <build>
