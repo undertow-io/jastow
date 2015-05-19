@@ -18,12 +18,12 @@ package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -41,25 +41,25 @@ import org.apache.jasper.JasperException;
 
 class PageInfo {
 
-    private Vector imports;
-    private Vector dependants;
+    private final Vector<String> imports;
+    private final Map<String,Long> dependants;
 
-    private BeanRepository beanRepository;
-    private Set<String> varInfoNames;
-    private HashMap taglibsMap;
-    private HashMap jspPrefixMapper;
-    private HashMap xmlPrefixMapper;
-    private HashMap nonCustomTagPrefixMap;
-    private String jspFile;
-    private String defaultLanguage = "java";
+    private final BeanRepository beanRepository;
+    private final Set<String> varInfoNames;
+    private final HashMap<String,TagLibraryInfo> taglibsMap;
+    private final HashMap<String, String> jspPrefixMapper;
+    private final HashMap<String, LinkedList<String>> xmlPrefixMapper;
+    private final HashMap<String, Mark> nonCustomTagPrefixMap;
+    private final String jspFile;
+    private final String defaultLanguage = "java";
     private String language;
-    private String defaultExtends = Constants.JSP_SERVLET_BASE;
+    private final String defaultExtends = Constants.JSP_SERVLET_BASE;
     private String xtends;
     private String contentType = null;
     private String session;
     private boolean isSession = true;
     private String bufferValue;
-    private int buffer = 8*1024;    // XXX confirm
+    private int buffer = 8*1024;
     private String autoFlush;
     private boolean isAutoFlush = true;
     private String isThreadSafeValue;
@@ -71,20 +71,18 @@ class PageInfo {
 
     private boolean scriptless = false;
     private boolean scriptingInvalid = false;
-    
+
     private String isELIgnoredValue;
     private boolean isELIgnored = false;
-    
+
     // JSP 2.1
     private String deferredSyntaxAllowedAsLiteralValue;
     private boolean deferredSyntaxAllowedAsLiteral = false;
-    private ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
+    private final ExpressionFactory expressionFactory =
+        ExpressionFactory.newInstance();
     private String trimDirectiveWhitespacesValue;
     private boolean trimDirectiveWhitespaces = false;
-    
-    // JSP 2.2
-    private boolean isErrorOnUndeclaredNamespace = false;
-    
+
     private String omitXmlDecl = null;
     private String doctypeName = null;
     private String doctypePublic = null;
@@ -93,35 +91,36 @@ class PageInfo {
     private boolean isJspPrefixHijacked;
 
     // Set of all element and attribute prefixes used in this translation unit
-    private HashSet prefixes;
+    private final HashSet<String> prefixes;
 
     private boolean hasJspRoot = false;
-    private ArrayList<String> includePrelude;
-    private ArrayList<String> includeCoda;
-    private Vector pluginDcls;      // Id's for tagplugin declarations
+    private Collection<String> includePrelude;
+    private Collection<String> includeCoda;
+    private final Vector<String> pluginDcls;  // Id's for tagplugin declarations
 
-    private boolean isTagFile = false;
+    // JSP 2.2
+    private boolean errorOnUndeclaredNamepsace = false;
+
+    private final boolean isTagFile;
 
     PageInfo(BeanRepository beanRepository, String jspFile, boolean isTagFile) {
-
-        this.jspFile = jspFile;
         this.isTagFile = isTagFile;
+        this.jspFile = jspFile;
         this.beanRepository = beanRepository;
-        this.varInfoNames = new HashSet<String>();
-        this.taglibsMap = new HashMap();
-        this.jspPrefixMapper = new HashMap();
-        this.xmlPrefixMapper = new HashMap();
-        this.nonCustomTagPrefixMap = new HashMap();
-        this.imports = new Vector();
-        this.dependants = new Vector();
-        this.includePrelude = new ArrayList<String>();
-        this.includeCoda = new ArrayList<String>();
-        this.pluginDcls = new Vector();
-        this.prefixes = new HashSet();
+        this.varInfoNames = new HashSet<>();
+        this.taglibsMap = new HashMap<>();
+        this.jspPrefixMapper = new HashMap<>();
+        this.xmlPrefixMapper = new HashMap<>();
+        this.nonCustomTagPrefixMap = new HashMap<>();
+        this.imports = new Vector<>();
+        this.dependants = new HashMap<>();
+        this.includePrelude = new Vector<>();
+        this.includeCoda = new Vector<>();
+        this.pluginDcls = new Vector<>();
+        this.prefixes = new HashSet<>();
 
         // Enter standard imports
-        for(int i = 0; i < Constants.STANDARD_IMPORTS.length; i++)
-            imports.add(Constants.STANDARD_IMPORTS[i]);
+        imports.addAll(Constants.STANDARD_IMPORTS);
     }
 
     public boolean isTagFile() {
@@ -140,7 +139,7 @@ class PageInfo {
         return false;
     }
 
-    public void addImports(List imports) {
+    public void addImports(List<String> imports) {
         this.imports.addAll(imports);
     }
 
@@ -148,7 +147,7 @@ class PageInfo {
         this.imports.add(imp);
     }
 
-    public List getImports() {
+    public List<String> getImports() {
         return imports;
     }
 
@@ -156,12 +155,12 @@ class PageInfo {
         return jspFile;
     }
 
-    public void addDependant(String d) {
-        if (!dependants.contains(d) && !jspFile.equals(d))
-                dependants.add(d);
+    public void addDependant(String d, Long lastModified) {
+        if (!dependants.containsKey(d) && !jspFile.equals(d))
+                dependants.put(d, lastModified);
     }
 
-    public List getDependants() {
+    public Map<String,Long> getDependants() {
         return dependants;
     }
 
@@ -185,19 +184,19 @@ class PageInfo {
         return scriptingInvalid;
     }
 
-    public List getIncludePrelude() {
+    public Collection<String> getIncludePrelude() {
         return includePrelude;
     }
 
-    public void setIncludePrelude(ArrayList<String> prelude) {
+    public void setIncludePrelude(Collection<String> prelude) {
         includePrelude = prelude;
     }
 
-    public List getIncludeCoda() {
+    public Collection<String> getIncludeCoda() {
         return includeCoda;
     }
 
-    public void setIncludeCoda(ArrayList<String> coda) {
+    public void setIncludeCoda(Collection<String> coda) {
         includeCoda = coda;
     }
 
@@ -288,7 +287,7 @@ class PageInfo {
      * @return Tag library corresponding to the given URI
      */
     public TagLibraryInfo getTaglib(String uri) {
-        return (TagLibraryInfo) taglibsMap.get(uri);
+        return taglibsMap.get(uri);
     }
 
     /*
@@ -296,7 +295,7 @@ class PageInfo {
      *
      * @return Collection of tag libraries that are associated with a URI
      */
-    public Collection getTaglibs() {
+    public Collection<TagLibraryInfo> getTaglibs() {
         return taglibsMap.values();
     }
 
@@ -330,9 +329,9 @@ class PageInfo {
      * @param uri The URI to be pushed onto the stack
      */
     public void pushPrefixMapping(String prefix, String uri) {
-        LinkedList stack = (LinkedList) xmlPrefixMapper.get(prefix);
+        LinkedList<String> stack = xmlPrefixMapper.get(prefix);
         if (stack == null) {
-            stack = new LinkedList();
+            stack = new LinkedList<>();
             xmlPrefixMapper.put(prefix, stack);
         }
         stack.addFirst(uri);
@@ -345,10 +344,7 @@ class PageInfo {
      * @param prefix The prefix whose stack of URIs is to be popped
      */
     public void popPrefixMapping(String prefix) {
-        LinkedList stack = (LinkedList) xmlPrefixMapper.get(prefix);
-        if (stack == null || stack.size() == 0) {
-            // XXX throw new Exception("XXX");
-        }
+        LinkedList<String> stack = xmlPrefixMapper.get(prefix);
         stack.removeFirst();
     }
 
@@ -363,11 +359,11 @@ class PageInfo {
 
         String uri = null;
 
-        LinkedList stack = (LinkedList) xmlPrefixMapper.get(prefix);
+        LinkedList<String> stack = xmlPrefixMapper.get(prefix);
         if (stack == null || stack.size() == 0) {
-            uri = (String) jspPrefixMapper.get(prefix);
+            uri = jspPrefixMapper.get(prefix);
         } else {
-            uri = (String) stack.getFirst();
+            uri = stack.getFirst();
         }
 
         return uri;
@@ -385,9 +381,9 @@ class PageInfo {
 
         if (!"java".equalsIgnoreCase(value)) {
             if (pagedir)
-                err.jspError(n.getStart(), MESSAGES.unsupportedPageDirectiveLanguage());
+                err.jspError(n, MESSAGES.unsupportedPageDirectiveLanguage());
             else
-                err.jspError(n.getStart(), MESSAGES.unsupportedTagDirectiveLanguage());
+                err.jspError(n, MESSAGES.unsupportedTagDirectiveLanguage());
         }
 
         language = value;
@@ -396,11 +392,6 @@ class PageInfo {
     public String getLanguage(boolean useDefault) {
         return (language == null && useDefault ? defaultLanguage : language);
     }
-
-    public String getLanguage() {
-        return getLanguage(true);
-    }
-
 
     /*
      * extends
@@ -457,32 +448,23 @@ class PageInfo {
         if ("none".equalsIgnoreCase(value))
             buffer = 0;
         else {
-            if (value == null || !value.endsWith("kb"))
-                err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveBufferSize());
-            try {
-                Integer k = new Integer(value.substring(0, value.length()-2));
-                buffer = k.intValue() * 1024;
-            } catch (NumberFormatException e) {
-                err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveBufferSize());
+            if (value == null || !value.endsWith("kb")) {
+                if (n == null) {
+                    err.jspError(MESSAGES.invalidPageDirectiveBufferSize());
+                } else {
+                    err.jspError(n, MESSAGES.invalidPageDirectiveBufferSize());
+                }
             }
-        }
-
-        bufferValue = value;
-    }
-
-    public void setBufferValue(String value, ErrorDispatcher err)
-    throws JasperException {
-
-        if ("none".equalsIgnoreCase(value))
-            buffer = 0;
-        else {
-            if (value == null || !value.endsWith("kb"))
-                err.jspError(MESSAGES.invalidPageDirectiveBufferSize());
             try {
+                @SuppressWarnings("null") // value can't be null here
                 Integer k = new Integer(value.substring(0, value.length()-2));
                 buffer = k.intValue() * 1024;
             } catch (NumberFormatException e) {
-                err.jspError(MESSAGES.invalidPageDirectiveBufferSize());
+                if (n == null) {
+                    err.jspError(MESSAGES.invalidPageDirectiveBufferSize());
+                } else {
+                    err.jspError(n, MESSAGES.invalidPageDirectiveBufferSize());
+                }
             }
         }
 
@@ -509,7 +491,7 @@ class PageInfo {
         else if ("false".equalsIgnoreCase(value))
             isSession = false;
         else
-            err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveSession());
+            err.jspError(n, MESSAGES.invalidPageDirectiveSession());
 
         session = value;
     }
@@ -534,7 +516,7 @@ class PageInfo {
         else if ("false".equalsIgnoreCase(value))
             isAutoFlush = false;
         else
-            err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveAutoFlush());
+            err.jspError(n, MESSAGES.invalidPageDirectiveAutoFlush());
 
         autoFlush = value;
     }
@@ -559,7 +541,7 @@ class PageInfo {
         else if ("false".equalsIgnoreCase(value))
             isThreadSafe = false;
         else
-            err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveIsThreadSafe());
+            err.jspError(n, MESSAGES.invalidPageDirectiveIsThreadSafe());
 
         isThreadSafeValue = value;
     }
@@ -608,7 +590,7 @@ class PageInfo {
         else if ("false".equalsIgnoreCase(value))
             isErrorPage = false;
         else
-            err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveIsErrorPage());
+            err.jspError(n, MESSAGES.invalidPageDirectiveIsErrorPage());
 
         isErrorPageValue = value;
     }
@@ -635,14 +617,14 @@ class PageInfo {
             isELIgnored = false;
         else {
             if (pagedir)
-                err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveIsElIgnored());
+                err.jspError(n, MESSAGES.invalidPageDirectiveIsElIgnored());
             else
-                err.jspError(n.getStart(), MESSAGES.invalidTagDirectiveIsElIgnored());
+                err.jspError(n, MESSAGES.invalidTagDirectiveIsElIgnored());
         }
 
         isELIgnoredValue = value;
     }
-    
+
     /*
      * deferredSyntaxAllowedAsLiteral
      */
@@ -656,14 +638,14 @@ class PageInfo {
             deferredSyntaxAllowedAsLiteral = false;
         else {
             if (pagedir)
-                err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveDeferredSyntaxAllowedAsLiteral());
+                err.jspError(n, MESSAGES.invalidPageDirectiveDeferredSyntaxAllowedAsLiteral());
             else
-                err.jspError(n.getStart(), MESSAGES.invalidTagDirectiveDeferredSyntaxAllowedAsLiteral());
+                err.jspError(n, MESSAGES.invalidTagDirectiveDeferredSyntaxAllowedAsLiteral());
         }
 
         deferredSyntaxAllowedAsLiteralValue = value;
     }
-    
+
     /*
      * trimDirectiveWhitespaces
      */
@@ -677,9 +659,9 @@ class PageInfo {
             trimDirectiveWhitespaces = false;
         else {
             if (pagedir)
-                err.jspError(n.getStart(), MESSAGES.invalidPageDirectiveTrimDirectiveWhitespaces());
+                err.jspError(n, MESSAGES.invalidPageDirectiveTrimDirectiveWhitespaces());
             else
-                err.jspError(n.getStart(), MESSAGES.invalidTagDirectiveTrimDirectiveWhitespaces());
+                err.jspError(n, MESSAGES.invalidTagDirectiveTrimDirectiveWhitespaces());
         }
 
         trimDirectiveWhitespacesValue = value;
@@ -702,9 +684,9 @@ class PageInfo {
     }
 
     public Mark getNonCustomTagPrefix(String prefix) {
-        return (Mark) nonCustomTagPrefixMap.get(prefix);
+        return nonCustomTagPrefixMap.get(prefix);
     }
-    
+
     public String getDeferredSyntaxAllowedAsLiteral() {
         return deferredSyntaxAllowedAsLiteralValue;
     }
@@ -733,15 +715,16 @@ class PageInfo {
         this.trimDirectiveWhitespaces = trimDirectiveWhitespaces;
     }
 
-    public void setErrorOnUndeclaredNamespace(boolean s) {
-        isErrorOnUndeclaredNamespace = s;
+    public Set<String> getVarInfoNames() {
+        return varInfoNames;
     }
 
     public boolean isErrorOnUndeclaredNamespace() {
-        return isErrorOnUndeclaredNamespace;
+        return errorOnUndeclaredNamepsace;
     }
 
-    public Set<String> getVarInfoNames() {
-        return varInfoNames;
+    public void setErrorOnUndeclaredNamespace(
+            boolean errorOnUndeclaredNamespace) {
+        this.errorOnUndeclaredNamepsace = errorOnUndeclaredNamespace;
     }
 }

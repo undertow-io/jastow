@@ -18,6 +18,7 @@
 package org.apache.jasper.compiler;
 
 import org.apache.jasper.JasperException;
+import org.apache.jasper.JasperMessages;
 import org.apache.jasper.compiler.ELNode.ELText;
 import org.apache.jasper.compiler.ELNode.Function;
 import org.apache.jasper.compiler.ELNode.Root;
@@ -96,7 +97,7 @@ public class ELParser {
      *
      * @return An ELNode.Nodes representing the EL expression
      *
-     * Note: This can not be refactored to use the standard EL implementation as
+     * Note: This cannot be refactored to use the standard EL implementation as
      *       the EL API does not provide the level of access required to the
      *       parsed expression.
      */
@@ -196,47 +197,128 @@ public class ELParser {
 
     /**
      * Skip until an EL expression ('${' || '#{') is reached, allowing escape
-     * sequences '\\' and '\$' and '\#'.
+     * sequences '\$' and '\#'.
      *
      * @return The text string up to the EL expression
      */
     private String skipUntilEL() {
-        char prev = 0;
         StringBuilder buf = new StringBuilder();
         while (hasNextChar()) {
             char ch = nextChar();
-            if (prev == '\\') {
-                prev = 0;
                 if (ch == '\\') {
-                    buf.append('\\');
-                    prev = '\\';
-                } else if (ch == '$'
-                        || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
+                // Is this the start of a "\${" or "\#{" escape sequence?
+                char p0 = peek(0);
+                char p1 = peek(1);
+                if ((p0 == '$' || (p0 == '#' && !isDeferredSyntaxAllowedAsLiteral)) && p1 == '{') {
+                    buf.append(nextChar());
+                    buf.append(nextChar());
+                } else {
                     buf.append(ch);
                 }
-                // else error!
-            } else if (prev == '$'
-                    || (!isDeferredSyntaxAllowedAsLiteral && prev == '#')) {
-                if (ch == '{') {
-                    this.type = prev;
-                    prev = 0;
+            } else if ((ch == '$' || (ch == '#' && !isDeferredSyntaxAllowedAsLiteral)) &&
+                    peek(0) == '{') {
+                this.type = ch;
+                nextChar();
                     break;
-                }
-                buf.append(prev);
-                prev = 0;
-            }
-            if (ch == '\\' || ch == '$'
-                    || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
-                prev = ch;
             } else {
                 buf.append(ch);
             }
-        }
-        if (prev != 0) {
-            buf.append(prev);
-        }
+                }
         return buf.toString();
     }
+
+
+    /**
+     * Escape '$' and '#', inverting the unescaping performed in
+     * {@link #skipUntilEL()}.
+     *
+     * @param input Non-EL input to be escaped
+     * @param isDeferredSyntaxAllowedAsLiteral
+     *
+     * @return The escaped version of the input
+     */
+    static String escapeLiteralExpression(String input,
+            boolean isDeferredSyntaxAllowedAsLiteral) {
+        int len = input.length();
+        int lastAppend = 0;
+        StringBuilder output = null;
+        for (int i = 0; i < len; i++) {
+            char ch = input.charAt(i);
+            if (ch =='$' || (!isDeferredSyntaxAllowedAsLiteral && ch == '#')) {
+                if (i + 1 < len && input.charAt(i + 1) == '{') {
+                    if (output == null) {
+                        output = new StringBuilder(len + 20);
+                    }
+                    output.append(input.substring(lastAppend, i));
+                    lastAppend = i + 1;
+                    output.append('\\');
+                    output.append(ch);
+                }
+            }
+        }
+        if (output == null) {
+            return input;
+        } else {
+            output.append(input.substring(lastAppend, len));
+            return output.toString();
+        }
+    }
+
+
+    /**
+     * Escape '\\', '\'' and '\"', inverting the unescaping performed in
+     * {@link #skipUntilEL()}.
+     *
+     * @param input Non-EL input to be escaped
+     * @param isDeferredSyntaxAllowedAsLiteral
+     *
+     * @return The escaped version of the input
+     */
+    private static String escapeELText(String input) {
+        int len = input.length();
+        char quote = 0;
+        int lastAppend = 0;
+        int start = 0;
+        int end = len;
+
+        // Look to see if the value is quoted
+        String trimmed = input.trim();
+        int trimmedLen = trimmed.length();
+        if (trimmedLen > 1) {
+            // Might be quoted
+            quote = trimmed.charAt(0);
+            if (quote == '\'' || quote == '\"') {
+                if (trimmed.charAt(trimmedLen - 1) != quote) {
+                    throw JasperMessages.MESSAGES.invalidStringLiteral(input);
+            }
+                start = input.indexOf(quote) + 1;
+                end = start + trimmedLen - 2;
+            } else {
+                quote = 0;
+            }
+        }
+
+        StringBuilder output = null;
+        for (int i = start; i < end; i++) {
+            char ch = input.charAt(i);
+            if (ch == '\\' || ch == quote) {
+                if (output == null) {
+                    output = new StringBuilder(len + 20);
+                }
+                output.append(input.substring(lastAppend, i));
+                lastAppend = i + 1;
+                output.append('\\');
+                output.append(ch);
+            }
+        }
+        if (output == null) {
+            return input;
+        } else {
+            output.append(input.substring(lastAppend, len));
+            return output.toString();
+        }
+    }
+
 
     /*
      * @return true if there is something left in EL expression buffer other
@@ -285,7 +367,7 @@ public class ELParser {
 
     /*
      * Parse a string in single or double quotes, allowing for escape sequences
-     * '\\', and ('\"', or "\'")
+     * '\\', '\"' and "\'"
      */
     private Token parseQuotedChars(char quote) {
         StringBuilder buf = new StringBuilder();
@@ -294,10 +376,11 @@ public class ELParser {
             char ch = nextChar();
             if (ch == '\\') {
                 ch = nextChar();
-                if (ch == '\\' || ch == quote) {
+                if (ch == '\\' || ch == '\'' || ch == '\"') {
                     buf.append(ch);
+                } else {
+                    throw JasperMessages.MESSAGES.invalidQuoting(expression);
                 }
-                // else error!
             } else if (ch == quote) {
                 buf.append(ch);
                 break;
@@ -333,6 +416,14 @@ public class ELParser {
             return (char) -1;
         }
         return expression.charAt(index++);
+    }
+
+    private char peek(int advance) {
+        int target = index + advance;
+        if (target >= expression.length()) {
+            return (char) -1;
+        }
+        return expression.charAt(target);
     }
 
     private int getIndex() {
@@ -450,9 +541,14 @@ public class ELParser {
     }
 
 
-    protected static class TextBuilder extends ELNode.Visitor {
+    static class TextBuilder extends ELNode.Visitor {
 
-        protected StringBuilder output = new StringBuilder();
+        protected final boolean isDeferredSyntaxAllowedAsLiteral;
+        protected final StringBuilder output = new StringBuilder();
+
+        protected TextBuilder(boolean isDeferredSyntaxAllowedAsLiteral) {
+            this.isDeferredSyntaxAllowedAsLiteral = isDeferredSyntaxAllowedAsLiteral;
+        }
 
         public String getText() {
             return output.toString();
@@ -468,18 +564,18 @@ public class ELParser {
 
         @Override
         public void visit(Function n) throws JasperException {
-            output.append(n.getOriginalText());
+            output.append(escapeLiteralExpression(n.getOriginalText(), isDeferredSyntaxAllowedAsLiteral));
             output.append('(');
         }
 
         @Override
         public void visit(Text n) throws JasperException {
-            output.append(n.getText());
+            output.append(escapeLiteralExpression(n.getText(),isDeferredSyntaxAllowedAsLiteral));
         }
 
         @Override
         public void visit(ELText n) throws JasperException {
-            output.append(n.getText());
+            output.append(escapeELText(n.getText()));
         }
     }
 }

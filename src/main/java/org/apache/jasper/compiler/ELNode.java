@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,12 @@
 
 package org.apache.jasper.compiler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.servlet.jsp.tagext.FunctionInfo;
+
 import org.apache.jasper.JasperException;
 
 /**
@@ -32,7 +36,7 @@ import org.apache.jasper.JasperException;
 
 abstract class ELNode {
 
-    abstract public void accept(Visitor v) throws JasperException;
+    public abstract void accept(Visitor v) throws JasperException;
 
     /**
      * Child classes
@@ -44,14 +48,15 @@ abstract class ELNode {
      */
     public static class Root extends ELNode {
 
-	private ELNode.Nodes expr;
-    private char type;
+        private final ELNode.Nodes expr;
+        private final char type;
 
 	Root(ELNode.Nodes expr, char type) {
 	    this.expr = expr;
         this.type = type;
 	}
 
+        @Override
 	public void accept(Visitor v) throws JasperException {
 	    v.visit(this);
 	}
@@ -70,12 +75,13 @@ abstract class ELNode {
      */
     public static class Text extends ELNode {
 
-	private String text;
+        private final String text;
 
 	Text(String text) {
 	    this.text = text;
 	}
 
+        @Override
 	public void accept(Visitor v) throws JasperException {
 	    v.visit(this);
 	}
@@ -91,12 +97,13 @@ abstract class ELNode {
      */
     public static class ELText extends ELNode {
 
-	private String text;
+        private final String text;
 
 	ELText(String text) {
 	    this.text = text;
 	}
 
+        @Override
 	public void accept(Visitor v) throws JasperException {
 	    v.visit(this);
 	}
@@ -127,6 +134,7 @@ abstract class ELNode {
         this.originalText = originalText;
 	}
 
+        @Override
 	public void accept(Visitor v) throws JasperException {
 	    v.visit(this);
 	}
@@ -184,11 +192,11 @@ abstract class ELNode {
 	/* Name used for creating a map for the functions in this
 	   EL expression, for communication to Generator.
 	 */
-	String mapName = null;	// The function map associated this EL
-	private List<ELNode> list;
+        private String mapName = null;    // The function map associated this EL
+        private final List<ELNode> list;
 
 	public Nodes() {
-	    list = new ArrayList<ELNode>();
+            list = new ArrayList<>();
 	}
 
 	public void add(ELNode en) {
@@ -236,7 +244,7 @@ abstract class ELNode {
 	public String getMapName() {
 	    return mapName;
 	}
-    
+
     }
 
     /*
@@ -248,13 +256,19 @@ abstract class ELNode {
 	    n.getExpression().visit(this);
 	}
 
+        @SuppressWarnings("unused")
 	public void visit(Function n) throws JasperException {
+            // NOOP by default
 	}
 
+        @SuppressWarnings("unused")
 	public void visit(Text n) throws JasperException {
+            // NOOP by default
 	}
 
+        @SuppressWarnings("unused")
 	public void visit(ELText n) throws JasperException {
+            // NOOP by default
 	}
     }
 }

@@ -43,9 +43,10 @@ public class JasperELResolver extends CompositeELResolver {
 
     private int size;
     private ELResolver[] resolvers;
-    private int appResolversSize;
+    private final int appResolversSize;
 
-    public JasperELResolver(List<ELResolver> appResolvers, ELResolver streamResolver) {
+    public JasperELResolver(List<ELResolver> appResolvers,
+            ELResolver streamResolver) {
         appResolversSize = appResolvers.size();
         resolvers = new ELResolver[appResolversSize + STANDARD_RESOLVERS_COUNT];
         size = 0;
@@ -68,7 +69,7 @@ public class JasperELResolver extends CompositeELResolver {
     public synchronized void add(ELResolver elResolver) {
         super.add(elResolver);
 
-        if (resolvers.length < size) {
+        if (resolvers.length > size) {
             resolvers[size] = elResolver;
         } else {
             ELResolver[] nr = new ELResolver[size + 1];
@@ -97,8 +98,8 @@ public class JasperELResolver extends CompositeELResolver {
                     return result;
                 }
             }
-            // skip collection-based resolvers (map, resource, list, array, and
-            // bean)
+            // skip stream, static and collection-based resolvers (map,
+            // resource, list, array) and bean
             start = index + 7;
         } else {
             // skip implicit resolver only
@@ -139,7 +140,7 @@ public class JasperELResolver extends CompositeELResolver {
             }
         }
 
-     // skip collection (map, resource, list, and array) resolvers
+        // skip collection (map, resource, list, and array) resolvers
         index += 4;
         // call bean and the rest of resolvers
         for (int i = index; i < size; i++) {

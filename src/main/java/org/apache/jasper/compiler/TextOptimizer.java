@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,55 +26,64 @@ public class TextOptimizer {
     /**
      * A visitor to concatenate contiguous template texts.
      */
-    static class TextCatVisitor extends Node.Visitor {
+    private static class TextCatVisitor extends Node.Visitor {
 
-        private Options options;
-        private PageInfo pageInfo;
+        private static final String EMPTY_TEXT = "";
+
+        private final Options options;
+        private final PageInfo pageInfo;
         private int textNodeCount = 0;
         private Node.TemplateText firstTextNode = null;
         private StringBuilder textBuffer;
-        private final String emptyText = new String("");
 
         public TextCatVisitor(Compiler compiler) {
             options = compiler.getCompilationContext().getOptions();
             pageInfo = compiler.getPageInfo();
         }
 
+        @Override
         public void doVisit(Node n) throws JasperException {
             collectText();
         }
 
-	/*
-         * The following directis are ignored in text concatenation
+        /*
+         * The following directives are ignored in text concatenation
          */
 
+        @Override
         public void visit(Node.PageDirective n) throws JasperException {
         }
 
+        @Override
         public void visit(Node.TagDirective n) throws JasperException {
         }
 
+        @Override
         public void visit(Node.TaglibDirective n) throws JasperException {
         }
 
+        @Override
         public void visit(Node.AttributeDirective n) throws JasperException {
         }
 
+        @Override
         public void visit(Node.VariableDirective n) throws JasperException {
         }
 
         /*
          * Don't concatenate text across body boundaries
          */
+        @Override
         public void visitBody(Node n) throws JasperException {
             super.visitBody(n);
             collectText();
         }
 
+        @Override
         public void visit(Node.TemplateText n) throws JasperException {
-            if ((options.getTrimSpaces() || pageInfo.isTrimDirectiveWhitespaces()) 
+            if ((options.getTrimSpaces() || pageInfo.isTrimDirectiveWhitespaces())
                     && n.isAllSpace()) {
-                n.setText(emptyText);
+                n.setText(EMPTY_TEXT);
                 return;
             }
 
@@ -84,13 +93,13 @@ public class TextOptimizer {
             } else {
                 // Append text to text buffer
                 textBuffer.append(n.getText());
-                n.setText(emptyText);
+                n.setText(EMPTY_TEXT);
             }
         }
 
         /**
          * This method breaks concatenation mode.  As a side effect it copies
-         * the concatenated string to the first text node 
+         * the concatenated string to the first text node
          */
         private void collectText() {
 
@@ -109,7 +118,7 @@ public class TextOptimizer {
         TextCatVisitor v = new TextCatVisitor(compiler);
         page.visit(v);
 
-	// Cleanup, in case the page ends with a template text
+        // Cleanup, in case the page ends with a template text
         v.collectText();
     }
 }

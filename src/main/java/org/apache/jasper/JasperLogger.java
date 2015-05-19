@@ -18,9 +18,11 @@
 
 package org.apache.jasper;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.WARN;
-import static org.jboss.logging.Logger.Level.DEBUG;
+
+import java.io.File;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -191,5 +193,21 @@ public interface JasperLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 5034, value = "Error loading core class")
     void errorLoadingCoreClass(@Cause Throwable t);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5035, value = "Invalid value '%s' for the initParam maxLoadedJsps. Will use the default value of '-1")
+    void invalidMaxLoadedJsps(int maxLoadedJsps);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5036, value = "Invalid value '%s' for the initParam jspIdleTimeout. Will use the default value of '-1'")
+    void invalidJspIdleTimeout(int timeout);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5037, value = "Failed to delete generated Java file '%s'")
+    void failedToDeleteGeneratedFile(File file);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5038, value = "Failed to delete generated class file(s)")
+    void failedToDeleteGeneratedFiles(@Cause Exception e);
 
 }

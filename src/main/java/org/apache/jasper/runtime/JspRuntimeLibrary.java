@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,10 +41,11 @@ import javax.servlet.jsp.tagext.BodyContent;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
+import org.apache.jasper.util.ExceptionUtils;
 
 /**
  * Bunch of util methods that are used by code generated for useBean,
- * getProperty and setProperty.  
+ * getProperty and setProperty.
  *
  * The __begin, __end stuff is there so that the JSP engine can
  * actually parse this file and inline them if people don't want
@@ -55,21 +56,16 @@ import org.apache.jasper.JasperException;
  * @author Shawn Bayern
  */
 public class JspRuntimeLibrary {
-    
-    private static final String SERVLET_EXCEPTION
-	= "javax.servlet.error.exception";
-    private static final String JSP_EXCEPTION
-	= "javax.servlet.jsp.jspException";
 
     protected static class PrivilegedIntrospectHelper
-	implements PrivilegedExceptionAction {
+        implements PrivilegedExceptionAction<Void> {
 
-	private Object bean;
-	private String prop;
-	private String value;
-	private ServletRequest request;
-	private String param;
-	private boolean ignoreMethodNF;
+        private final Object bean;
+        private final String prop;
+        private final String value;
+        private final ServletRequest request;
+        private final String param;
+        private final boolean ignoreMethodNF;
 
         PrivilegedIntrospectHelper(Object bean, String prop,
                                    String value, ServletRequest request,
@@ -82,8 +78,9 @@ public class JspRuntimeLibrary {
 	    this.param = param;
 	    this.ignoreMethodNF = ignoreMethodNF;
         }
-         
-        public Object run() throws JasperException {
+
+        @Override
+        public Void run() throws JasperException {
 	    internalIntrospecthelper(
                 bean,prop,value,request,param,ignoreMethodNF);
             return null;
@@ -100,18 +97,19 @@ public class JspRuntimeLibrary {
      * variable is initialized.
      */
     public static Throwable getThrowable(ServletRequest request) {
-	Throwable error = (Throwable) request.getAttribute(SERVLET_EXCEPTION);
+        Throwable error = (Throwable) request.getAttribute(
+                RequestDispatcher.ERROR_EXCEPTION);
 	if (error == null) {
-	    error = (Throwable) request.getAttribute(JSP_EXCEPTION);
+            error = (Throwable) request.getAttribute(PageContext.EXCEPTION);
 	    if (error != null) {
 		/*
 		 * The only place that sets JSP_EXCEPTION is
 		 * PageContextImpl.handlePageException(). It really should set
-		 * SERVLET_EXCEPTION, but that would interfere with the 
+                 * SERVLET_EXCEPTION, but that would interfere with the
 		 * ErrorReportValve. Therefore, if JSP_EXCEPTION is set, we
 		 * need to set SERVLET_EXCEPTION.
 		 */
-		request.setAttribute(SERVLET_EXCEPTION, error);
+                request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, error);
 	    }
 	}
 
@@ -122,7 +120,7 @@ public class JspRuntimeLibrary {
 	if (s == null || s.length() == 0)
 	    return false;
 	else
-	    return Boolean.valueOf(s).booleanValue();
+            return Boolean.parseBoolean(s);
     }
 
     public static byte coerceToByte(String s) {
@@ -159,24 +157,24 @@ public class JspRuntimeLibrary {
 	if (s == null || s.length() == 0)
 	    return 0;
 	else
-	    return Integer.valueOf(s).intValue();
+            return Integer.parseInt(s);
     }
 
     public static short coerceToShort(String s) {
 	if (s == null || s.length() == 0)
 	    return (short) 0;
 	else
-	    return Short.valueOf(s).shortValue();
+            return Short.parseShort(s);
     }
 
     public static long coerceToLong(String s) {
 	if (s == null || s.length() == 0)
-	    return (long) 0;
+            return 0;
 	else
-	    return Long.valueOf(s).longValue();
+            return Long.parseLong(s);
     }
 
-    public static Object coerce(String s, Class target) {
+    public static Object coerce(String s, Class<?> target) {
 
 	boolean isNullOrEmpty = (s == null || s.length() == 0);
 
@@ -184,51 +182,54 @@ public class JspRuntimeLibrary {
 	    if (isNullOrEmpty) {
 		s = "false";
 	    }
-	    return new Boolean(s);
+            return Boolean.valueOf(s);
 	} else if (target == Byte.class) {
 	    if (isNullOrEmpty)
-		return new Byte((byte) 0);
+                return Byte.valueOf((byte) 0);
 	    else
-		return new Byte(s);
+                return Byte.valueOf(s);
 	} else if (target == Character.class) {
 	    if (isNullOrEmpty)
-		return new Character((char) 0);
-	    else 
-		return new Character(s.charAt(0));
+                return Character.valueOf((char) 0);
+            else {
+                @SuppressWarnings("null")
+                Character result = Character.valueOf(s.charAt(0));
+                return result;
+            }
 	} else if (target == Double.class) {
 	    if (isNullOrEmpty)
-		return new Double(0);
+                return Double.valueOf(0);
 	    else
-		return new Double(s);
+                return Double.valueOf(s);
 	} else if (target == Float.class) {
 	    if (isNullOrEmpty)
-		return new Float(0);
+                return Float.valueOf(0);
 	    else
-		return new Float(s);
+                return Float.valueOf(s);
 	} else if (target == Integer.class) {
 	    if (isNullOrEmpty)
-		return new Integer(0);
+                return Integer.valueOf(0);
 	    else
-		return new Integer(s);
+                return Integer.valueOf(s);
 	} else if (target == Short.class) {
 	    if (isNullOrEmpty)
-		return new Short((short) 0);
+                return Short.valueOf((short) 0);
 	    else
-		return new Short(s);
+                return Short.valueOf(s);
 	} else if (target == Long.class) {
 	    if (isNullOrEmpty)
-		return new Long(0);
+                return Long.valueOf(0);
 	    else
-		return new Long(s);
+                return Long.valueOf(s);
 	} else {
 	    return null;
 	}
     }
 
    // __begin convertMethod
-    public static Object convert(String propertyName, String s, Class t,
-				 Class propertyEditorClass) 
-       throws JasperException 
+    public static Object convert(String propertyName, String s, Class<?> t,
+            Class<?> propertyEditorClass)
+       throws JasperException
     {
         try {
             if (s == null) {
@@ -245,21 +246,21 @@ public class JspRuntimeLibrary {
                     s = "true";
                 else
                     s = "false";
-                return new Boolean(s);
+                return Boolean.valueOf(s);
             } else if ( t.equals(Byte.class) || t.equals(Byte.TYPE) ) {
-                return new Byte(s);
+                return Byte.valueOf(s);
             } else if (t.equals(Character.class) || t.equals(Character.TYPE)) {
-                return s.length() > 0 ? new Character(s.charAt(0)) : null;
+                return s.length() > 0 ? Character.valueOf(s.charAt(0)) : null;
             } else if ( t.equals(Short.class) || t.equals(Short.TYPE) ) {
-                return new Short(s);
+                return Short.valueOf(s);
             } else if ( t.equals(Integer.class) || t.equals(Integer.TYPE) ) {
-                return new Integer(s);
+                return Integer.valueOf(s);
             } else if ( t.equals(Float.class) || t.equals(Float.TYPE) ) {
-                return new Float(s);
+                return Float.valueOf(s);
             } else if ( t.equals(Long.class) || t.equals(Long.TYPE) ) {
-                return new Long(s);
+                return Long.valueOf(s);
             } else if ( t.equals(Double.class) || t.equals(Double.TYPE) ) {
-                return new Double(s);
+                return Double.valueOf(s);
             } else if ( t.equals(String.class) ) {
                 return s;
             } else if ( t.equals(java.io.File.class) ) {
@@ -280,15 +281,15 @@ public class JspRuntimeLibrary {
     public static void introspect(Object bean, ServletRequest request)
                                   throws JasperException
     {
-	Enumeration e = request.getParameterNames();
+        Enumeration<String> e = request.getParameterNames();
 	while ( e.hasMoreElements() ) {
-	    String name  = (String) e.nextElement();
+            String name  = e.nextElement();
 	    String value = request.getParameter(name);
 	    introspecthelper(bean, name, value, request, name, true);
 	}
     }
     // __end introspectMethod
-    
+
     // __begin introspecthelperMethod
     public static void introspecthelper(Object bean, String prop,
                                         String value, ServletRequest request,
@@ -313,12 +314,12 @@ public class JspRuntimeLibrary {
 
     private static void internalIntrospecthelper(Object bean, String prop,
 					String value, ServletRequest request,
-					String param, boolean ignoreMethodNF) 
+                                        String param, boolean ignoreMethodNF)
 					throws JasperException
     {
         Method method = null;
-        Class type = null;
-        Class propertyEditorClass = null;
+        Class<?> type = null;
+        Class<?> propertyEditorClass = null;
 	try {
 	    java.beans.BeanInfo info
 		= java.beans.Introspector.getBeanInfo(bean.getClass());
@@ -334,21 +335,20 @@ public class JspRuntimeLibrary {
 		    }
 		}
 	    }
-	    if ( method != null ) {
+            if (method != null && type != null) {
 		if (type.isArray()) {
                     if (request == null) {
 			throw new JasperException(MESSAGES.failedSettingBeanIndexedProperty());
                     }
-		    Class t = type.getComponentType();
+                    Class<?> t = type.getComponentType();
 		    String[] values = request.getParameterValues(param);
 		    //XXX Please check.
 		    if(values == null) return;
 		    if(t.equals(String.class)) {
 			method.invoke(bean, new Object[] { values });
 		    } else {
-			Object tmpval = null;
 			createTypedArray (prop, bean, method, values, t,
-					  propertyEditorClass); 
+                                          propertyEditorClass);
 		    }
 		} else {
 		    if(value == null || (param != null && value.equals(""))) return;
@@ -358,6 +358,8 @@ public class JspRuntimeLibrary {
 		}
 	    }
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
 	}
         if (!ignoreMethodNF && (method == null)) {
@@ -369,7 +371,7 @@ public class JspRuntimeLibrary {
         }
     }
     // __end introspecthelperMethod
-    
+
     //-------------------------------------------------------------------
     // functions to convert builtin Java data types to string.
     //-------------------------------------------------------------------
@@ -379,35 +381,35 @@ public class JspRuntimeLibrary {
     }
 
     public static String toString(byte b) {
-        return new Byte(b).toString();
+        return Byte.toString(b);
     }
 
     public static String toString(boolean b) {
-        return new Boolean(b).toString();
+        return Boolean.toString(b);
     }
 
     public static String toString(short s) {
-        return new Short(s).toString();
+        return Short.toString(s);
     }
 
     public static String toString(int i) {
-        return new Integer(i).toString();
+        return Integer.toString(i);
     }
 
     public static String toString(float f) {
-        return new Float(f).toString();
+        return Float.toString(f);
     }
 
     public static String toString(long l) {
-        return new Long(l).toString();
+        return Long.toString(l);
     }
 
     public static String toString(double d) {
-        return new Double(d).toString();
+        return Double.toString(d);
     }
 
     public static String toString(char c) {
-        return new Character(c).toString();
+        return Character.toString(c);
     }
     // __end toStringMethod
 
@@ -421,8 +423,8 @@ public class JspRuntimeLibrary {
 					Object bean,
 					Method method,
 					String[] values,
-					Class t,
-					Class propertyEditorClass)
+                                        Class<?> t,
+                                        Class<?> propertyEditorClass)
 	        throws JasperException {
 
 	try {
@@ -446,7 +448,7 @@ public class JspRuntimeLibrary {
 	    } else if (t.equals(Boolean.class)) {
 		Boolean[] tmpval = new Boolean[values.length];
 		for (int i = 0 ; i < values.length; i++)
-		    tmpval[i] = new Boolean (values[i]);
+                    tmpval[i] = Boolean.valueOf(values[i]);
 		method.invoke (bean, new Object[] {tmpval});
 	    } else if (t.equals(Short.class)) {
 		Short[] tmpval = new Short[values.length];
@@ -471,7 +473,7 @@ public class JspRuntimeLibrary {
 	    } else if (t.equals(Character.class)) {
 		Character[] tmpval = new Character[values.length];
 		for (int i = 0 ; i < values.length; i++)
-		    tmpval[i] = new Character(values[i].charAt(0));
+                    tmpval[i] = Character.valueOf(values[i].charAt(0));
 		method.invoke (bean, new Object[] {tmpval});
 	    } else if (t.equals(int.class)) {
 		int []tmpval = new int[values.length];
@@ -516,13 +518,15 @@ public class JspRuntimeLibrary {
 	    } else {
 		Object[] tmpval = new Integer[values.length];
 		for (int i=0; i<values.length; i++) {
-		    tmpval[i] =  
+                    tmpval[i] =
 			getValueFromPropertyEditorManager(
                                             t, propertyName, values[i]);
 		}
 		method.invoke (bean, new Object[] {tmpval});
 	    }
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
             throw new JasperException ("error in invoking method", ex);
 	}
     }
@@ -536,10 +540,10 @@ public class JspRuntimeLibrary {
     public static String escapeQueryString(String unescString) {
     if ( unescString == null )
         return null;
-   
+
     String escString    = "";
     String shellSpChars = "&;`'\"|*?~<>^()[]{}$\\\n";
-   
+
     for(int index=0; index<unescString.length(); index++) {
         char nextChar = unescString.charAt(index);
 
@@ -549,44 +553,6 @@ public class JspRuntimeLibrary {
         escString += nextChar;
     }
     return escString;
-    }
-
-    /**
-     * Decode an URL formatted string.
-     * @param encoded The string to decode.
-     * @return The decoded string.
-     */
-
-    public static String decode(String encoded) {
-        // speedily leave if we're not needed
-    if (encoded == null) return null;
-        if (encoded.indexOf('%') == -1 && encoded.indexOf('+') == -1)
-        return encoded;
-
-    //allocate the buffer - use byte[] to avoid calls to new.
-        byte holdbuffer[] = new byte[encoded.length()];
-
-        char holdchar;
-        int bufcount = 0;
-
-        for (int count = 0; count < encoded.length(); count++) {
-        char cur = encoded.charAt(count);
-            if (cur == '%') {
-            holdbuffer[bufcount++] =
-          (byte)Integer.parseInt(encoded.substring(count+1,count+3),16);
-                if (count + 2 >= encoded.length())
-                    count = encoded.length();
-                else
-                    count += 2;
-            } else if (cur == '+') {
-        holdbuffer[bufcount++] = (byte) ' ';
-        } else {
-            holdbuffer[bufcount++] = (byte) cur;
-            }
-        }
-	// REVISIT -- remedy for Deprecated warning.
-    //return new String(holdbuffer,0,0,bufcount);
-    return new String(holdbuffer,0,bufcount);
     }
 
     // __begin lookupReadMethodMethod
@@ -600,6 +566,8 @@ public class JspRuntimeLibrary {
             Method method = getReadMethod(o.getClass(), prop);
 	    value = method.invoke(o, (Object[]) null);
         } catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException (ex);
         }
         return value;
@@ -607,27 +575,6 @@ public class JspRuntimeLibrary {
     // __end lookupReadMethodMethod
 
     // handles <jsp:setProperty> with EL expression for 'value' attribute
-/** Use proprietaryEvaluate
-    public static void handleSetPropertyExpression(Object bean,
-        String prop, String expression, PageContext pageContext,
-        VariableResolver variableResolver, FunctionMapper functionMapper )
-	throws JasperException
-    {
-	try {
-            Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { 
-		pageContext.getExpressionEvaluator().evaluate(
-		    expression,
-		    method.getParameterTypes()[0],
-                    variableResolver,
-                    functionMapper,
-                    null )
-	    });
-	} catch (Exception ex) {
-	    throw new JasperException(ex);
-	}
-    }
-**/
     public static void handleSetPropertyExpression(Object bean,
         String prop, String expression, PageContext pageContext,
 	ProtectedFunctionMapper functionMapper )
@@ -640,10 +587,11 @@ public class JspRuntimeLibrary {
                     expression,
                     method.getParameterTypes()[0],
 		    pageContext,
-                    functionMapper,
-                    false )
+                    functionMapper)
             });
         } catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
             throw new JasperException(ex);
         }
     }
@@ -656,80 +604,94 @@ public class JspRuntimeLibrary {
             Method method = getWriteMethod(bean.getClass(), prop);
 	    method.invoke(bean, new Object[] { value });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
 	}
     }
-    
+
     public static void handleSetProperty(Object bean, String prop,
 					 int value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Integer(value) });
+            method.invoke(bean, new Object[] { Integer.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
     }
-    
+    }
+
     public static void handleSetProperty(Object bean, String prop,
 					 short value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Short(value) });
+            method.invoke(bean, new Object[] { Short.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
     }
-    
+    }
+
     public static void handleSetProperty(Object bean, String prop,
 					 long value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Long(value) });
+            method.invoke(bean, new Object[] { Long.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
-    } 
-    
+        }
+    }
+
     public static void handleSetProperty(Object bean, String prop,
 					 double value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Double(value) });
+            method.invoke(bean, new Object[] { Double.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
     }
-    
+    }
+
     public static void handleSetProperty(Object bean, String prop,
 					 float value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Float(value) });
+            method.invoke(bean, new Object[] { Float.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
     }
-    
+    }
+
     public static void handleSetProperty(Object bean, String prop,
 					 char value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Character(value) });
+            method.invoke(bean, new Object[] { Character.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
+        }
     }
 
     public static void handleSetProperty(Object bean, String prop,
@@ -738,28 +700,32 @@ public class JspRuntimeLibrary {
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Byte(value) });
+            method.invoke(bean, new Object[] { Byte.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
     }
-    
+    }
+
     public static void handleSetProperty(Object bean, String prop,
 					 boolean value)
 	throws JasperException
     {
 	try {
             Method method = getWriteMethod(bean.getClass(), prop);
-	    method.invoke(bean, new Object[] { new Boolean(value) });
+            method.invoke(bean, new Object[] { Boolean.valueOf(value) });
 	} catch (Exception ex) {
+            Throwable thr = ExceptionUtils.unwrapInvocationTargetException(ex);
+            ExceptionUtils.handleThrowable(thr);
 	    throw new JasperException(ex);
-	}	
     }
-    
-    public static Method getWriteMethod(Class beanClass, String prop)
+    }
+
+    public static Method getWriteMethod(Class<?> beanClass, String prop)
     throws JasperException {
-	Method method = null;	
-        Class type = null;
+        Method method = null;
+        Class<?> type = null;
 	try {
 	    java.beans.BeanInfo info
                 = java.beans.Introspector.getBeanInfo(beanClass);
@@ -773,7 +739,7 @@ public class JspRuntimeLibrary {
 			break;
 		    }
 		}
-            } else {        
+            } else {
                 // just in case introspection silently fails.
                 throw new JasperException(MESSAGES.cannotFindBeanInfo(beanClass.getName()));
             }
@@ -790,11 +756,11 @@ public class JspRuntimeLibrary {
         return method;
     }
 
-    public static Method getReadMethod(Class beanClass, String prop)
+    public static Method getReadMethod(Class<?> beanClass, String prop)
 	    throws JasperException {
 
-        Method method = null;        
-        Class type = null;
+        Method method = null;
+        Class<?> type = null;
         try {
             java.beans.BeanInfo info
                 = java.beans.Introspector.getBeanInfo(beanClass);
@@ -808,7 +774,7 @@ public class JspRuntimeLibrary {
                         break;
                     }
                 }
-            } else {        
+            } else {
                 // just in case introspection silently fails.
 		throw new JasperException(MESSAGES.cannotFindBeanInfo(beanClass.getName()));
 	    }
@@ -830,12 +796,13 @@ public class JspRuntimeLibrary {
     // PropertyEditor Support
 
     public static Object getValueFromBeanInfoPropertyEditor(
-		           Class attrClass, String attrName, String attrValue,
-			   Class propertyEditorClass) 
-	throws JasperException 
+                           Class<?> attrClass, String attrName, String attrValue,
+                           Class<?> propertyEditorClass)
+        throws JasperException
     {
 	try {
-	    PropertyEditor pe = (PropertyEditor)propertyEditorClass.newInstance();
+            PropertyEditor pe =
+                (PropertyEditor)propertyEditorClass.newInstance();
 	    pe.setAsText(attrValue);
 	    return pe.getValue();
 	} catch (Exception ex) {
@@ -845,11 +812,11 @@ public class JspRuntimeLibrary {
     }
 
     public static Object getValueFromPropertyEditorManager(
-	             Class attrClass, String attrName, String attrValue) 
-	throws JasperException 
+                     Class<?> attrClass, String attrName, String attrValue)
+        throws JasperException
     {
 	try {
-	    PropertyEditor propEditor = 
+            PropertyEditor propEditor =
 		PropertyEditorManager.findEditor(attrClass);
 	    if (propEditor != null) {
 		propEditor.setAsText(attrValue);
@@ -884,19 +851,19 @@ public class JspRuntimeLibrary {
         if (!(request instanceof HttpServletRequest))
             return (relativePath);
         HttpServletRequest hrequest = (HttpServletRequest) request;
-        String uri = (String)
-            request.getAttribute("javax.servlet.include.servlet_path");
+        String uri = (String) request.getAttribute(
+                RequestDispatcher.INCLUDE_SERVLET_PATH);
         if (uri != null) {
             String pathInfo = (String)
-                request.getAttribute("javax.servlet.include.path_info");
+                request.getAttribute(RequestDispatcher.INCLUDE_PATH_INFO);
             if (pathInfo == null) {
-                if (uri.lastIndexOf('/') >= 0) 
+                if (uri.lastIndexOf('/') >= 0)
                     uri = uri.substring(0, uri.lastIndexOf('/'));
             }
         }
         else {
             uri = hrequest.getServletPath();
-            if (uri.lastIndexOf('/') >= 0) 
+            if (uri.lastIndexOf('/') >= 0)
                 uri = uri.substring(0, uri.lastIndexOf('/'));
         }
         return uri + '/' + relativePath;
@@ -948,7 +915,7 @@ public class JspRuntimeLibrary {
      * in J2SDK1.4, and should be removed if the only platform supported
      * is 1.4 or higher.
      * @param s The String to be URL encoded.
-     * @param enc The character encoding 
+     * @param enc The character encoding
      * @return The URL encoded String
      */
     public static String URLEncode(String s, String enc) {
@@ -958,7 +925,7 @@ public class JspRuntimeLibrary {
 	}
 
 	if (enc == null) {
-	    enc = "ISO-8859-1";	// The default request encoding 
+            enc = "ISO-8859-1";        // The default request encoding
 	}
 
 	StringBuilder out = new StringBuilder(s.length());
@@ -970,7 +937,7 @@ public class JspRuntimeLibrary {
 	    // Use the default encoding?
 	    writer = new OutputStreamWriter(buf);
 	}
-	
+
 	for (int i = 0; i < s.length(); i++) {
 	    int c = s.charAt(i);
 	    if (c == ' ') {

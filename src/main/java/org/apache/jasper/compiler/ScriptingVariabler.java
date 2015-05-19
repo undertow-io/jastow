@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,11 +44,12 @@ class ScriptingVariabler {
      * to help identify, for every custom tag, the scripting variables that it
      * needs to declare.
      */
-    static class CustomTagCounter extends Node.Visitor {
+    private static class CustomTagCounter extends Node.Visitor {
 
         private int count;
         private Node.CustomTag parent;
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
             n.setCustomTagParent(parent);
             Node.CustomTag tmpParent = parent;
@@ -61,18 +62,19 @@ class ScriptingVariabler {
 
     /*
      * For every custom tag, determines the scripting variables it needs to
-     * declare. 
+     * declare.
      */
-    static class ScriptingVariableVisitor extends Node.Visitor {
+    private static class ScriptingVariableVisitor extends Node.Visitor {
 
-        private ErrorDispatcher err;
-        private Map<String, Integer> scriptVars;
+        private final ErrorDispatcher err;
+        private final Map<String, Integer> scriptVars;
 
         public ScriptingVariableVisitor(ErrorDispatcher err) {
             this.err = err;
-            scriptVars = new HashMap<String,Integer>();
+            scriptVars = new HashMap<>();
         }
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
             setScriptingVars(n, VariableInfo.AT_BEGIN);
             setScriptingVars(n, VariableInfo.NESTED);
@@ -89,10 +91,10 @@ class ScriptingVariabler {
                 return;
             }
 
-            List<Object> vec = new ArrayList<Object>();
+            List<Object> vec = new ArrayList<>();
 
-            Node.CustomTag parent = n.getCustomTagParent();
             Integer ownRange = null;
+            Node.CustomTag parent = n.getCustomTagParent();
             if (scope == VariableInfo.AT_BEGIN
                     || scope == VariableInfo.AT_END) {
                 if (parent == null)
@@ -112,7 +114,7 @@ class ScriptingVariabler {
                     }
                     String varName = varInfos[i].getVarName();
 
-                    Integer currentRange = (Integer) scriptVars.get(varName);
+                    Integer currentRange = scriptVars.get(varName);
                     if (currentRange == null ||
                             ownRange.compareTo(currentRange) > 0) {
                         scriptVars.put(varName, ownRange);
@@ -135,7 +137,7 @@ class ScriptingVariabler {
                         }
                     }
 
-                    Integer currentRange = (Integer) scriptVars.get(varName);
+                    Integer currentRange = scriptVars.get(varName);
                     if (currentRange == null ||
                             ownRange.compareTo(currentRange) > 0) {
                         scriptVars.put(varName, ownRange);

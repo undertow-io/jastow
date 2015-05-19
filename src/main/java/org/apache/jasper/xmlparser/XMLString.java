@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ package org.apache.jasper.xmlparser;
  * <p>
  * <strong>Note:</strong> Methods that are passed an XMLString structure
  * are required to copy the information out of the buffer if it is to be
- * saved for use beyond the scope of the method. The contents of the 
+ * saved for use beyond the scope of the method. The contents of the
  * structure are volatile and the contents of the character buffer cannot
  * be assured once the method that is passed this structure returns.
  * Therefore, methods passed this structure should not save any reference
@@ -46,8 +46,6 @@ package org.apache.jasper.xmlparser;
  *
  * @author Eric Ye, IBM
  * @author Andy Clark, IBM
- *
- * @version $Id: XMLString.java 515 2008-03-17 21:02:23Z jfrederic.clere@jboss.com $
  */
 public class XMLString {
 
@@ -72,31 +70,6 @@ public class XMLString {
     public XMLString() {
     } // <init>()
 
-    /**
-     * Constructs an XMLString structure preset with the specified
-     * values.
-     * 
-     * @param ch     The character array.
-     * @param offset The offset into the character array.
-     * @param length The length of characters from the offset.
-     */
-    public XMLString(char[] ch, int offset, int length) {
-        setValues(ch, offset, length);
-    } // <init>(char[],int,int)
-
-    /**
-     * Constructs an XMLString structure with copies of the values in
-     * the given structure.
-     * <p>
-     * <strong>Note:</strong> This does not copy the character array;
-     * only the reference to the array is copied.
-     *
-     * @param string The XMLString to copy.
-     */
-    public XMLString(XMLString string) {
-        setValues(string);
-    } // <init>(XMLString)
-
     //
     // Public methods
     //
@@ -104,7 +77,7 @@ public class XMLString {
     /**
      * Initializes the contents of the XMLString structure with the
      * specified values.
-     * 
+     *
      * @param ch     The character array.
      * @param offset The offset into the character array.
      * @param length The length of characters from the offset.
@@ -121,7 +94,7 @@ public class XMLString {
      * <p>
      * <strong>Note:</strong> This does not copy the character array;
      * only the reference to the array is copied.
-     * 
+     *
      * @param s
      */
     public void setValues(XMLString s) {
@@ -135,34 +108,11 @@ public class XMLString {
         this.length = -1;
     } // clear()
 
-    /**
-     * Returns true if the contents of this XMLString structure and
-     * the specified array are equal.
-     * 
-     * @param ch     The character array.
-     * @param offset The offset into the character array.
-     * @param length The length of characters from the offset.
-     */
-    public boolean equals(char[] ch, int offset, int length) {
-        if (ch == null) {
-            return false;
-        }
-        if (this.length != length) {
-            return false;
-        }
-
-        for (int i=0; i<length; i++) {
-            if (this.ch[this.offset+i] != ch[offset+i] ) {
-                return false;
-            }
-        }
-        return true;
-    } // equals(char[],int,int):boolean
 
     /**
      * Returns true if the contents of this XMLString structure and
      * the specified string are equal.
-     * 
+     *
      * @param s The string to compare.
      */
     public boolean equals(String s) {
@@ -173,7 +123,7 @@ public class XMLString {
             return false;
         }
 
-        // is this faster than call s.toCharArray first and compare the 
+        // is this faster than call s.toCharArray first and compare the
         // two arrays directly, which will possibly involve creating a
         // new char array object.
         for (int i=0; i<length; i++) {
@@ -190,6 +140,7 @@ public class XMLString {
     //
 
     /** Returns a string representation of this object. */
+    @Override
     public String toString() {
         return length > 0 ? new String(ch, offset, length) : "";
     } // toString():String

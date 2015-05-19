@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ import javax.el.ValueExpression;
 
 /**
  * Wrapper for providing context to ValueExpressions
- * 
+ *
  * @author Jacob Hookom
  */
 public final class JspValueExpression extends ValueExpression implements
@@ -48,14 +48,19 @@ public final class JspValueExpression extends ValueExpression implements
         this.mark = mark;
     }
 
+    @Override
     public Class<?> getExpectedType() {
         return this.target.getExpectedType();
     }
 
+    @Override
     public Class<?> getType(ELContext context) throws NullPointerException,
             PropertyNotFoundException, ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
         try {
-            return this.target.getType(context);
+            Class<?> result = this.target.getType(context);
+            context.notifyAfterEvaluation(getExpressionString());
+            return result;
         } catch (PropertyNotFoundException e) {
             if (e instanceof JspPropertyNotFoundException) throw e;
             throw new JspPropertyNotFoundException(this.mark, e);
@@ -65,10 +70,14 @@ public final class JspValueExpression extends ValueExpression implements
         }
     }
 
+    @Override
     public boolean isReadOnly(ELContext context) throws NullPointerException,
             PropertyNotFoundException, ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
         try {
-            return this.target.isReadOnly(context);
+            boolean result = this.target.isReadOnly(context);
+            context.notifyAfterEvaluation(getExpressionString());
+            return result;
         } catch (PropertyNotFoundException e) {
             if (e instanceof JspPropertyNotFoundException) throw e;
             throw new JspPropertyNotFoundException(this.mark, e);
@@ -78,11 +87,14 @@ public final class JspValueExpression extends ValueExpression implements
         }
     }
 
+    @Override
     public void setValue(ELContext context, Object value)
             throws NullPointerException, PropertyNotFoundException,
             PropertyNotWritableException, ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
         try {
             this.target.setValue(context, value);
+            context.notifyAfterEvaluation(getExpressionString());
         } catch (PropertyNotWritableException e) {
             if (e instanceof JspPropertyNotWritableException) throw e;
             throw new JspPropertyNotWritableException(this.mark, e);
@@ -95,10 +107,14 @@ public final class JspValueExpression extends ValueExpression implements
         }
     }
 
+    @Override
     public Object getValue(ELContext context) throws NullPointerException,
             PropertyNotFoundException, ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
         try {
-            return this.target.getValue(context);
+            Object result = this.target.getValue(context);
+            context.notifyAfterEvaluation(getExpressionString());
+            return result;
         } catch (PropertyNotFoundException e) {
             if (e instanceof JspPropertyNotFoundException) throw e;
             throw new JspPropertyNotFoundException(this.mark, e);
@@ -108,27 +124,33 @@ public final class JspValueExpression extends ValueExpression implements
         }
     }
 
+    @Override
     public boolean equals(Object obj) {
         return this.target.equals(obj);
     }
 
+    @Override
     public int hashCode() {
         return this.target.hashCode();
     }
 
+    @Override
     public String getExpressionString() {
         return this.target.getExpressionString();
     }
 
+    @Override
     public boolean isLiteralText() {
         return this.target.isLiteralText();
     }
 
+    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeUTF(this.mark);
         out.writeObject(this.target);
     }
 
+    @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {
         this.mark = in.readUTF();

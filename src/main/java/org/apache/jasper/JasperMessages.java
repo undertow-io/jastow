@@ -784,4 +784,16 @@ public interface JasperMessages {
     @Message(id = 4248, value = "JSPs only permit GET POST or HEAD")
     String forbiddenHttpMethod();
 
+    @Message(id = 4249, value = "Page directive: invalid value for import")
+    IllegalArgumentException invalidImportStatement();
+
+    @Message(id = 4250, value = "The String literal %s is not valid. It must be contained within single or double quotes.")
+    IllegalArgumentException invalidStringLiteral(String aString);
+
+    @Message(id = 4251, value = "An error occurred at line: %s column: %s")
+    String errorInJspFileLineColumn(int line, int column);
+
+    @Message(id = 4252, value = "The expression %s is not valid. Within a quoted String only [\\], ['] and [\"] may be escaped with [\\].")
+    IllegalArgumentException invalidQuoting(String aString);
+
 }

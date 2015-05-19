@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,29 +21,32 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 import java.io.CharArrayWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-
+import java.security.AccessController;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.jar.JarFile;
-
 import javax.servlet.jsp.tagext.TagFileInfo;
 import javax.servlet.jsp.tagext.TagInfo;
 import javax.servlet.jsp.tagext.TagLibraryInfo;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.JspCompilationContext;
+import org.apache.tomcat.util.descriptor.DigesterFactory;
+import org.apache.tomcat.util.descriptor.LocalResolver;
+import org.apache.tomcat.util.scan.Jar;
+import org.apache.tomcat.util.security.PrivilegedGetTccl;
+import org.apache.tomcat.util.security.PrivilegedSetTccl;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.ext.LexicalHandler;
+import org.xml.sax.ext.DefaultHandler2;
+import org.xml.sax.ext.EntityResolver2;
 import org.xml.sax.helpers.AttributesImpl;
-import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Class implementing a parser for a JSP document, that is, a JSP page in XML
@@ -54,18 +57,17 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 
 class JspDocumentParser
-    extends DefaultHandler
-    implements LexicalHandler, TagConstants {
+    extends DefaultHandler2
+    implements TagConstants {
 
-    private static final String JSP_VERSION = "version";
     private static final String LEXICAL_HANDLER_PROPERTY =
         "http://xml.org/sax/properties/lexical-handler";
     private static final String JSP_URI = "http://java.sun.com/JSP/Page";
 
-    private ParserController parserController;
-    private JspCompilationContext ctxt;
-    private PageInfo pageInfo;
-    private String path;
+    private final ParserController parserController;
+    private final JspCompilationContext ctxt;
+    private final PageInfo pageInfo;
+    private final String path;
     private StringBuilder charBuffer;
 
     // Node representing the XML element currently being parsed
@@ -75,7 +77,7 @@ class JspDocumentParser
      * Outermost (in the nesting hierarchy) node whose body is declared to be
      * scriptless. If a node's body is declared to be scriptless, all its
      * nested nodes must be scriptless, too.
-     */ 
+     */
     private Node scriptlessBodyNode;
 
     private Locator locator;
@@ -96,15 +98,16 @@ class JspDocumentParser
     private boolean inDTD;
 
     private boolean isValidating;
+    private final EntityResolver2 entityResolver;
 
-    private ErrorDispatcher err;
-    private boolean isTagFile;
-    private boolean directivesOnly;
+    private final ErrorDispatcher err;
+    private final boolean isTagFile;
+    private final boolean directivesOnly;
     private boolean isTop;
 
     // Nesting level of Tag dependent bodies
     private int tagDependentNesting = 0;
-    // Flag set to delay incrmenting tagDependentNesting until jsp:body
+    // Flag set to delay incrementing tagDependentNesting until jsp:body
     // is first encountered
     private boolean tagDependentPending = false;
 
@@ -124,6 +127,20 @@ class JspDocumentParser
         this.isTagFile = isTagFile;
         this.directivesOnly = directivesOnly;
         this.isTop = true;
+
+        String blockExternalString = ctxt.getServletContext().getInitParameter(
+                Constants.XML_BLOCK_EXTERNAL_INIT_PARAM);
+        boolean blockExternal;
+        if (blockExternalString == null) {
+            blockExternal = true;
+        } else {
+            blockExternal = Boolean.parseBoolean(blockExternalString);
+        }
+
+        this.entityResolver = new LocalResolver(
+                DigesterFactory.SERVLET_API_PUBLIC_IDS,
+                DigesterFactory.SERVLET_API_SYSTEM_IDS,
+                blockExternal);
     }
 
     /*
@@ -134,7 +151,7 @@ class JspDocumentParser
     public static Node.Nodes parse(
         ParserController pc,
         String path,
-        JarFile jarFile,
+        Jar jar,
         Node parent,
         boolean isTagFile,
         boolean directivesOnly,
@@ -166,33 +183,28 @@ class JspDocumentParser
                 jspDocParser.isTop = false;
             }
 
+            jspDocParser.isValidating = false;
+
             // Parse the input
             SAXParser saxParser = getSAXParser(false, jspDocParser);
-            InputStream inStream = null;
+            InputSource source = JspUtil.getInputSource(path, jar, jspDocParser.ctxt);
             try {
-                inStream = JspUtil.getInputStream(path, jarFile,
-                                                  jspDocParser.ctxt,
-                                                  jspDocParser.err);
-                saxParser.parse(new InputSource(inStream), jspDocParser);
+                saxParser.parse(source, jspDocParser);
             } catch (EnableDTDValidationException e) {
                 saxParser = getSAXParser(true, jspDocParser);
                 jspDocParser.isValidating = true;
-                if (inStream != null) {
                     try {
-                        inStream.close();
-                    } catch (Exception any) {
+                    source.getByteStream().close();
+                } catch (IOException e2) {
+                    // ignore
                     }
-                }
-                inStream = JspUtil.getInputStream(path, jarFile,
-                                                  jspDocParser.ctxt,
-                                                  jspDocParser.err);
-                saxParser.parse(new InputSource(inStream), jspDocParser);
+                source = JspUtil.getInputSource(path, jar, jspDocParser.ctxt);
+                saxParser.parse(source, jspDocParser);
             } finally {
-                if (inStream != null) {
                     try {
-                        inStream.close();
-                    } catch (Exception any) {
-                    }
+                    source.getByteStream().close();
+                } catch (IOException e) {
+                    // ignore
                 }
             }
 
@@ -206,14 +218,15 @@ class JspDocumentParser
             pageNodes = new Node.Nodes(dummyRoot);
 
         } catch (IOException ioe) {
-            jspDocParser.err.jspError(MESSAGES.errorReadingFile(path), ioe);
+            jspDocParser.err.jspError(ioe, MESSAGES.errorReadingFile(path));
         } catch (SAXParseException e) {
             jspDocParser.err.jspError
                 (new Mark(jspDocParser.ctxt, path, e.getLineNumber(),
                           e.getColumnNumber()),
-                          MESSAGES.errorParsingFile(path), e);
+                          e,
+                          MESSAGES.errorParsingFile(path));
         } catch (Exception e) {
-            jspDocParser.err.jspError(MESSAGES.errorParsingFile(path), e);
+            jspDocParser.err.jspError(e, MESSAGES.errorParsingFile(path));
         }
 
         return pageNodes;
@@ -225,11 +238,11 @@ class JspDocumentParser
      * This is used to implement the include-prelude and include-coda
      * subelements of the jsp-config element in web.xml
      */
-    private void addInclude(Node parent, List files) throws SAXException {
+    private void addInclude(Node parent, Collection<String> files) throws SAXException {
         if (files != null) {
-            Iterator iter = files.iterator();
+            Iterator<String> iter = files.iterator();
             while (iter.hasNext()) {
-                String file = (String)iter.next();
+                String file = iter.next();
                 AttributesImpl attrs = new AttributesImpl();
                 attrs.addAttribute("", "file", "file", "CDATA", file);
 
@@ -242,11 +255,33 @@ class JspDocumentParser
         }
     }
 
+
+    @Override
+    public InputSource getExternalSubset(String name, String baseURI)
+            throws SAXException, IOException {
+        return entityResolver.getExternalSubset(name, baseURI);
+    }
+
+    @Override
+    public InputSource resolveEntity(String publicId, String systemId)
+            throws SAXException, IOException {
+        return entityResolver.resolveEntity(publicId, systemId);
+    }
+
+    @Override
+    public InputSource resolveEntity(String name, String publicId,
+            String baseURI, String systemId) throws SAXException, IOException {
+        // TODO URLs returned by the Jar abstraction may be of the form jar:jar:
+        //      which is not a URL that can be resolved by the JRE. This should
+        //      use the JarFactory to construct and return a valid InputSource.
+        return entityResolver.resolveEntity(name, publicId, baseURI, systemId);
+    }
+
     /*
      * Receives notification of the start of an element.
      *
      * This method assigns the given tag attributes to one of 3 buckets:
-     * 
+     *
      * - "xmlns" attributes that represent (standard or custom) tag libraries.
      * - "xmlns" attributes that do not represent tag libraries.
      * - all remaining attributes.
@@ -255,6 +290,7 @@ class JspDocumentParser
      * corresponding TagLibraryInfo object is added to the set of custom
      * tag libraries.
      */
+    @Override
     public void startElement(
         String uri,
         String localName,
@@ -275,11 +311,8 @@ class JspDocumentParser
             return;
         }
 
-        String currentPrefix = getPrefix(current.getQName());
-
         // jsp:text must not have any subelements
-        if (JSP_URI.equals(uri) && TEXT_ACTION.equals(current.getLocalName())
-                                && "jsp".equals(currentPrefix)) {
+        if (current instanceof Node.JspText) {
             throw new SAXParseException(
                 MESSAGES.invalidJspTextSubelements(),
                 locator);
@@ -288,10 +321,9 @@ class JspDocumentParser
         startMark = new Mark(ctxt, path, locator.getLineNumber(),
                              locator.getColumnNumber());
 
-        if (attrs != null) {
             /*
              * Notice that due to a bug in the underlying SAX parser, the
-             * attributes must be enumerated in descending order. 
+         * attributes must be enumerated in descending order.
              */
             boolean isTaglib = false;
             for (int i = attrs.getLength() - 1; i >= 0; i--) {
@@ -339,7 +371,6 @@ class JspDocumentParser
                     }
                 }
             }
-        }
 
         Node node = null;
 
@@ -354,8 +385,7 @@ class JspDocumentParser
                     nonTaglibAttrs,
                     nonTaglibXmlnsAttrs,
                     taglibAttrs,
-                    startMark,
-                    current);
+                    startMark);
             return;
         }
 
@@ -368,8 +398,7 @@ class JspDocumentParser
                     nonTaglibAttrs,
                     nonTaglibXmlnsAttrs,
                     taglibAttrs,
-                    startMark,
-                    current);
+                    startMark);
             return;
         }
 
@@ -396,8 +425,7 @@ class JspDocumentParser
                     nonTaglibAttrs,
                     nonTaglibXmlnsAttrs,
                     taglibAttrs,
-                    startMark,
-                    current);
+                    startMark);
         } else {
             node =
                 parseCustomAction(
@@ -443,7 +471,7 @@ class JspDocumentParser
      * invoke this method with chunks of it.  This is a problem when we try
      * to determine if the text contains only whitespaces, or when we are
      * looking for an EL expression string.  Therefore it is necessary to
-     * buffer and concatenate the chunks and process the concatenated text 
+     * buffer and concatenate the chunks and process the concatenated text
      * later (at beginTag and endTag)
      *
      * @param buf The characters
@@ -452,7 +480,9 @@ class JspDocumentParser
      *
      * @throws SAXException
      */
+    @Override
     public void characters(char[] buf, int offset, int len) {
+
         if (charBuffer == null) {
             charBuffer = new StringBuilder();
         }
@@ -477,10 +507,8 @@ class JspDocumentParser
         if (!(current instanceof Node.JspText)
             && !(current instanceof Node.NamedAttribute)) {
             for (int i = 0; i < charBuffer.length(); i++) {
-                if (!(charBuffer.charAt(i) == ' '
-                    || charBuffer.charAt(i) == '\n'
-                    || charBuffer.charAt(i) == '\r'
-                    || charBuffer.charAt(i) == '\t')) {
+                char ch = charBuffer.charAt(i);
+                if (!(ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t')) {
                     isAllSpace = false;
                     break;
                 }
@@ -492,9 +520,12 @@ class JspDocumentParser
             tagDependentNesting++;
         }
 
-        if (tagDependentNesting > 0) {
+        if (tagDependentNesting > 0 || pageInfo.isELIgnored() ||
+                current instanceof Node.ScriptingElement) {
             if (charBuffer.length() > 0) {
-                new Node.TemplateText(charBuffer.toString(), startMark, current);
+                @SuppressWarnings("unused")
+                Node unused = new Node.TemplateText(
+                        charBuffer.toString(), startMark, current);
             }
             startMark = new Mark(ctxt, path, locator.getLineNumber(),
                                  locator.getColumnNumber());
@@ -523,11 +554,10 @@ class JspDocumentParser
                 if ((lastCh == '$' || lastCh == '#') && ch == '{') {
                     elType = lastCh;
                     if (ttext.size() > 0) {
-                        new Node.TemplateText(
-                            ttext.toString(),
-                            startMark,
-                            current);
-                        ttext = new CharArrayWriter();
+                        @SuppressWarnings("unused")
+                        Node unused = new Node.TemplateText(
+                                ttext.toString(), startMark, current);
+                        ttext.reset();
                         //We subtract two from the column number to
                         //account for the '[$,#]{' that we've already parsed
                         startMark = new Mark(ctxt, path, line, column - 2);
@@ -556,11 +586,11 @@ class JspDocumentParser
                             continue;
                         }
                         if (ch == '}') {
-                            new Node.ELExpression((char) elType,
-                                ttext.toString(),
-                                startMark,
-                                current);
-                            ttext = new CharArrayWriter();
+                            @SuppressWarnings("unused")
+                            Node unused = new Node.ELExpression(
+                                    (char) elType, ttext.toString(),
+                                    startMark, current);
+                            ttext.reset();
                             startMark = new Mark(ctxt, path, line, column);
                             break;
                         }
@@ -573,7 +603,11 @@ class JspDocumentParser
                         lastCh = ch;
                     }
                 } else if (lastCh == '\\' && (ch == '$' || ch == '#')) {
+                    if (i + 1 < charBuffer.length() && charBuffer.charAt(i + 1) == '{') {
                     if (pageInfo.isELIgnored()) {
+                        ttext.write('\\');
+                    }
+                    } else {
                         ttext.write('\\');
                     }
                     ttext.write(ch);
@@ -592,7 +626,9 @@ class JspDocumentParser
                 ttext.write(lastCh);
             }
             if (ttext.size() > 0) {
-                new Node.TemplateText(ttext.toString(), startMark, current);
+                @SuppressWarnings("unused")
+                Node unused = new Node.TemplateText(
+                        ttext.toString(), startMark, current);
             }
         }
         startMark = new Mark(ctxt, path, locator.getLineNumber(),
@@ -604,6 +640,7 @@ class JspDocumentParser
     /*
      * Receives notification of the end of an element.
      */
+    @Override
     public void endElement(String uri, String localName, String qName)
         throws SAXException {
 
@@ -683,6 +720,7 @@ class JspDocumentParser
      *
      * @param locator the document locator
      */
+    @Override
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
     }
@@ -690,25 +728,25 @@ class JspDocumentParser
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void comment(char[] buf, int offset, int len) throws SAXException {
 
         processChars();  // Flush char buffer and remove white spaces
 
         // ignore comments in the DTD
         if (!inDTD) {
-            startMark =
-                new Mark(
-                    ctxt,
-                    path,
-                    locator.getLineNumber(),
+            startMark = new Mark(ctxt, path, locator.getLineNumber(),
                     locator.getColumnNumber());
-            new Node.Comment(new String(buf, offset, len), startMark, current);
+            @SuppressWarnings("unused")
+            Node unused = new Node.Comment(
+                    new String(buf, offset, len), startMark, current);
         }
     }
 
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void startCDATA() throws SAXException {
 
         processChars();  // Flush char buffer and remove white spaces
@@ -719,6 +757,7 @@ class JspDocumentParser
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void endCDATA() throws SAXException {
         processChars();  // Flush char buffer and remove white spaces
     }
@@ -726,6 +765,7 @@ class JspDocumentParser
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void startEntity(String name) throws SAXException {
         // do nothing
     }
@@ -733,6 +773,7 @@ class JspDocumentParser
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void endEntity(String name) throws SAXException {
         // do nothing
     }
@@ -740,10 +781,12 @@ class JspDocumentParser
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void startDTD(String name, String publicId, String systemId)
         throws SAXException {
         if (!isValidating) {
-            fatalError(new EnableDTDValidationException("jsp.error.enable_dtd_validation", null));
+            fatalError(new EnableDTDValidationException(
+                    "jsp.error.enable_dtd_validation", null));
         }
 
         inDTD = true;
@@ -752,6 +795,7 @@ class JspDocumentParser
     /*
      * See org.xml.sax.ext.LexicalHandler.
      */
+    @Override
     public void endDTD() throws SAXException {
         inDTD = false;
     }
@@ -759,6 +803,7 @@ class JspDocumentParser
     /*
      * Receives notification of a non-recoverable error.
      */
+    @Override
     public void fatalError(SAXParseException e) throws SAXException {
         throw e;
     }
@@ -766,13 +811,15 @@ class JspDocumentParser
     /*
      * Receives notification of a recoverable error.
      */
+    @Override
     public void error(SAXParseException e) throws SAXException {
         throw e;
     }
 
     /*
-     * Receives notification of the start of a Namespace mapping. 
+     * Receives notification of the start of a Namespace mapping.
      */
+    @Override
     public void startPrefixMapping(String prefix, String uri)
         throws SAXException {
         TagLibraryInfo taglibInfo;
@@ -780,7 +827,7 @@ class JspDocumentParser
         if (directivesOnly && !(JSP_URI.equals(uri))) {
             return;
         }
-        
+
         try {
             taglibInfo = getTaglibInfo(prefix, uri);
         } catch (JasperException je) {
@@ -800,8 +847,9 @@ class JspDocumentParser
     }
 
     /*
-     * Receives notification of the end of a Namespace mapping. 
+     * Receives notification of the end of a Namespace mapping.
      */
+    @Override
     public void endPrefixMapping(String prefix) throws SAXException {
 
         if (directivesOnly) {
@@ -823,8 +871,7 @@ class JspDocumentParser
         Attributes nonTaglibAttrs,
         Attributes nonTaglibXmlnsAttrs,
         Attributes taglibAttrs,
-        Mark start,
-        Node parent)
+        Mark start)
         throws SAXException {
 
         Node node = null;
@@ -1224,14 +1271,12 @@ class JspDocumentParser
             }
 
             if (ctxt.getOptions().isCaching()) {
-                result = (TagLibraryInfo) ctxt.getOptions().getCache().get(uri);
+                    result = ctxt.getOptions().getCache().get(uri);
             }
-            if (result == null) {
-                // Fallback to Jasper's legacy scanning if nothing was provided
-                // by the options' TLD cache
-                String[] location = ctxt.getTldLocation(uri);
-                if (location != null || !isPlainUri) {
-                    if (result == null) {
+            String[] location = ctxt.getTldLocation(uri);
+            if (location != null || !isPlainUri) {
+                if (result == null) {
+
                         /*
                          * If the uri value is a plain uri, a translation error must
                          * not be generated if the uri is not found in the taglib map.
@@ -1253,7 +1298,6 @@ class JspDocumentParser
                     }
                 }
             }
-        }
 
         return result;
     }
@@ -1306,7 +1350,7 @@ class JspDocumentParser
                 locator,
                 fnfe);
         } catch (Exception e) {
-            throw new SAXException(MESSAGES.errorParsingFile(fname), e);
+            throw new SAXParseException(e.getMessage(), locator, e);
         }
     }
 
@@ -1370,18 +1414,43 @@ class JspDocumentParser
         JspDocumentParser jspDocParser)
         throws Exception {
 
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
+        ClassLoader original;
+        if (Constants.IS_SECURITY_ENABLED) {
+            PrivilegedGetTccl pa = new PrivilegedGetTccl();
+            original = AccessController.doPrivileged(pa);
+        } else {
+            original = Thread.currentThread().getContextClassLoader();
+        }
+        try {
+            if (Constants.IS_SECURITY_ENABLED) {
+                PrivilegedSetTccl pa =
+                        new PrivilegedSetTccl(JspDocumentParser.class.getClassLoader());
+                AccessController.doPrivileged(pa);
+            } else {
+                Thread.currentThread().setContextClassLoader(
+                        JspDocumentParser.class.getClassLoader());
+            }
 
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+
+        factory.setNamespaceAware(true);
         // Preserve xmlns attributes
         factory.setFeature(
             "http://xml.org/sax/features/namespace-prefixes",
             true);
+
         factory.setValidating(validating);
-        //factory.setFeature(
-        //    "http://xml.org/sax/features/validation",
-        //    validating);
-        
+            if (validating) {
+                // Enable DTD validation
+                factory.setFeature(
+                        "http://xml.org/sax/features/validation",
+                        true);
+                // Enable schema validation
+                factory.setFeature(
+                        "http://apache.org/xml/features/validation/schema",
+                        true);
+            }
+
         // Configure the parser
         SAXParser saxParser = factory.newSAXParser();
         XMLReader xmlReader = saxParser.getXMLReader();
@@ -1389,6 +1458,14 @@ class JspDocumentParser
         xmlReader.setErrorHandler(jspDocParser);
 
         return saxParser;
+        } finally {
+            if (Constants.IS_SECURITY_ENABLED) {
+                PrivilegedSetTccl pa = new PrivilegedSetTccl(original);
+                AccessController.doPrivileged(pa);
+            } else {
+                Thread.currentThread().setContextClassLoader(original);
+            }
+        }
     }
 
     /*
@@ -1398,12 +1475,15 @@ class JspDocumentParser
     private static class EnableDTDValidationException
         extends SAXParseException {
 
+        private static final long serialVersionUID = 1L;
+
         EnableDTDValidationException(String message, Locator loc) {
             super(message, loc);
         }
-        
+
+        @Override
         public synchronized Throwable fillInStackTrace() {
-            // No stack trace
+            // This class does not provide a stack trace
             return this;
         }
     }

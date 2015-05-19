@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,28 +33,28 @@ import javax.servlet.jsp.HttpJspPage;
  *
  * @author Anil K. Vijendran
  */
-public abstract class HttpJspBase 
-    extends HttpServlet 
-    implements HttpJspPage 
-        
-    
-{
-    
+public abstract class HttpJspBase extends HttpServlet implements HttpJspPage {
+
+    private static final long serialVersionUID = 1L;
+
     protected HttpJspBase() {
     }
 
-    public final void init(ServletConfig config) 
-	throws ServletException 
+    @Override
+    public final void init(ServletConfig config)
+        throws ServletException
     {
         super.init(config);
 	jspInit();
         _jspInit();
     }
-    
+
+    @Override
     public String getServletInfo() {
 	return MESSAGES.jspInfo();
     }
 
+    @Override
     public final void destroy() {
 	jspDestroy();
 	_jspDestroy();
@@ -63,25 +63,29 @@ public abstract class HttpJspBase
     /**
      * Entry point into service.
      */
-    public final void service(HttpServletRequest request, HttpServletResponse response) 
-	throws ServletException, IOException 
+    @Override
+    public final void service(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException
     {
         _jspService(request, response);
     }
-    
+
+    @Override
     public void jspInit() {
     }
 
     public void _jspInit() {
     }
 
+    @Override
     public void jspDestroy() {
     }
 
     protected void _jspDestroy() {
     }
 
-    public abstract void _jspService(HttpServletRequest request, 
-				     HttpServletResponse response) 
+    @Override
+    public abstract void _jspService(HttpServletRequest request,
+                                     HttpServletResponse response)
 	throws ServletException, IOException;
 }

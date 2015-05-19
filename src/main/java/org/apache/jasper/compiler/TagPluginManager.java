@@ -5,23 +5,21 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.io.InputStream;
 import java.util.HashMap;
-
 import javax.servlet.ServletContext;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLInputFactory;
@@ -35,6 +33,7 @@ import org.apache.jasper.compiler.tagplugin.TagPluginContext;
 
 /**
  * Manages tag plugin optimizations.
+ *
  * @author Kin-man Chung
  */
 
@@ -46,36 +45,24 @@ public class TagPluginManager {
     private boolean initialized = false;
     private HashMap<String, TagPlugin> tagPlugins = null;
     private ServletContext ctxt;
-    private PageInfo pageInfo;
 
     public TagPluginManager(ServletContext ctxt) {
 	this.ctxt = ctxt;
     }
 
     public void apply(Node.Nodes page, ErrorDispatcher err, PageInfo pageInfo)
-	    throws JasperException {
+            throws JasperException {
 
-	init(err);
-	if (tagPlugins == null || tagPlugins.size() == 0) {
-	    return;
-	}
-
-	this.pageInfo = pageInfo;
-
-        page.visit(new Node.Visitor() {
-            public void visit(Node.CustomTag n)
-                    throws JasperException {
-                invokePlugin(n);
-                visitBody(n);
-            }
-        });
-
+        init(err);
+        if (!tagPlugins.isEmpty()) {
+            page.visit(new NodeVisitor(this, pageInfo));
+        }
     }
- 
+
     private void init(ErrorDispatcher err) throws JasperException {
         if (initialized)
             return;
-
+        tagPlugins = new HashMap<>();
         InputStream is = ctxt.getResourceAsStream(TAG_PLUGINS_XML);
         if (is == null)
             return;
@@ -95,7 +82,7 @@ public class TagPluginManager {
                         TAG_PLUGINS_ROOT_ELEM));
             }
 
-            tagPlugins = new HashMap<String, TagPlugin>();
+
             while (reader.hasNext() && reader.nextTag() != XMLStreamConstants.END_ELEMENT) {
                 String elementName = reader.getLocalName();
                 if ("tag-plugin".equals(elementName)) { // JSP 1.2
@@ -132,7 +119,7 @@ public class TagPluginManager {
                 }
             }
         } catch (XMLStreamException e) {
-            err.jspError(MESSAGES.invalidTagPlugin(TAG_PLUGINS_XML), e);
+            err.jspError(e, MESSAGES.invalidTagPlugin(TAG_PLUGINS_XML));
         } catch (FactoryConfigurationError e) {
             throw new JasperException(e);
         } finally {
@@ -147,14 +134,13 @@ public class TagPluginManager {
     }
 
     /**
-     * Invoke tag plugin for the given custom tag, if a plugin exists for 
+     * Invoke tag plugin for the given custom tag, if a plugin exists for
      * the custom tag's tag handler.
-     *
+     * <p/>
      * The given custom tag node will be manipulated by the plugin.
      */
-    private void invokePlugin(Node.CustomTag n) {
-	TagPlugin tagPlugin = (TagPlugin)
-		tagPlugins.get(n.getTagHandlerClass().getName());
+    private void invokePlugin(Node.CustomTag n, PageInfo pageInfo) {
+        TagPlugin tagPlugin = tagPlugins.get(n.getTagHandlerClass().getName());
 	if (tagPlugin == null) {
 	    return;
 	}
@@ -164,11 +150,27 @@ public class TagPluginManager {
 	tagPlugin.doTag(tagPluginContext);
     }
 
-    static class TagPluginContextImpl implements TagPluginContext {
-	private Node.CustomTag node;
+    private static class NodeVisitor extends Node.Visitor {
+        private final TagPluginManager manager;
+        private final PageInfo pageInfo;
+
+        public NodeVisitor(TagPluginManager manager, PageInfo pageInfo) {
+            this.manager = manager;
+            this.pageInfo = pageInfo;
+        }
+
+        @Override
+        public void visit(Node.CustomTag n) throws JasperException {
+            manager.invokePlugin(n, pageInfo);
+            visitBody(n);
+        }
+    }
+
+     private static class TagPluginContextImpl implements TagPluginContext {
+        private final Node.CustomTag node;
+        private final PageInfo pageInfo;
+        private final HashMap<String, Object> pluginAttributes;
 	private Node.Nodes curNodes;
-	private PageInfo pageInfo;
-	private HashMap pluginAttributes;
 
 	TagPluginContextImpl(Node.CustomTag n, PageInfo pageInfo) {
 	    this.node = n;
@@ -178,29 +180,34 @@ public class TagPluginManager {
 	    curNodes = new Node.Nodes();
 	    n.setAtSTag(curNodes);
 	    n.setUseTagPlugin(true);
-	    pluginAttributes = new HashMap();
+            pluginAttributes = new HashMap<>();
 	}
 
+        @Override
 	public TagPluginContext getParentContext() {
 	    Node parent = node.getParent();
-	    if (! (parent instanceof Node.CustomTag)) {
+            if (!(parent instanceof Node.CustomTag)) {
 		return null;
 	    }
 	    return ((Node.CustomTag) parent).getTagPluginContext();
 	}
 
+        @Override
 	public void setPluginAttribute(String key, Object value) {
 	    pluginAttributes.put(key, value);
 	}
 
+        @Override
 	public Object getPluginAttribute(String key) {
 	    return pluginAttributes.get(key);
 	}
 
+        @Override
 	public boolean isScriptless() {
 	    return node.getChildInfo().isScriptless();
 	}
 
+        @Override
 	public boolean isConstantAttribute(String attribute) {
 	    Node.JspAttribute attr = getNodeAttribute(attribute);
 	    if (attr == null)
@@ -208,6 +215,7 @@ public class TagPluginManager {
 	    return attr.isLiteral();
 	}
 
+        @Override
 	public String getConstantAttribute(String attribute) {
 	    Node.JspAttribute attr = getNodeAttribute(attribute);
             if (attr == null)
@@ -215,18 +223,22 @@ public class TagPluginManager {
 	    return attr.getValue();
 	}
 
+        @Override
 	public boolean isAttributeSpecified(String attribute) {
 	    return getNodeAttribute(attribute) != null;
 	}
 
+        @Override
 	public String getTemporaryVariableName() {
 	    return node.getRoot().nextTemporaryVariableName();
 	}
 
+        @Override
 	public void generateImport(String imp) {
 	    pageInfo.addImport(imp);
 	}
 
+        @Override
 	public void generateDeclaration(String id, String text) {
 	    if (pageInfo.isPluginDeclared(id)) {
 		return;
@@ -234,23 +246,27 @@ public class TagPluginManager {
 	    curNodes.add(new Node.Declaration(text, node.getStart(), null));
 	}
 
+        @Override
 	public void generateJavaSource(String sourceCode) {
 	    curNodes.add(new Node.Scriptlet(sourceCode, node.getStart(),
 					    null));
 	}
 
+        @Override
 	public void generateAttribute(String attributeName) {
 	    curNodes.add(new Node.AttributeGenerator(node.getStart(),
 						     attributeName,
 						     node));
 	}
 
+        @Override
 	public void dontUseTagPlugin() {
 	    node.setUseTagPlugin(false);
 	}
 
+        @Override
 	public void generateBody() {
-	    // Since we'll generate the body anyway, this is really a nop, 
+            // Since we'll generate the body anyway, this is really a nop,
 	    // except for the fact that it lets us put the Java sources the
 	    // plugins produce in the correct order (w.r.t the body).
 	    curNodes = node.getAtETag();
@@ -263,7 +279,7 @@ public class TagPluginManager {
 
 	private Node.JspAttribute getNodeAttribute(String attribute) {
 	    Node.JspAttribute[] attrs = node.getJspAttributes();
-	    for (int i=0; attrs != null && i < attrs.length; i++) {
+            for (int i = 0; attrs != null && i < attrs.length; i++) {
 		if (attrs[i].getName().equals(attribute)) {
 		    return attrs[i];
 		}
@@ -271,4 +287,6 @@ public class TagPluginManager {
 	    return null;
 	}
     }
+
 }
+

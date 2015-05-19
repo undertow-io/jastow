@@ -20,7 +20,7 @@ package org.apache.jasper.compiler;
 import org.apache.jasper.JasperException;
 
 /**
- * Collect info about the page and nodes, and make them availabe through
+ * Collect info about the page and nodes, and make them available through
  * the PageInfo object.
  *
  * @author Kin-man Chung
@@ -33,7 +33,7 @@ class Collector {
      * A visitor for collecting information on the page and the body of
      * the custom tags.
      */
-    static class CollectVisitor extends Node.Visitor {
+    private static class CollectVisitor extends Node.Visitor {
 
         private boolean scriptingElementSeen = false;
         private boolean usebeanSeen = false;
@@ -42,6 +42,7 @@ class Collector {
         private boolean setPropertySeen = false;
         private boolean hasScriptingVars = false;
 
+        @Override
         public void visit(Node.ParamAction n) throws JasperException {
             if (n.getValue().isExpression()) {
                 scriptingElementSeen = true;
@@ -49,6 +50,7 @@ class Collector {
             paramActionSeen = true;
         }
 
+        @Override
         public void visit(Node.IncludeAction n) throws JasperException {
             if (n.getPage().isExpression()) {
                 scriptingElementSeen = true;
@@ -57,6 +59,7 @@ class Collector {
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.ForwardAction n) throws JasperException {
             if (n.getPage().isExpression()) {
                 scriptingElementSeen = true;
@@ -64,6 +67,7 @@ class Collector {
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.SetProperty n) throws JasperException {
             if (n.getValue() != null && n.getValue().isExpression()) {
                 scriptingElementSeen = true;
@@ -71,6 +75,7 @@ class Collector {
             setPropertySeen = true;
         }
 
+        @Override
         public void visit(Node.UseBean n) throws JasperException {
             if (n.getBeanName() != null && n.getBeanName().isExpression()) {
                 scriptingElementSeen = true;
@@ -79,6 +84,7 @@ class Collector {
                 visitBody(n);
         }
 
+        @Override
         public void visit(Node.PlugIn n) throws JasperException {
             if (n.getHeight() != null && n.getHeight().isExpression()) {
                 scriptingElementSeen = true;
@@ -89,6 +95,7 @@ class Collector {
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
             // Check to see what kinds of element we see as child elements
             checkSeen( n.getChildInfo(), n );
@@ -152,6 +159,7 @@ class Collector {
             hasScriptingVars = hasScriptingVars || hasScriptingVarsSave;
         }
 
+        @Override
         public void visit(Node.JspElement n) throws JasperException {
             if (n.getNameAttribute().isExpression())
                 scriptingElementSeen = true;
@@ -166,27 +174,32 @@ class Collector {
             visitBody(n);
         }
 
+        @Override
         public void visit(Node.JspBody n) throws JasperException {
             checkSeen( n.getChildInfo(), n );
         }
 
+        @Override
         public void visit(Node.NamedAttribute n) throws JasperException {
             checkSeen( n.getChildInfo(), n );
         }
 
+        @Override
         public void visit(Node.Declaration n) throws JasperException {
             scriptingElementSeen = true;
         }
 
+        @Override
         public void visit(Node.Expression n) throws JasperException {
             scriptingElementSeen = true;
         }
 
+        @Override
         public void visit(Node.Scriptlet n) throws JasperException {
             scriptingElementSeen = true;
         }
 
-        public void updatePageInfo(PageInfo pageInfo) {
+        private void updatePageInfo(PageInfo pageInfo) {
             pageInfo.setScriptless(! scriptingElementSeen);
         }
     }

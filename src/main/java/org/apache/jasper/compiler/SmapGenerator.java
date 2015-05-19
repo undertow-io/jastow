@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,14 +17,14 @@
 
 package org.apache.jasper.compiler;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a source map (SMAP), which serves to associate lines
  * of the input JSP file(s) to lines in the generated servlet in the
  * final .class file, according to the JSR-045 spec.
- * 
+ *
  * @author Shawn Bayern
  */
 public class SmapGenerator {
@@ -47,8 +47,8 @@ public class SmapGenerator {
 
     private String outputFileName;
     private String defaultStratum = "Java";
-    private List strata = new ArrayList();
-    private List embedded = new ArrayList();
+    private final List<SmapStratum> strata = new ArrayList<>();
+    private final List<String> embedded = new ArrayList<>();
     private boolean doEmbedded = true;
 
     //*********************************************************************
@@ -129,7 +129,7 @@ public class SmapGenerator {
 	// print our StratumSections, FileSections, and LineSections
 	int nStrata = strata.size();
 	for (int i = 0; i < nStrata; i++) {
-	    SmapStratum s = (SmapStratum) strata.get(i);
+            SmapStratum s = strata.get(i);
 	    out.append(s.getString());
 	}
 
@@ -139,6 +139,7 @@ public class SmapGenerator {
 	return out.toString();
     }
 
+    @Override
     public String toString() { return getString(); }
 
     //*********************************************************************

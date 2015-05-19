@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,11 +44,15 @@ public final class JspMethodExpression extends MethodExpression implements
         this.mark = mark;
     }
 
+    @Override
     public MethodInfo getMethodInfo(ELContext context)
             throws NullPointerException, PropertyNotFoundException,
             MethodNotFoundException, ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
         try {
-            return this.target.getMethodInfo(context);
+            MethodInfo result = this.target.getMethodInfo(context);
+            context.notifyAfterEvaluation(getExpressionString());
+            return result;
         } catch (MethodNotFoundException e) {
             if (e instanceof JspMethodNotFoundException) throw e;
             throw new JspMethodNotFoundException(this.mark, e);
@@ -61,11 +65,15 @@ public final class JspMethodExpression extends MethodExpression implements
         }
     }
 
+    @Override
     public Object invoke(ELContext context, Object[] params)
             throws NullPointerException, PropertyNotFoundException,
             MethodNotFoundException, ELException {
+        context.notifyBeforeEvaluation(getExpressionString());
         try {
-            return this.target.invoke(context, params);
+            Object result = this.target.invoke(context, params);
+            context.notifyAfterEvaluation(getExpressionString());
+            return result;
         } catch (MethodNotFoundException e) {
             if (e instanceof JspMethodNotFoundException) throw e;
             throw new JspMethodNotFoundException(this.mark, e);
@@ -78,27 +86,33 @@ public final class JspMethodExpression extends MethodExpression implements
         }
     }
 
+    @Override
     public boolean equals(Object obj) {
         return this.target.equals(obj);
     }
 
+    @Override
     public int hashCode() {
         return this.target.hashCode();
     }
 
+    @Override
     public String getExpressionString() {
         return this.target.getExpressionString();
     }
 
+    @Override
     public boolean isLiteralText() {
         return this.target.isLiteralText();
     }
 
+    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeUTF(this.mark);
         out.writeObject(this.target);
     }
 
+    @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {
         this.mark = in.readUTF();

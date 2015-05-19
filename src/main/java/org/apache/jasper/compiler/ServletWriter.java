@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,39 +16,40 @@
  */
 package org.apache.jasper.compiler;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * This is what is used to generate servlets. 
+ * This is what is used to generate servlets.
  *
  * @author Anil K. Vijendran
  * @author Kin-man Chung
  */
-public class ServletWriter {
-    public static int TAB_WIDTH = 2;
-    public static String SPACES = "                              ";
+public class ServletWriter implements AutoCloseable {
+
+    private static final int TAB_WIDTH = 2;
+    private static final String SPACES = "                              ";
 
     // Current indent level:
     private int indent = 0;
     private int virtual_indent = 0;
 
     // The sink writer:
-    PrintWriter writer;
-    
+    private final PrintWriter writer;
+
     // servlet line numbers start from 1
     private int javaLine = 1;
 
 
     public ServletWriter(PrintWriter writer) {
-	this.writer = writer;
+        this.writer = writer;
     }
 
-    public void close() throws IOException {
-	writer.close();
+    @Override
+    public void close() {
+        writer.close();
     }
 
-    
+
     // -------------------- Access informations --------------------
 
     public int getJavaLine() {
@@ -59,35 +60,15 @@ public class ServletWriter {
     // -------------------- Formatting --------------------
 
     public void pushIndent() {
-	virtual_indent += TAB_WIDTH;
-	if (virtual_indent >= 0 && virtual_indent <= SPACES.length())
-	    indent = virtual_indent;
+        virtual_indent += TAB_WIDTH;
+        if (virtual_indent >= 0 && virtual_indent <= SPACES.length())
+            indent = virtual_indent;
     }
 
     public void popIndent() {
-	virtual_indent -= TAB_WIDTH;
-	if (virtual_indent >= 0 && virtual_indent <= SPACES.length())
-	    indent = virtual_indent;
-    }
-
-    /**
-     * Print a standard comment for echo outputed chunk.
-     * @param start The starting position of the JSP chunk being processed. 
-     * @param stop  The ending position of the JSP chunk being processed. 
-     */
-    public void printComment(Mark start, Mark stop, char[] chars) {
-        if (start != null && stop != null) {
-            println("// from="+start);
-            println("//   to="+stop);
-        }
-        
-        if (chars != null)
-            for(int i = 0; i < chars.length;) {
-                printin();
-                print("// ");
-                while (chars[i] != '\n' && i < chars.length)
-                    writer.print(chars[i++]);
-            }
+        virtual_indent -= TAB_WIDTH;
+        if (virtual_indent >= 0 && virtual_indent <= SPACES.length())
+            indent = virtual_indent;
     }
 
     /**
@@ -95,7 +76,7 @@ public class ServletWriter {
      */
     public void println(String s) {
         javaLine++;
-	writer.println(s);
+        writer.println(s);
     }
 
     /**
@@ -103,22 +84,22 @@ public class ServletWriter {
      */
     public void println() {
         javaLine++;
-	writer.println("");
+        writer.println("");
     }
 
     /**
      * Prints the current indention
      */
     public void printin() {
-	writer.print(SPACES.substring(0, indent));
+        writer.print(SPACES.substring(0, indent));
     }
 
     /**
      * Prints the current indention, followed by the given string
      */
     public void printin(String s) {
-	writer.print(SPACES.substring(0, indent));
-	writer.print(s);
+        writer.print(SPACES.substring(0, indent));
+        writer.print(s);
     }
 
     /**
@@ -126,8 +107,8 @@ public class ServletWriter {
      */
     public void printil(String s) {
         javaLine++;
-	writer.print(SPACES.substring(0, indent));
-	writer.println(s);
+        writer.print(SPACES.substring(0, indent));
+        writer.println(s);
     }
 
     /**
@@ -136,14 +117,14 @@ public class ServletWriter {
      * Use println() to print a '\n'.
      */
     public void print(char c) {
-	writer.print(c);
+        writer.print(c);
     }
 
     /**
      * Prints the given int.
      */
     public void print(int i) {
-	writer.print(i);
+        writer.print(i);
     }
 
     /**
@@ -153,7 +134,7 @@ public class ServletWriter {
      * off.
      */
     public void print(String s) {
-	writer.print(s);
+        writer.print(s);
     }
 
     /**
@@ -171,6 +152,6 @@ public class ServletWriter {
             index++;
         }
 
-	writer.print(s);
+        writer.print(s);
     }
 }

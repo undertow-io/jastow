@@ -56,11 +56,11 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
     private static final String IMPLICIT_TLD = "implicit.tld";
 
     // Maps tag names to tag file paths
-    private Hashtable tagFileMap;
+    private final Hashtable<String,String> tagFileMap;
 
-    private ParserController pc;
-    private PageInfo pi;
-    private Vector vec;
+    private final ParserController pc;
+    private final PageInfo pi;
+    private final Vector<TagFileInfo> vec;
 
     /**
      * Constructor.
@@ -74,8 +74,8 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
         super(prefix, null);
         this.pc = pc;
         this.pi = pi;
-        this.tagFileMap = new Hashtable();
-        this.vec = new Vector();
+        this.tagFileMap = new Hashtable<>();
+        this.vec = new Vector<>();
 
         // Implicit tag libraries have no functions:
         this.functions = new FunctionInfo[0];
@@ -98,7 +98,7 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
         }
 
         // Populate mapping of tag names to tag file paths
-        Set dirList = ctxt.getResourcePaths(tagdir);
+        Set<String> dirList = ctxt.getResourcePaths(tagdir);
         if (dirList != null) {
             Iterator it = dirList.iterator();
             while (it.hasNext()) {
@@ -124,7 +124,7 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
                             
                             // Add implicit TLD to dependency list
                             if (pi != null) {
-                                pi.addDependant(path);
+                                pi.addDependant(path, ctxt.getLastModified(path));
                             }
                             
                             XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(is);
@@ -167,7 +167,7 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
                             }
                         }
                     } catch (XMLStreamException e) {
-                        err.jspError(MESSAGES.invalidImplicitTld(path), e);
+                        err.jspError(e, MESSAGES.invalidImplicitTld(path));
                     } finally {
                         if (is != null) {
                             try {
@@ -189,11 +189,12 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
      * @return The TagFileInfo corresponding to the given tag name, or null if
      * the given tag name is not implemented as a tag file
      */
+    @Override
     public TagFileInfo getTagFile(String shortName) {
 
         TagFileInfo tagFile = super.getTagFile(shortName);
         if (tagFile == null) {
-            String path = (String) tagFileMap.get(shortName);
+            String path = tagFileMap.get(shortName);
             if (path == null) {
                 return null;
             }
@@ -203,7 +204,7 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
                 tagInfo = TagFileProcessor.parseTagFileDirectives(pc,
                         shortName,
                         path,
-                        pc.getJspCompilationContext().getTagFileJarUrl(path),
+                        null,
                         this);
             } catch (JasperException je) {
                 throw new RuntimeException(je.toString(), je);
@@ -219,9 +220,10 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
         return tagFile;
     }
 
+    @Override
     public TagLibraryInfo[] getTagLibraryInfos() {
-        Collection coll = pi.getTaglibs();
-        return (TagLibraryInfo[]) coll.toArray(new TagLibraryInfo[0]);
+        Collection<TagLibraryInfo> coll = pi.getTaglibs();
+        return coll.toArray(new TagLibraryInfo[0]);
     }
 
 }

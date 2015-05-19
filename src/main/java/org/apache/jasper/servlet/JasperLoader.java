@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,28 +29,22 @@ import java.security.PermissionCollection;
 import org.apache.jasper.Constants;
 
 /**
- * Class loader for loading servlet class files (corresponding to JSP files) 
+ * Class loader for loading servlet class files (corresponding to JSP files)
  * and tag handler class files (corresponding to tag files).
  *
  * @author Anil K. Vijendran
  * @author Harish Prabandham
- * @author Jean-Francois Arcand
  */
 public class JasperLoader extends URLClassLoader {
 
-    private static final String JSP_PACKAGE_PREFIX = Constants.JSP_PACKAGE_NAME + ".";
-    private PermissionCollection permissionCollection;
-    private CodeSource codeSource;
-    private String className;
-    private ClassLoader parent;
-    private SecurityManager securityManager;
+    private final PermissionCollection permissionCollection;
+    private final ClassLoader parent;
+    private final SecurityManager securityManager;
 
     public JasperLoader(URL[] urls, ClassLoader parent,
-			PermissionCollection permissionCollection,
-			CodeSource codeSource) {
+                        PermissionCollection permissionCollection) {
 	super(urls, parent);
 	this.permissionCollection = permissionCollection;
-	this.codeSource = codeSource;
 	this.parent = parent;
 	this.securityManager = System.getSecurityManager();
     }
@@ -64,7 +58,8 @@ public class JasperLoader extends URLClassLoader {
      *
      * @exception ClassNotFoundException if the class was not found
      */
-    public Class loadClass(String name) throws ClassNotFoundException {
+    @Override
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
 
         return (loadClass(name, false));
     }
@@ -79,22 +74,23 @@ public class JasperLoader extends URLClassLoader {
      *     <code>Class</code> object is returned.</li>
      * <li>If the <code>delegate</code> property is set to <code>true</code>,
      *     call the <code>loadClass()</code> method of the parent class
-     *     loader, if any.</li>            
+     *     loader, if any.</li>
      * <li>Call <code>findClass()</code> to find this class in our locally
-     *     defined repositories.</li>      
+     *     defined repositories.</li>
      * <li>Call the <code>loadClass()</code> method of our parent
-     *     class loader, if any.</li>      
+     *     class loader, if any.</li>
      * </ul>
      * If the class was found using the above steps, and the
      * <code>resolve</code> flag is <code>true</code>, this method will then
      * call <code>resolveClass(Class)</code> on the resulting Class object.
-     *                                     
+     *
      * @param name Name of the class to be loaded
      * @param resolve If <code>true</code> then resolve the class
-     *                                     
+     *
      * @exception ClassNotFoundException if the class was not found
-     */                                    
-    public Class<?> loadClass(final String name, boolean resolve)
+     */
+    @Override
+    public synchronized Class<?> loadClass(final String name, boolean resolve)
             throws ClassNotFoundException {
 
         Class<?> clazz = null;
@@ -112,12 +108,9 @@ public class JasperLoader extends URLClassLoader {
             int dot = name.lastIndexOf('.');
             if (dot >= 0) {
                 try {
-                    // Do not call the security manager since by default, we
-                    // grant that package.
-                    if (!"org.apache.jasper.runtime".equalsIgnoreCase(name
-                            .substring(0, dot))) {
-                        securityManager.checkPackageAccess(name.substring(0,
-                                dot));
+                    // Do not call the security manager since by default, we grant that package.
+                    if (!"org.apache.jasper.runtime".equalsIgnoreCase(name.substring(0,dot))){
+                        securityManager.checkPackageAccess(name.substring(0,dot));
                     }
                 } catch (SecurityException se) {
                     throw new ClassNotFoundException(MESSAGES.securityExceptionLoadingClass(name), se);
@@ -125,23 +118,25 @@ public class JasperLoader extends URLClassLoader {
             }
         }
 
-        if (!name.startsWith(JSP_PACKAGE_PREFIX)) {
+        if( !name.startsWith(Constants.JSP_PACKAGE_NAME + '.') ) {
             // Class is not in org.apache.jsp, therefore, have our
             // parent load it
             clazz = parent.loadClass(name);
-            if (resolve)
+            if( resolve )
                 resolveClass(clazz);
             return clazz;
         }
 
         return findClass(name);
     }
-    
+
+
     /**
      * Delegate to parent
-     * 
+     *
      * @see java.lang.ClassLoader#getResourceAsStream(java.lang.String)
      */
+    @Override
     public InputStream getResourceAsStream(String name) {
         InputStream is = parent.getResourceAsStream(name);
         if (is == null) {
@@ -150,14 +145,14 @@ public class JasperLoader extends URLClassLoader {
                 try {
                     is = url.openStream();
                 } catch (IOException e) {
-                    is = null;
+                    // Ignore
                 }
             }
         }
         return is;
     }
-    
-    
+
+
     /**
      * Get the Permissions for a CodeSource.
      *
@@ -168,9 +163,8 @@ public class JasperLoader extends URLClassLoader {
      * @param codeSource Code source where the code was loaded from
      * @return PermissionCollection for CodeSource
      */
+    @Override
     public final PermissionCollection getPermissions(CodeSource codeSource) {
         return permissionCollection;
     }
-
-
 }

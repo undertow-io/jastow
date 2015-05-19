@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,9 @@
  */
 package org.apache.jasper.runtime;
 
+import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
@@ -30,7 +30,6 @@ import javax.servlet.jsp.PageContext;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.JasperLogger;
-import org.jboss.logging.Logger;
 
 /**
  * Implementation of JspFactory.
@@ -39,23 +38,24 @@ import org.jboss.logging.Logger;
  */
 public class JspFactoryImpl extends JspFactory {
 
-    private static final String SPEC_VERSION = "2.2";
-    private static final boolean USE_POOL = 
+    private static final String SPEC_VERSION = "2.3";
+    private static final boolean USE_POOL =
         Boolean.valueOf(System.getProperty("org.apache.jasper.runtime.JspFactoryImpl.USE_POOL", "true")).booleanValue();
-    private static final int POOL_SIZE = 
+    private static final int POOL_SIZE =
         Integer.valueOf(System.getProperty("org.apache.jasper.runtime.JspFactoryImpl.POOL_SIZE", "8")).intValue();
 
-    private ThreadLocal<PageContextPool> localPool = new ThreadLocal<PageContextPool>();
+    private final ThreadLocal<PageContextPool> localPool = new ThreadLocal<>();
 
+    @Override
     public PageContext getPageContext(Servlet servlet, ServletRequest request,
             ServletResponse response, String errorPageURL, boolean needsSession,
             int bufferSize, boolean autoflush) {
 
         if( Constants.IS_SECURITY_ENABLED ) {
             PrivilegedGetPageContext dp = new PrivilegedGetPageContext(
-                    (JspFactoryImpl)this, servlet, request, response, errorPageURL,
+                    this, servlet, request, response, errorPageURL,
                     needsSession, bufferSize, autoflush);
-            return (PageContext)AccessController.doPrivileged(dp);
+            return AccessController.doPrivileged(dp);
         } else {
             return internalGetPageContext(servlet, request, response,
                     errorPageURL, needsSession,
@@ -63,20 +63,23 @@ public class JspFactoryImpl extends JspFactory {
         }
     }
 
+    @Override
     public void releasePageContext(PageContext pc) {
         if( pc == null )
             return;
         if( Constants.IS_SECURITY_ENABLED ) {
             PrivilegedReleasePageContext dp = new PrivilegedReleasePageContext(
-                    (JspFactoryImpl)this,pc);
+                    this,pc);
             AccessController.doPrivileged(dp);
         } else {
             internalReleasePageContext(pc);
         }
     }
 
+    @Override
     public JspEngineInfo getEngineInfo() {
         return new JspEngineInfo() {
+            @Override
             public String getSpecificationVersion() {
                 return SPEC_VERSION;
             }
@@ -86,7 +89,7 @@ public class JspFactoryImpl extends JspFactory {
     private PageContext internalGetPageContext(Servlet servlet, ServletRequest request,
             ServletResponse response, String errorPageURL, boolean needsSession,
             int bufferSize, boolean autoflush) {
-        try {
+
             PageContext pc;
             if (USE_POOL) {
                 PageContextPool pool = localPool.get();
@@ -101,14 +104,17 @@ public class JspFactoryImpl extends JspFactory {
             } else {
                 pc = new PageContextImpl();
             }
-            pc.initialize(servlet, request, response, errorPageURL, 
+
+        try {
+            pc.initialize(servlet, request, response, errorPageURL,
                     needsSession, bufferSize, autoflush);
-            return pc;
-        } catch (Throwable ex) {
-            /* FIXME: need to do something reasonable here!! */
-            JasperLogger.ROOT_LOGGER.errorInitializingPageContext(ex);
-            return null;
+         } catch (IOException ioe) {
+            // Implementation never throws IOE but can't change the signature
+            // since it is part of the JSP API
+            JasperLogger.ROOT_LOGGER.errorInitializingPageContext(ioe);
         }
+
+        return pc;
     }
 
     private void internalReleasePageContext(PageContext pc) {
@@ -118,7 +124,8 @@ public class JspFactoryImpl extends JspFactory {
         }
     }
 
-    private class PrivilegedGetPageContext implements PrivilegedAction {
+    private static class PrivilegedGetPageContext
+            implements PrivilegedAction<PageContext> {
 
         private JspFactoryImpl factory;
         private Servlet servlet;
@@ -142,13 +149,15 @@ public class JspFactoryImpl extends JspFactory {
             this.autoflush = autoflush;
         }
 
-        public Object run() {
+        @Override
+        public PageContext run() {
             return factory.internalGetPageContext(servlet, request, response,
                     errorPageURL, needsSession, bufferSize, autoflush);
         }
     }
 
-    private class PrivilegedReleasePageContext implements PrivilegedAction {
+    private static class PrivilegedReleasePageContext
+            implements PrivilegedAction<Void> {
 
         private JspFactoryImpl factory;
         private PageContext pageContext;
@@ -159,15 +168,16 @@ public class JspFactoryImpl extends JspFactory {
             this.pageContext = pageContext;
         }
 
-        public Object run() {
+        @Override
+        public Void run() {
             factory.internalReleasePageContext(pageContext);
             return null;
         }
     }
 
-    protected static final class PageContextPool  {
+    private static final class PageContextPool  {
 
-        private PageContext[] pool;
+        private final PageContext[] pool;
 
         private int current = -1;
 
@@ -193,7 +203,9 @@ public class JspFactoryImpl extends JspFactory {
 
     }
 
-    public JspApplicationContext getJspApplicationContext(final ServletContext context) {
+    @Override
+    public JspApplicationContext getJspApplicationContext(
+            final ServletContext context) {
         if (Constants.IS_SECURITY_ENABLED) {
             return AccessController.doPrivileged(
                     new PrivilegedAction<JspApplicationContext>() {

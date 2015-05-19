@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,11 @@
  */
 package org.apache.jasper.compiler;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 
 import org.apache.jasper.JasperException;
 import org.apache.jasper.JspCompilationContext;
@@ -28,9 +32,9 @@ import org.xml.sax.SAXException;
  *
  * This class is also responsible for localizing any error codes before they
  * are passed on to the configured error handler.
- * 
+ *
  * In the case of a Java compilation error, the compiler error message is
- * parsed into an array of JavacErrorDetail instances, which is passed on to 
+ * parsed into an array of JavacErrorDetail instances, which is passed on to
  * the configured error handler.
  *
  * @author Jan Luehe
@@ -39,10 +43,10 @@ import org.xml.sax.SAXException;
 public class ErrorDispatcher {
 
     // Custom error handler
-    private ErrorHandler errHandler;
+    private final ErrorHandler errHandler;
 
     // Indicates whether the compilation was initiated by JspServlet or JspC
-    private boolean jspcMode = false;
+    private final boolean jspcMode;
 
 
     /*
@@ -55,6 +59,131 @@ public class ErrorDispatcher {
 	// XXX check web.xml for custom error handler
 	errHandler = new DefaultErrorHandler();
         this.jspcMode = jspcMode;
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     */
+    public void jspError(String errCode, String... args) throws JasperException {
+        dispatch(null, errCode, args, null);
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param where Error location
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     */
+    public void jspError(Mark where, String errCode, String... args)
+            throws JasperException {
+        dispatch(where, errCode, args, null);
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param n Node that caused the error
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     */
+    public void jspError(Node n, String errCode, String... args)
+            throws JasperException {
+        dispatch(n.getStart(), errCode, args, null);
+    }
+
+    /*
+     * Dispatches the given parsing exception to the configured error handler.
+     *
+     * @param e Parsing exception
+     */
+    public void jspError(Exception e) throws JasperException {
+        dispatch(null, null, null, e);
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     * @param e Parsing exception
+     */
+    public void jspError(Exception e, String errCode, String... args)
+                throws JasperException {
+        dispatch(null, errCode, args, e);
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param where Error location
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     * @param e Parsing exception
+     */
+    public void jspError(Mark where, Exception e, String errCode, String... args)
+                throws JasperException {
+        dispatch(where, errCode, args, e);
+    }
+
+    /*
+     * Dispatches the given JSP parse error to the configured error handler.
+     *
+     * The given error code is localized. If it is not found in the
+     * resource bundle for localized error messages, it is used as the error
+     * message.
+     *
+     * @param n Node that caused the error
+     * @param errCode Error code
+     * @param args Arguments for parametric replacement
+     * @param e Parsing exception
+     */
+    public void jspError(Node n, Exception e, String errCode, String... args)
+                throws JasperException {
+        dispatch(n.getStart(), errCode, args, e);
+    }
+
+    /**
+     * Parses the given error message into an array of javac compilation error
+     * messages (one per javac compilation error line number).
+     *
+     * @param errMsg Error message
+     * @param fname Name of Java source file whose compilation failed
+     * @param page Node representation of JSP page from which the Java source
+     * file was generated
+     *
+     * @return Array of javac compilation errors, or null if the given error
+     * message does not contain any compilation error line numbers
+     */
+    public static JavacErrorDetail[] parseJavacErrors(String errMsg,
+                                                      String fname,
+                                                      Node.Nodes page)
+            throws JasperException, IOException {
+
+        return parseJavacMessage(errMsg, fname, page);
     }
 
     /*
@@ -84,19 +213,10 @@ public class ErrorDispatcher {
     }
 
 
-    public void jspError(String errorMessage) throws JasperException {
-        jspError(null, errorMessage, null);
-    }
+    //*********************************************************************
+    // Private utility methods
 
-    public void jspError(String errorMessage, Exception e) throws JasperException {
-        jspError(null, errorMessage, e);
-    }
-
-    public void jspError(Mark where, String errorMessage) throws JasperException {
-        jspError(where, errorMessage, null);
-    }
-
-    /**
+    /*
      * Dispatches the given JSP parse error to the configured error handler.
      *
      * The given error code is localized. If it is not found in the
@@ -104,15 +224,26 @@ public class ErrorDispatcher {
      * message.
      *
      * @param where Error location
-     * @param errorMessage The error message
+     * @param errCode Error code
      * @param args Arguments for parametric replacement
      * @param e Parsing exception
      */
-    public void jspError(Mark where, String errorMessage, Exception e) throws JasperException {
+    private void dispatch(Mark where, String errCode, Object[] args,
+                          Exception e) throws JasperException {
         String file = null;
+        String errMsg = null;
         int line = -1;
         int column = -1;
         boolean hasLocation = false;
+
+        // Localize
+        if (errCode != null) {
+            //errMsg = Localizer.getMessage(errCode, args);
+            errMsg = errCode;
+        } else if (e != null) {
+            // give a hint about what's wrong
+            errMsg = e.getMessage();
+        }
 
         // Get error location
         if (where != null) {
@@ -142,11 +273,95 @@ public class ErrorDispatcher {
         }
 
         if (hasLocation) {
-            errHandler.jspError(file, line, column, errorMessage, nestedEx);
+            errHandler.jspError(file, line, column, errMsg, nestedEx);
         } else {
-            errHandler.jspError(errorMessage, nestedEx);
+            errHandler.jspError(errMsg, nestedEx);
         }
     }
+
+    /*
+     * Parses the given Java compilation error message, which may contain one
+     * or more compilation errors, into an array of JavacErrorDetail instances.
+     *
+     * Each JavacErrorDetail instance contains the information about a single
+     * compilation error.
+     *
+     * @param errMsg Compilation error message that was generated by the
+     * javac compiler
+     * @param fname Name of Java source file whose compilation failed
+     * @param page Node representation of JSP page from which the Java source
+     * file was generated
+     *
+     * @return Array of JavacErrorDetail instances corresponding to the
+     * compilation errors
+     */
+    private static JavacErrorDetail[] parseJavacMessage(
+                                String errMsg, String fname, Node.Nodes page)
+                throws IOException, JasperException {
+
+        ArrayList<JavacErrorDetail> errors = new ArrayList<>();
+        StringBuilder errMsgBuf = null;
+        int lineNum = -1;
+        JavacErrorDetail javacError = null;
+
+        BufferedReader reader = new BufferedReader(new StringReader(errMsg));
+
+        /*
+         * Parse compilation errors. Each compilation error consists of a file
+         * path and error line number, followed by a number of lines describing
+         * the error.
+         */
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+
+            /*
+             * Error line number is delimited by set of colons.
+             * Ignore colon following drive letter on Windows (fromIndex = 2).
+             * XXX Handle deprecation warnings that don't have line info
+             */
+            int beginColon = line.indexOf(':', 2);
+            int endColon = line.indexOf(':', beginColon + 1);
+            if ((beginColon >= 0) && (endColon >= 0)) {
+                if (javacError != null) {
+                    // add previous error to error vector
+                    errors.add(javacError);
+                }
+
+                String lineNumStr = line.substring(beginColon + 1, endColon);
+                try {
+                    lineNum = Integer.parseInt(lineNumStr);
+                } catch (NumberFormatException e) {
+                    lineNum = -1;
+                }
+
+                errMsgBuf = new StringBuilder();
+
+                javacError = createJavacError(fname, page, errMsgBuf, lineNum);
+            }
+
+            // Ignore messages preceding first error
+            if (errMsgBuf != null) {
+                errMsgBuf.append(line);
+                errMsgBuf.append(System.lineSeparator());
+            }
+        }
+
+        // Add last error to error vector
+        if (javacError != null) {
+            errors.add(javacError);
+        }
+
+        reader.close();
+
+        JavacErrorDetail[] errDetails = null;
+        if (errors.size() > 0) {
+            errDetails = new JavacErrorDetail[errors.size()];
+            errors.toArray(errDetails);
+        }
+
+        return errDetails;
+    }
+
 
     /**
      * @param fname
@@ -161,8 +376,8 @@ public class ErrorDispatcher {
                     throws JasperException {
         return createJavacError(fname, page, errMsgBuf, lineNum, null);
     }
-    
-    
+
+
     /**
      * @param fname
      * @param page
@@ -204,7 +419,7 @@ public class ErrorDispatcher {
         } else {
             /*
              * javac error line number cannot be mapped to JSP page
-             * line number. For example, this is the case if a 
+             * line number. For example, this is the case if a
              * scriptlet is missing a closing brace, which causes
              * havoc with the try-catch-finally block that the code
              * generator places around all generated code: As a result
@@ -228,16 +443,16 @@ public class ErrorDispatcher {
      * Visitor responsible for mapping a line number in the generated servlet
      * source code to the corresponding JSP node.
      */
-    static class ErrorVisitor extends Node.Visitor {
+    private static class ErrorVisitor extends Node.Visitor {
 
 	// Java source line number to be mapped
-	private int lineNum;
+        private final int lineNum;
 
 	/*
 	 * JSP node whose Java source code range in the generated servlet
 	 * contains the Java source line number to be mapped
 	 */
-	Node found;
+        private Node found;
 
 	/*
 	 * Constructor.
@@ -248,6 +463,7 @@ public class ErrorDispatcher {
 	    this.lineNum = lineNum;
 	}
 
+        @Override
 	public void doVisit(Node n) throws JasperException {
 	    if ((lineNum >= n.getBeginJavaLine())
 		    && (lineNum < n.getEndJavaLine())) {

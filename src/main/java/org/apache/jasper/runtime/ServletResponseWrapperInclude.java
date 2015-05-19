@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,36 +41,39 @@ public class ServletResponseWrapperInclude extends HttpServletResponseWrapper {
     /**
      * PrintWriter which appends to the JspWriter of the including page.
      */
-    private PrintWriter printWriter;
+    private final PrintWriter printWriter;
 
-    private JspWriter jspWriter;
+    private final JspWriter jspWriter;
 
-    public ServletResponseWrapperInclude(ServletResponse response, 
-					 JspWriter jspWriter) {
-	super((HttpServletResponse)response);
-	this.printWriter = new PrintWriter(jspWriter);
-	this.jspWriter = jspWriter;
+    public ServletResponseWrapperInclude(ServletResponse response,
+                                         JspWriter jspWriter) {
+        super((HttpServletResponse)response);
+        this.printWriter = new PrintWriter(jspWriter);
+        this.jspWriter = jspWriter;
     }
 
     /**
      * Returns a wrapper around the JspWriter of the including page.
      */
+    @Override
     public PrintWriter getWriter() throws IOException {
-	return printWriter;
+        return printWriter;
     }
 
+    @Override
     public ServletOutputStream getOutputStream() throws IOException {
-	throw new IllegalStateException();
+        throw new IllegalStateException();
     }
 
     /**
      * Clears the output buffer of the JspWriter associated with the including
      * page.
      */
+    @Override
     public void resetBuffer() {
-	try {
-	    jspWriter.clearBuffer();
-	} catch (IOException ioe) {
-	}
+        try {
+            jspWriter.clearBuffer();
+        } catch (IOException ioe) {
+        }
     }
 }

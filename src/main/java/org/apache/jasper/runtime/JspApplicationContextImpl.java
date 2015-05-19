@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.el.CompositeELResolver;
 import javax.el.ELContextEvent;
 import javax.el.ELContextListener;
 import javax.el.ELResolver;
@@ -37,19 +38,19 @@ import org.apache.jasper.el.JasperELResolver;
 
 /**
  * Implementation of JspApplicationContext
- * 
+ *
  * @author Jacob Hookom
  */
 public class JspApplicationContextImpl implements JspApplicationContext {
 
-	private final static String KEY = JspApplicationContextImpl.class.getName();
+    private static final String KEY = JspApplicationContextImpl.class.getName();
 
     private final ExpressionFactory expressionFactory =
             ExpressionFactory.newInstance();
 
-	private final List<ELContextListener> contextListeners = new ArrayList<ELContextListener>();
+    private final List<ELContextListener> contextListeners = new ArrayList<>();
 
-	private final List<ELResolver> resolvers = new ArrayList<ELResolver>();
+    private final List<ELResolver> resolvers = new ArrayList<>();
 
 	private boolean instantiated = false;
 
@@ -59,6 +60,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 
 	}
 
+    @Override
 	public void addELContextListener(ELContextListener listener) {
 		if (listener == null) {
 			throw MESSAGES.nullElContextListener();
@@ -90,6 +92,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
         if (Constants.IS_SECURITY_ENABLED) {
             ctx = AccessController.doPrivileged(
                     new PrivilegedAction<ELContextImpl>() {
+                        @Override
                         public ELContextImpl run() {
                             return new ELContextImpl(r);
                         }
@@ -111,11 +114,14 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 	private ELResolver createELResolver() {
 		this.instantiated = true;
 		if (this.resolver == null) {
-			this.resolver = new JasperELResolver(this.resolvers, expressionFactory.getStreamELResolver());
+            CompositeELResolver r = new JasperELResolver(this.resolvers,
+                    expressionFactory.getStreamELResolver());
+            this.resolver = r;
 		}
 		return this.resolver;
 	}
 
+    @Override
 	public void addELResolver(ELResolver resolver) throws IllegalStateException {
 		if (resolver == null) {
 			throw MESSAGES.nullElResolver();
@@ -126,6 +132,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 		this.resolvers.add(resolver);
 	}
 
+    @Override
 	public ExpressionFactory getExpressionFactory() {
 		return expressionFactory;
 	}

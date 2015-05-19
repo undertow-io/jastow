@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ package org.apache.jasper.xmlparser;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 
 /**
@@ -28,35 +28,25 @@ import java.io.Reader;
  * byte streams that only contain 7-bit ASCII characters.
  *
  * @author Andy Clark, IBM
- *
- * @version $Id: ASCIIReader.java 793 2008-09-27 17:44:11Z remy.maucherat@jboss.com $
  */
-public class ASCIIReader
-    extends Reader {
-
-    //
-    // Constants
-    //
-
-    /** Default byte buffer size (2048). */
-    public static final int DEFAULT_BUFFER_SIZE = 2048;
+public class ASCIIReader extends Reader {
 
     //
     // Data
     //
 
     /** Input stream. */
-    protected InputStream fInputStream;
+    private final InputStream fInputStream;
 
     /** Byte buffer. */
-    protected byte[] fBuffer;
+    private final byte[] fBuffer;
 
     //
     // Constructors
     //
 
-    /** 
-     * Constructs an ASCII reader from the specified input stream 
+    /**
+     * Constructs an ASCII reader from the specified input stream
      * and buffer size.
      *
      * @param inputStream The input stream.
@@ -84,6 +74,7 @@ public class ASCIIReader
      *
      * @exception  IOException  If an I/O error occurs
      */
+    @Override
     public int read() throws IOException {
         int b0 = fInputStream.read();
         if (b0 > 0x80) {
@@ -106,6 +97,7 @@ public class ASCIIReader
      *
      * @exception  IOException  If an I/O error occurs
      */
+    @Override
     public int read(char ch[], int offset, int length) throws IOException {
         if (length > fBuffer.length) {
             length = fBuffer.length;
@@ -131,6 +123,7 @@ public class ASCIIReader
      *
      * @exception  IOException  If an I/O error occurs
      */
+    @Override
     public long skip(long n) throws IOException {
         return fInputStream.skip(n);
     } // skip(long):long
@@ -144,6 +137,7 @@ public class ASCIIReader
      *
      * @exception  IOException  If an I/O error occurs
      */
+    @Override
     public boolean ready() throws IOException {
 	return false;
     } // ready()
@@ -151,6 +145,7 @@ public class ASCIIReader
     /**
      * Tell whether this stream supports the mark() operation.
      */
+    @Override
     public boolean markSupported() {
 	return fInputStream.markSupported();
     } // markSupported()
@@ -168,6 +163,7 @@ public class ASCIIReader
      * @exception  IOException  If the stream does not support mark(),
      *                          or if some other I/O error occurs
      */
+    @Override
     public void mark(int readAheadLimit) throws IOException {
 	fInputStream.mark(readAheadLimit);
     } // mark(int)
@@ -185,6 +181,7 @@ public class ASCIIReader
      *                          or if the stream does not support reset(),
      *                          or if some other I/O error occurs
      */
+    @Override
     public void reset() throws IOException {
         fInputStream.reset();
     } // reset()
@@ -196,6 +193,7 @@ public class ASCIIReader
      *
      * @exception  IOException  If an I/O error occurs
      */
+     @Override
      public void close() throws IOException {
          fInputStream.close();
      } // close()

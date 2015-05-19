@@ -24,11 +24,13 @@ import java.util.HashMap;
 import javax.servlet.ServletException;
 
 import io.undertow.jsp.HackInstanceManager;
+import io.undertow.jsp.JspFileHandler;
 import io.undertow.jsp.JspServletBuilder;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
+import io.undertow.servlet.api.ServletInfo;
 import io.undertow.servlet.test.util.TestClassIntrospector;
 import io.undertow.servlet.test.util.TestResourceLoader;
 import io.undertow.testutils.DefaultServer;
@@ -38,6 +40,7 @@ import org.apache.http.client.methods.HttpGet;
 import io.undertow.testutils.TestHttpClient;
 import org.apache.jasper.deploy.JspPropertyGroup;
 import org.apache.jasper.deploy.TagLibraryInfo;
+import org.apache.jasper.servlet.JspServlet;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -66,7 +69,12 @@ public class SimpleJspTestCase {
                 .setClassIntrospecter(TestClassIntrospector.INSTANCE)
                 .setDeploymentName("servletContext.war")
                 .setResourceManager(new TestResourceLoader(SimpleJspTestCase.class))
-                .addServlet(JspServletBuilder.createServlet("Default Jsp Servlet", "*.jsp"));
+                .addServlet(JspServletBuilder.createServlet("Default Jsp Servlet", "*.jsp"))
+                .addServlet(new ServletInfo("jsp-file", JspServlet.class)
+                                .addHandlerChainWrapper(JspFileHandler.jspFileHandlerWrapper("/a.jsp"))
+                               .addMapping("/jspFile"));
+
+
         JspServletBuilder.setupDeployment(builder, new HashMap<String, JspPropertyGroup>(), new HashMap<String, TagLibraryInfo>(), new HackInstanceManager());
 
         DeploymentManager manager = container.addDeployment(builder);
@@ -87,6 +95,20 @@ public class SimpleJspTestCase {
         TestHttpClient client = new TestHttpClient();
         try {
             HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/a.jsp");
+            HttpResponse result = client.execute(get);
+            Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+            final String response = HttpClientUtils.readResponse(result);
+            Assert.assertEquals("<HTML><BODY> Message:Hello JSP!</BODY></HTML>", response);
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
+
+    @Test
+    public void testServletJSPFile() throws IOException {
+        TestHttpClient client = new TestHttpClient();
+        try {
+            HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/jspFile");
             HttpResponse result = client.execute(get);
             Assert.assertEquals(200, result.getStatusLine().getStatusCode());
             final String response = HttpClientUtils.readResponse(result);

@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ package org.apache.jasper.compiler.tagplugin;
 
 
 /**
- * This interface allows the plugin author to make inqueries about the
+ * This interface allows the plugin author to make inquiries about the
  * properties of the current tag, and to use Jasper resources to generate
  * direct Java codes in place of tag handler invocations.
  */
@@ -49,7 +49,7 @@ public interface TagPluginContext {
 
     /**
      * Generate a declaration in the of the generated class.  This can be
-     * used to declare an innter class, a method, or a class variable.
+     * used to declare an inner class, a method, or a class variable.
      * @param id An unique ID identifying the declaration.  It is not
      *           part of the declaration, and is used to ensure that the
      *           declaration will only appear once.  If this method is
@@ -78,7 +78,7 @@ public interface TagPluginContext {
     String getConstantAttribute(String attribute);
 
     /**
-     * Generate codesto evaluate value of a attribute in the custom tag
+     * Generate codes to evaluate value of a attribute in the custom tag
      * The codes is a Java expression.
      * NOTE: Currently cannot handle attributes that are fragments.
      * @param attribute The specified attribute
@@ -94,7 +94,7 @@ public interface TagPluginContext {
      * Abandon optimization for this tag handler, and instruct
      * Jasper to generate the tag handler calls, as usual.
      * Should be invoked if errors are detected, or when the tag body
-     * is deemed too compilicated for optimization.
+     * is deemed too complicated for optimization.
      */
     void dontUseTagPlugin();
 
@@ -112,7 +112,7 @@ public interface TagPluginContext {
     /**
      * Associate the attribute with a value in the current tagplugin context.
      * The plugin attributes can be used for communication among tags that
-     * must work together as a group.  See <c:when> for an example.
+     * must work together as a group.  See &lt;c:when&gt; for an example.
      */
     void setPluginAttribute(String attr, Object value);
 

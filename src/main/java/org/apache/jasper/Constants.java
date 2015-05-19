@@ -5,18 +5,20 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Some constants and other global data that are used by the compiler and the runtime.
@@ -27,7 +29,7 @@ package org.apache.jasper;
  * @author Mark Roth
  */
 public class Constants {
-    
+
     /**
      * The servlet context attribute under which we record the Servlet API version
      * support declared for this webapp.
@@ -47,54 +49,44 @@ public class Constants {
 
     /**
      * The servlet context attribute under which we record the set of
-     * JSP tag libraries (as an object of type HashMap<String, TagLibraryInfo>) 
+     * JSP tag libraries (as an object of type HashMap<String, TagLibraryInfo>)
      * for this application.
      */
     public static final String JSP_TAG_LIBRARIES =
         "org.apache.jasper.JSP_TAG_LIBRARIES";
 
-
     /**
-     * The base class of the generated servlets. 
+     * The base class of the generated servlets.
      */
-    public static final String JSP_SERVLET_BASE = 
+    public static final String JSP_SERVLET_BASE =
         System.getProperty("org.apache.jasper.Constants.JSP_SERVLET_BASE", "org.apache.jasper.runtime.HttpJspBase");
 
     /**
-     * _jspService is the name of the method that is called by 
+     * _jspService is the name of the method that is called by
      * HttpJspBase.service(). This is where most of the code generated
      * from JSPs go.
      */
-    public static final String SERVICE_METHOD_NAME = 
-        System.getProperty("org.apache.jasper.Constants.SERVICE_METHOD_NAME", "_jspService");
-
-    /**
-     * Default servlet content type.
-     */
-    public static final String SERVLET_CONTENT_TYPE = "text/html";
+    public static final String SERVICE_METHOD_NAME =
+            System.getProperty("org.apache.jasper.Constants.SERVICE_METHOD_NAME", "_jspService");
 
     /**
      * These classes/packages are automatically imported by the
-     * generated code. 
+     * generated code.
      */
-    public static final String[] STANDARD_IMPORTS = { 
-	"javax.servlet.*", 
-	"javax.servlet.http.*", 
+    private static final String[] PRIVATE_STANDARD_IMPORTS = {
+        "javax.servlet.*",
+        "javax.servlet.http.*",
 	"javax.servlet.jsp.*"
     };
+    public static final List<String> STANDARD_IMPORTS =
+        Collections.unmodifiableList(Arrays.asList(PRIVATE_STANDARD_IMPORTS));
 
     /**
-     * ServletContext attribute for the JSP Servlet options.
+     * ServletContext attribute for classpath. This is tomcat specific.
+     * Other servlet engines may choose to support this attribute if they
+     * want to have this JSP engine running on them.
      */
-    public static final String SERVLET_OPTIONS = 
-        System.getProperty("org.apache.jasper.Constants.SERVLET_OPTIONS", "org.apache.catalina.jsp_options");
-
-    /**
-     * ServletContext attribute for classpath. This is tomcat specific. 
-     * Other servlet engines may choose to support this attribute if they 
-     * want to have this JSP engine running on them. 
-     */
-    public static final String SERVLET_CLASSPATH = 
+    public static final String SERVLET_CLASSPATH =
         System.getProperty("org.apache.jasper.Constants.SERVLET_CLASSPATH", "org.apache.catalina.jsp_classpath");
 
     /**
@@ -103,9 +95,8 @@ public class Constants {
      * value returned by <code>request.getServletPath()</code> to select
      * the JSP page to be executed.
      */
-    public static final String JSP_FILE = 
-        System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file");
-
+    public static final String JSP_FILE =
+            System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file");
 
     /**
      * Default size of the JSP buffer.
@@ -124,36 +115,30 @@ public class Constants {
 
     /**
      * The query parameter that causes the JSP engine to just
-     * pregenerated the servlet but not invoke it. 
+     * pregenerated the servlet but not invoke it.
      */
-    public static final String PRECOMPILE = 
+    public static final String PRECOMPILE =
         System.getProperty("org.apache.jasper.Constants.PRECOMPILE", "jsp_precompile");
 
     /**
      * The default package name for compiled jsp pages.
      */
-    public static final String JSP_PACKAGE_NAME = 
+    public static final String JSP_PACKAGE_NAME =
         System.getProperty("org.apache.jasper.Constants.JSP_PACKAGE_NAME", "org.apache.jsp");
 
     /**
      * The default package name for tag handlers generated from tag files
      */
-    public static final String TAG_FILE_PACKAGE_NAME = 
+    public static final String TAG_FILE_PACKAGE_NAME =
         System.getProperty("org.apache.jasper.Constants.TAG_FILE_PACKAGE_NAME", "org.apache.jsp.tag");
 
     /**
-     * Servlet context and request attributes that the JSP engine
-     * uses. 
+     * Default URLs to download the plugin for Netscape and IE.
      */
-    public static final String INC_SERVLET_PATH = "javax.servlet.include.servlet_path";
-
-    /**
-     * Default URLs to download the pluging for Netscape and IE.
-     */
-    public static final String NS_PLUGIN_URL = 
+    public static final String NS_PLUGIN_URL =
         "http://java.sun.com/products/plugin/";
 
-    public static final String IE_PLUGIN_URL = 
+    public static final String IE_PLUGIN_URL =
         "http://java.sun.com/products/plugin/1.2.2/jinstall-1_2_2-win.cab#Version=1,2,2,0";
 
     /**
@@ -165,20 +150,44 @@ public class Constants {
     /**
      * Has security been turned on?
      */
-    public static final boolean IS_SECURITY_ENABLED = 
+    public static final boolean IS_SECURITY_ENABLED =
         (System.getSecurityManager() != null);
 
     public static final boolean USE_INSTANCE_MANAGER_FOR_TAGS =
-        Boolean.valueOf(System.getProperty("org.apache.jasper.Constants.USE_INSTANCE_MANAGER_FOR_TAGS", "true")).booleanValue();
-
-    public static final boolean INJECT_TAGS =
-        Boolean.valueOf(System.getProperty("org.apache.jasper.Constants.INJECT_TAGS", "false")).booleanValue();
+        Boolean.valueOf(System.getProperty("org.apache.jasper.Constants.USE_INSTANCE_MANAGER_FOR_TAGS", "false")).booleanValue();
 
     /**
      * The name of the path parameter used to pass the session identifier
      * back and forth with the client.
      */
-    public static final String SESSION_PARAMETER_NAME = System.getProperty("org.apache.catalina.jsessionid", "jsessionid");
+    public static final String SESSION_PARAMETER_NAME =
+        System.getProperty("org.apache.catalina.SESSION_PARAMETER_NAME",
+                "jsessionid");
+
+    /**
+     * Name of the system property containing
+     * the tomcat product installation path
+     */
+    public static final String CATALINA_HOME_PROP = "catalina.home";
+
+
+    /**
+     * Name of the ServletContext init-param that determines if the XML parsers
+     * used for *.tld files will be validating or not.
+     * <p>
+     * This must be kept in sync with org.apache.catalina.Globals
+     */
+    public static final String XML_VALIDATION_TLD_INIT_PARAM =
+            "org.apache.jasper.XML_VALIDATE_TLD";
+
+    /**
+     * Name of the ServletContext init-param that determines if the XML parsers
+     * will block the resolution of external entities.
+     * <p>
+     * This must be kept in sync with org.apache.catalina.Globals
+     */
+    public static final String XML_BLOCK_EXTERNAL_INIT_PARAM =
+            "org.apache.jasper.XML_BLOCK_EXTERNAL";
 
     public static final String PERMISSION_COLLECTION_ATTRIBUTE_NAME = "org.apache.jasper.Constants.PERMISSION_COLLECTION_ATTRIBUTE_NAME";
     public static final String CODE_SOURCE_ATTRIBUTE_NAME = "org.apache.jasper.Constants.CODE_SOURCE_ATTRIBUTE_NAME";

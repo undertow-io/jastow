@@ -58,17 +58,17 @@ public class SymbolTable {
     //
 
     /** Default table size. */
-    protected static final int TABLE_SIZE = 101;
+    private static final int TABLE_SIZE = 101;
 
     //
     // Data
     //
 
     /** Buckets. */
-    protected Entry[] fBuckets = null;
+    private final Entry[] fBuckets;
 
     // actual table size
-    protected int fTableSize;
+    private final int fTableSize;
 
     //
     // Constructors
@@ -253,23 +253,23 @@ public class SymbolTable {
      * This class is a symbol table entry. Each entry acts as a node
      * in a linked list.
      */
-    protected static final class Entry {
+    private static final class Entry {
 
         //
         // Data
         //
 
         /** Symbol. */
-        public String symbol;
+        private final String symbol;
 
         /**
          * Symbol characters. This information is duplicated here for
          * comparison performance.
          */
-        public char[] characters;
+        private final char[] characters;
 
         /** The next entry. */
-        public Entry next;
+        private final Entry next;
 
         //
         // Constructors

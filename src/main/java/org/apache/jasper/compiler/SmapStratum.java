@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents the line and file mappings associated with a JSR-045
@@ -38,7 +38,7 @@ public class SmapStratum {
      * Represents a single LineSection in an SMAP, associated with
      * a particular stratum.
      */
-    public static class LineInfo {
+    private static class LineInfo {
         private int inputStartLine = -1;
         private int outputStartLine = -1;
         private int lineFileID = 0;
@@ -108,6 +108,7 @@ public class SmapStratum {
             return out.toString();
         }
 
+        @Override
         public String toString() {
             return getString();
         }
@@ -116,10 +117,10 @@ public class SmapStratum {
     //*********************************************************************
     // Private state
 
-    private String stratumName;
-    private List fileNameList;
-    private List filePathList;
-    private List lineData;
+    private final String stratumName;
+    private final List<String> fileNameList;
+    private final List<String> filePathList;
+    private final List<LineInfo> lineData;
     private int lastFileID;
 
     //*********************************************************************
@@ -133,9 +134,9 @@ public class SmapStratum {
      */
     public SmapStratum(String stratumName) {
         this.stratumName = stratumName;
-        fileNameList = new ArrayList();
-        filePathList = new ArrayList();
-        lineData = new ArrayList();
+        fileNameList = new ArrayList<>();
+        filePathList = new ArrayList<>();
+        lineData = new ArrayList<>();
         lastFileID = 0;
     }
 
@@ -178,12 +179,12 @@ public class SmapStratum {
             System.out.print(li.toString());
         }
 */
-        //Incorporate each LineInfo into the previous LineInfo's 
+        //Incorporate each LineInfo into the previous LineInfo's
         //outputLineIncrement, if possible
         int i = 0;
         while (i < lineData.size() - 1) {
-            LineInfo li = (LineInfo)lineData.get(i);
-            LineInfo liNext = (LineInfo)lineData.get(i + 1);
+            LineInfo li = lineData.get(i);
+            LineInfo liNext = lineData.get(i + 1);
             if (!liNext.lineFileIDSet
                 && liNext.inputStartLine == li.inputStartLine
                 && liNext.inputLineCount == 1
@@ -205,8 +206,8 @@ public class SmapStratum {
         //inputLineCount, if possible
         i = 0;
         while (i < lineData.size() - 1) {
-            LineInfo li = (LineInfo)lineData.get(i);
-            LineInfo liNext = (LineInfo)lineData.get(i + 1);
+            LineInfo li = lineData.get(i);
+            LineInfo liNext = lineData.get(i + 1);
             if (!liNext.lineFileIDSet
                 && liNext.inputStartLine == li.inputStartLine + li.inputLineCount
                 && liNext.outputLineIncrement == li.outputLineIncrement
@@ -236,7 +237,7 @@ public class SmapStratum {
      *        carefully, and only when they uniquely identify a file.
      * @param inputLineCount the number of lines in the input to map
      *        (SMAP <tt>LineFileCount</tt>)
-     * @param outputStartLine starting line in the output file 
+     * @param outputStartLine starting line in the output file
      *        (SMAP <tt>OutputStartLine</tt>)
      * @param outputLineIncrement number of output lines to map to each
      *        input line (SMAP <tt>OutputLineIncrement</tt>).  <i>Given the
@@ -255,7 +256,7 @@ public class SmapStratum {
         if (fileIndex == -1) // still
             throw MESSAGES.unknownFileName(inputFileName);
 
-        //Jasper incorrectly SMAPs certain Nodes, giving them an 
+        //Jasper incorrectly SMAPs certain Nodes, giving them an
         //outputStartLine of 0.  This can cause a fatal error in
         //optimizeLineSection, making it impossible for Jasper to
         //compile the JSP.  Until we can fix the underlying
@@ -309,7 +310,7 @@ public class SmapStratum {
                 out.append("+ " + i + " " + fileNameList.get(i) + "\n");
                 // Source paths must be relative, not absolute, so we
                 // remove the leading "/", if one exists.
-                String filePath = (String)filePathList.get(i);
+                String filePath = filePathList.get(i);
                 if (filePath.startsWith("/")) {
                     filePath = filePath.substring(1);
                 }
@@ -323,13 +324,14 @@ public class SmapStratum {
         out.append("*L\n");
         bound = lineData.size();
         for (int i = 0; i < bound; i++) {
-            LineInfo li = (LineInfo)lineData.get(i);
+            LineInfo li = lineData.get(i);
             out.append(li.getString());
         }
 
         return out.toString();
     }
 
+    @Override
     public String toString() {
         return getString();
     }

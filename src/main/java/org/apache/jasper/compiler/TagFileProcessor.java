@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,17 +21,14 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map.Entry;
 import java.util.Vector;
-
 import javax.el.MethodExpression;
 import javax.el.ValueExpression;
 import javax.servlet.jsp.tagext.TagAttributeInfo;
-import javax.servlet.jsp.tagext.TagExtraInfo;
 import javax.servlet.jsp.tagext.TagFileInfo;
 import javax.servlet.jsp.tagext.TagInfo;
 import javax.servlet.jsp.tagext.TagLibraryInfo;
@@ -42,17 +39,19 @@ import org.apache.jasper.JasperException;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.runtime.JspSourceDependent;
 import org.apache.jasper.servlet.JspServletWrapper;
+import org.apache.tomcat.util.scan.Jar;
+import org.apache.tomcat.util.scan.JarFactory;
 
 /**
  * 1. Processes and extracts the directive info in a tag file. 2. Compiles and
  * loads tag files used in a JSP file.
- * 
+ *
  * @author Kin-man Chung
  */
 
 class TagFileProcessor {
 
-    private Vector tempVector;
+    private Vector<Compiler> tempVector;
 
     /**
      * A visitor the tag file
@@ -103,8 +102,6 @@ class TagFileProcessor {
 
         private String path = null;
 
-        private TagExtraInfo tei = null;
-
         private String bodycontent = null;
 
         private String description = null;
@@ -119,9 +116,9 @@ class TagFileProcessor {
 
         private String example = null;
 
-        private Vector attributeVector;
+        private Vector<TagAttributeInfo> attributeVector;
 
-        private Vector variableVector;
+        private Vector<TagVariableInfo> variableVector;
 
         private static final String ATTR_NAME = MESSAGES.tagFileProcessorAttrName();
 
@@ -133,9 +130,9 @@ class TagFileProcessor {
 
         private static final String TAG_DYNAMIC = MESSAGES.tagFileProcessorTagDynamic();
 
-        private HashMap nameTable = new HashMap();
+        private HashMap<String,NameEntry> nameTable = new HashMap<>();
 
-        private HashMap nameFromTable = new HashMap();
+        private HashMap<String,NameEntry> nameFromTable = new HashMap<>();
 
         public TagFileDirectiveVisitor(Compiler compiler,
                 TagLibraryInfo tagLibInfo, String name, String path) {
@@ -143,10 +140,11 @@ class TagFileProcessor {
             this.tagLibInfo = tagLibInfo;
             this.name = name;
             this.path = path;
-            attributeVector = new Vector();
-            variableVector = new Vector();
+            attributeVector = new Vector<>();
+            variableVector = new Vector<>();
         }
 
+        @Override
         public void visit(Node.TagDirective n) throws JasperException {
 
             JspUtil.checkAttributes(TagConstants.TAG_DIRECTIVE_ACTION, n, tagDirectiveAttrs, err);
@@ -159,7 +157,7 @@ class TagFileProcessor {
                             .equalsIgnoreCase(TagInfo.BODY_CONTENT_TAG_DEPENDENT)
                     && !bodycontent
                             .equalsIgnoreCase(TagInfo.BODY_CONTENT_SCRIPTLESS)) {
-                err.jspError(n.getStart(), MESSAGES.invalidBodyContentInTagDirective(bodycontent));
+                err.jspError(n, MESSAGES.invalidBodyContentInTagDirective(bodycontent));
             }
             dynamicAttrsMapName = checkConflict(n, dynamicAttrsMapName,
                     "dynamic-attributes");
@@ -180,7 +178,7 @@ class TagFileProcessor {
             String attrValue = n.getAttributeValue(attr);
             if (attrValue != null) {
                 if (oldAttrValue != null && !oldAttrValue.equals(attrValue)) {
-                    err.jspError(n.getStart(), MESSAGES.invalidConflictingTagDirectiveAttributeValues(attr,
+                    err.jspError(n, MESSAGES.invalidConflictingTagDirectiveAttributeValues(attr,
                             oldAttrValue, attrValue));
                 }
                 result = attrValue;
@@ -205,7 +203,7 @@ class TagFileProcessor {
             String deferredValueType = n.getAttributeValue("deferredValueType");
             if (deferredValueType != null) {
                 if (deferredValueSpecified && !deferredValue) {
-                    err.jspError(n.getStart(), MESSAGES.cannotUseValueTypeWithoutDeferredValue());
+                    err.jspError(n, MESSAGES.cannotUseValueTypeWithoutDeferredValue());
                 } else {
                     deferredValue = true;
                 }
@@ -228,7 +226,7 @@ class TagFileProcessor {
                     .getAttributeValue("deferredMethodSignature");
             if (deferredMethodSignature != null) {
                 if (deferredMethodSpecified && !deferredMethod) {
-                    err.jspError(n.getStart(), MESSAGES.cannotUseMethodSignatureWithoutDeferredMethod());
+                    err.jspError(n, MESSAGES.cannotUseMethodSignatureWithoutDeferredMethod());
                 } else {
                     deferredMethod = true;
                 }
@@ -237,7 +235,7 @@ class TagFileProcessor {
             }
 
             if (deferredMethod && deferredValue) {
-                err.jspError(n.getStart(), MESSAGES.cannotUseBothDeferredValueAndMethod());
+                err.jspError(n, MESSAGES.cannotUseBothDeferredValueAndMethod());
             }
             
             String attrName = n.getAttributeValue("name");
@@ -255,13 +253,13 @@ class TagFileProcessor {
                 // type is fixed to "JspFragment" and a translation error
                 // must occur if specified.
                 if (type != null) {
-                    err.jspError(n.getStart(), MESSAGES.cannotUseFragmentWithType());
+                    err.jspError(n, MESSAGES.cannotUseFragmentWithType());
                 }
                 // rtexprvalue is fixed to "true" and a translation error
                 // must occur if specified.
                 rtexprvalue = true;
                 if (rtexprvalueString != null) {
-                    err.jspError(n.getStart(), MESSAGES.cannotUseFragmentWithRtexprValue());
+                    err.jspError(n, MESSAGES.cannotUseFragmentWithRtexprValue());
                 }
             } else {
                 if (type == null)
@@ -349,28 +347,6 @@ class TagFileProcessor {
                     nameFromAttribute, className, declare, scope));
         }
 
-        /*
-         * Returns the vector of attributes corresponding to attribute
-         * directives.
-         */
-        public Vector getAttributesVector() {
-            return attributeVector;
-        }
-
-        /*
-         * Returns the vector of variables corresponding to variable directives.
-         */
-        public Vector getVariablesVector() {
-            return variableVector;
-        }
-
-        /*
-         * Returns the value of the dynamic-attributes tag directive attribute.
-         */
-        public String getDynamicAttributesMapName() {
-            return dynamicAttrsMapName;
-        }
-
         public TagInfo getTagInfo() throws JasperException {
 
             if (name == null) {
@@ -393,7 +369,7 @@ class TagFileProcessor {
             attributeVector.copyInto(tagAttributeInfo);
 
             return new JasperTagInfo(name, tagClassName, bodycontent,
-                    description, tagLibInfo, tei, tagAttributeInfo,
+                    description, tagLibInfo, null, tagAttributeInfo,
                     displayName, smallIcon, largeIcon, tagVariableInfos,
                     dynamicAttrsMapName);
         }
@@ -427,14 +403,14 @@ class TagFileProcessor {
         /**
          * Reports a translation error if names specified in attributes of
          * directives are not unique in this translation unit.
-         * 
+         *
          * The value of the following attributes must be unique. 1. 'name'
          * attribute of an attribute directive 2. 'name-given' attribute of a
          * variable directive 3. 'alias' attribute of variable directive 4.
          * 'dynamic-attributes' of a tag directive except that
          * 'dynamic-attributes' can (and must) have the same value when it
          * appears in multiple tag directives.
-         * 
+         *
          * Also, 'name-from' attribute of a variable directive cannot have the
          * same value as that from another variable directive.
          */
@@ -446,12 +422,13 @@ class TagFileProcessor {
         private void checkUniqueName(String name, String type, Node n,
                 TagAttributeInfo attr) throws JasperException {
 
-            HashMap table = (type == VAR_NAME_FROM) ? nameFromTable : nameTable;
-            NameEntry nameEntry = (NameEntry) table.get(name);
+            HashMap<String, NameEntry> table = (type == VAR_NAME_FROM) ? nameFromTable : nameTable;
+            NameEntry nameEntry = table.get(name);
             if (nameEntry != null) {
-                if (type != TAG_DYNAMIC || nameEntry.getType() != TAG_DYNAMIC) {
+                if (!TAG_DYNAMIC.equals(type) ||
+                        !TAG_DYNAMIC.equals(nameEntry.getType())) {
                     int line = nameEntry.getNode().getStart().getLineNumber();
-                    err.jspError(n.getStart(), MESSAGES.invalidDuplicateNames(type,
+                    err.jspError(n, MESSAGES.invalidDuplicateNames(type,
                             nameEntry.getType(), line));
                 }
             } else {
@@ -460,16 +437,15 @@ class TagFileProcessor {
         }
 
         /**
-         * Perform miscellean checks after the nodes are visited.
+         * Perform miscellaneous checks after the nodes are visited.
          */
         void postCheck() throws JasperException {
             // Check that var.name-from-attributes has valid values.
-            Iterator iter = nameFromTable.keySet().iterator();
+            Iterator<String> iter = nameFromTable.keySet().iterator();
             while (iter.hasNext()) {
-                String nameFrom = (String) iter.next();
-                NameEntry nameEntry = (NameEntry) nameTable.get(nameFrom);
-                NameEntry nameFromEntry = (NameEntry) nameFromTable
-                        .get(nameFrom);
+                String nameFrom = iter.next();
+                NameEntry nameEntry = nameTable.get(nameFrom);
+                NameEntry nameFromEntry = nameFromTable.get(nameFrom);
                 Node nameFromNode = nameFromEntry.getNode();
                 if (nameEntry == null) {
                     err.jspError(nameFromNode.getStart(),
@@ -493,49 +469,22 @@ class TagFileProcessor {
      * in it. The method is used to obtain the info on the tag file, when the
      * handler that it represents is referenced. The tag file is not compiled
      * here.
-     * 
+     *
      * @param pc
      *            the current ParserController used in this compilation
      * @param name
      *            the tag name as specified in the TLD
-     * @param tagfile
+     * @param path
      *            the path for the tagfile
-     * @param tagLibInfo
-     *            the TagLibraryInfo object associated with this TagInfo
-     * @return a TagInfo object assembled from the directives in the tag file.
-     * @deprecated Use {@link TagFileProcessor#parseTagFileDirectives(
-     *                  ParserController, String, String, URL, TagLibraryInfo)}
-     *             See https://issues.apache.org/bugzilla/show_bug.cgi?id=46471
-     */
-    public static TagInfo parseTagFileDirectives(ParserController pc,
-            String name, String path, TagLibraryInfo tagLibInfo)
-            throws JasperException {
-
-        return parseTagFileDirectives(pc, name, path,
-                pc.getJspCompilationContext().getTagFileJarUrl(path),
-                tagLibInfo);
-    }
-    
-    /**
-     * Parses the tag file, and collects information on the directives included
-     * in it. The method is used to obtain the info on the tag file, when the
-     * handler that it represents is referenced. The tag file is not compiled
-     * here.
-     * 
-     * @param pc
-     *            the current ParserController used in this compilation
-     * @param name
-     *            the tag name as specified in the TLD
-     * @param tagfile
-     *            the path for the tagfile
-     * @param tagFileJarUrl
-     *            the url for the Jar containign the tag file 
+     * @param jar
+     *            the Jar resource containing the tag file
      * @param tagLibInfo
      *            the TagLibraryInfo object associated with this TagInfo
      * @return a TagInfo object assembled from the directives in the tag file.
      */
+    @SuppressWarnings("null") // page can't be null
     public static TagInfo parseTagFileDirectives(ParserController pc,
-            String name, String path, URL tagFileJarUrl, TagLibraryInfo tagLibInfo)
+            String name, String path, Jar jar, TagLibraryInfo tagLibInfo)
             throws JasperException {
 
 
@@ -543,7 +492,7 @@ class TagFileProcessor {
 
         Node.Nodes page = null;
         try {
-            page = pc.parseTagFileDirectives(path, tagFileJarUrl);
+            page = pc.parseTagFileDirectives(path, jar);
         } catch (FileNotFoundException e) {
             err.jspError(MESSAGES.fileNotFound(path));
         } catch (IOException e) {
@@ -558,43 +507,48 @@ class TagFileProcessor {
         return tagFileVisitor.getTagInfo();
     }
 
-
     /**
      * Compiles and loads a tagfile.
      */
-    private Class loadTagFile(Compiler compiler, String tagFilePath,
+    private Class<?> loadTagFile(Compiler compiler, String tagFilePath,
             TagInfo tagInfo, PageInfo parentPageInfo) throws JasperException {
 
-        URL tagFileJarUrl = null;
+        Jar tagJar = null;
+        Jar tagJarOriginal = null;
+        try {
         if (tagFilePath.startsWith("/META-INF/")) {
             try {
                 String[] location = compiler.getCompilationContext().getTldLocation(tagInfo.getTagLibrary().getURI());
                 URL jarUrl = compiler.getCompilationContext().getServletContext().getResource(location[0]);
-                tagFileJarUrl = new URL("jar:" + jarUrl + "!/");
-            } catch (MalformedURLException e) {
-                // Ignore ...
+                tagJar =  JarFactory.newInstance(new URL("jar:" + jarUrl + "!/"));
+
+                } catch (IOException ioe) {
+                    throw new JasperException(ioe);
             }
         }
-        String tagFileJarPath;
-        if (tagFileJarUrl == null) {
-            tagFileJarPath = "";
+            String wrapperUri;
+            if (tagJar == null) {
+                wrapperUri = tagFilePath;
         } else {
-            tagFileJarPath = tagFileJarUrl.toString();
+                wrapperUri = tagJar.getURL(tagFilePath);
         }
 
         JspCompilationContext ctxt = compiler.getCompilationContext();
         JspRuntimeContext rctxt = ctxt.getRuntimeContext();
-        JspServletWrapper wrapper = rctxt.getWrapper(tagFileJarPath + tagFilePath);
 
         synchronized (rctxt) {
+                JspServletWrapper wrapper = null;
+                try {
+                    wrapper = rctxt.getWrapper(wrapperUri);
             if (wrapper == null) {
                 wrapper = new JspServletWrapper(ctxt.getServletContext(), ctxt
                         .getOptions(), tagFilePath, tagInfo, ctxt
-                        .getRuntimeContext(), tagFileJarUrl);
-                rctxt.addWrapper(tagFileJarPath + tagFilePath, wrapper);
+                                .getRuntimeContext(), tagJar);
+                        rctxt.addWrapper(wrapperUri, wrapper);
 
                 // Use same classloader and classpath for compiling tag files
-                wrapper.getJspEngineContext().setClassLoader(ctxt.getClassLoader());
+                        wrapper.getJspEngineContext().setClassLoader(
+                                ctxt.getClassLoader());
                 wrapper.getJspEngineContext().setClassPath(ctxt.getClassPath());
             } else {
                 // Make sure that JspCompilationContext gets the latest TagInfo
@@ -602,23 +556,29 @@ class TagFileProcessor {
                 // time the tag file was scanned for directives, and the tag
                 // file may have been modified since then.
                 wrapper.getJspEngineContext().setTagInfo(tagInfo);
+                        // This compilation needs to use the current tagJar.
+                        // Compilation may be nested in which case the old tagJar
+                        // will need to be restored
+                        tagJarOriginal = wrapper.getJspEngineContext().getTagFileJar();
+                        wrapper.getJspEngineContext().setTagFileJar(tagJar);
             }
 
-            Class tagClazz;
+                    Class<?> tagClazz;
             int tripCount = wrapper.incTripCount();
             try {
                 if (tripCount > 0) {
                     // When tripCount is greater than zero, a circular
-                    // dependency exists. The circularily dependant tag
+                            // dependency exists. The circularly dependent tag
                     // file is compiled in prototype mode, to avoid infinite
                     // recursion.
 
                     JspServletWrapper tempWrapper = new JspServletWrapper(ctxt
                             .getServletContext(), ctxt.getOptions(),
                             tagFilePath, tagInfo, ctxt.getRuntimeContext(),
-                            ctxt.getTagFileJarUrl(tagFilePath));
+                                    tagJar);
                     // Use same classloader and classpath for compiling tag files
-                    tempWrapper.getJspEngineContext().setClassLoader(ctxt.getClassLoader());
+                            tempWrapper.getJspEngineContext().setClassLoader(
+                                    ctxt.getClassLoader());
                     tempWrapper.getJspEngineContext().setClassPath(ctxt.getClassPath());
                     tagClazz = tempWrapper.loadTagFilePrototype();
                     tempVector.add(tempWrapper.getJspEngineContext()
@@ -630,16 +590,18 @@ class TagFileProcessor {
                 wrapper.decTripCount();
             }
 
-            // Add the dependants for this tag file to its parent's
-            // dependant list. The only reliable dependency information
+                    // Add the dependents for this tag file to its parent's
+                    // Dependent list. The only reliable dependency information
             // can only be obtained from the tag instance.
             try {
                 Object tagIns = tagClazz.newInstance();
                 if (tagIns instanceof JspSourceDependent) {
-                    Iterator iter = ((List) ((JspSourceDependent) tagIns)
-                            .getDependants()).iterator();
+                            Iterator<Entry<String,Long>> iter = ((JspSourceDependent)
+                                    tagIns).getDependants().entrySet().iterator();
                     while (iter.hasNext()) {
-                        parentPageInfo.addDependant((String) iter.next());
+                                Entry<String,Long> entry = iter.next();
+                                parentPageInfo.addDependant(entry.getKey(),
+                                        entry.getValue());
                     }
                 }
             } catch (Exception e) {
@@ -647,6 +609,16 @@ class TagFileProcessor {
             }
 
             return tagClazz;
+                } finally {
+                    if (wrapper != null && tagJarOriginal != null) {
+                        wrapper.getJspEngineContext().setTagFileJar(tagJarOriginal);
+                    }
+                }
+            }
+        } finally {
+            if (tagJar != null) {
+                tagJar.close();
+            }
         }
     }
 
@@ -666,25 +638,28 @@ class TagFileProcessor {
             this.pageInfo = compiler.getPageInfo();
         }
 
+        @Override
         public void visit(Node.CustomTag n) throws JasperException {
             TagFileInfo tagFileInfo = n.getTagFileInfo();
             if (tagFileInfo != null) {
                 String tagFilePath = tagFileInfo.getPath();
                 if (tagFilePath.startsWith("/META-INF/")) {
                     // For tags in JARs, add the TLD and the tag as a dependency
+                     // For tags in JARs, add the TLD and the tag as a dependency
                     String[] location =
                         compiler.getCompilationContext().getTldLocation(
                                 tagFileInfo.getTagInfo().getTagLibrary().getURI());
                     // Add TLD
-                    pageInfo.addDependant("jar:" + location[0] + "!/" +
-                            location[1]);
+                    String path = "jar:" + location[0] + "!/" + location[1];
+                    pageInfo.addDependant(path, compiler.getCompilationContext().getLastModified(path));
                     // Add Tag
-                    pageInfo.addDependant("jar:" + location[0] + "!" +
-                            tagFilePath);
+                    path = "jar:" + location[0] + "!" + tagFilePath; //todo this will probably break
+                    pageInfo.addDependant(path, compiler.getCompilationContext().getLastModified(path));
                 } else {
-                    pageInfo.addDependant(tagFilePath);
+                    pageInfo.addDependant(tagFilePath,
+                            compiler.getCompilationContext().getLastModified(tagFilePath));
                 }
-                Class c = loadTagFile(compiler, tagFilePath, n.getTagInfo(),
+                Class<?> c = loadTagFile(compiler, tagFilePath, n.getTagInfo(),
                         pageInfo);
                 n.setTagHandlerClass(c);
             }
@@ -695,27 +670,27 @@ class TagFileProcessor {
     /**
      * Implements a phase of the translation that compiles (if necessary) the
      * tag files used in a JSP files. The directives in the tag files are
-     * assumed to have been proccessed and encapsulated as TagFileInfo in the
+     * assumed to have been processed and encapsulated as TagFileInfo in the
      * CustomTag nodes.
      */
     public void loadTagFiles(Compiler compiler, Node.Nodes page)
             throws JasperException {
 
-        tempVector = new Vector();
+        tempVector = new Vector<>();
         page.visit(new TagFileLoaderVisitor(compiler));
     }
 
     /**
      * Removed the java and class files for the tag prototype generated from the
      * current compilation.
-     * 
+     *
      * @param classFileName
      *            If non-null, remove only the class file with with this name.
      */
     public void removeProtoTypeFiles(String classFileName) {
-        Iterator iter = tempVector.iterator();
+        Iterator<Compiler> iter = tempVector.iterator();
         while (iter.hasNext()) {
-            Compiler c = (Compiler) iter.next();
+            Compiler c = iter.next();
             if (classFileName == null) {
                 c.removeGeneratedClassFiles();
             } else if (classFileName.equals(c.getCompilationContext()

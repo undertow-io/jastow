@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,12 +25,17 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Set;
 
 import javax.el.ELContext;
+import javax.el.ELException;
 import javax.el.ExpressionFactory;
+import javax.el.ImportHandler;
 import javax.el.ValueExpression;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -44,23 +49,16 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspFactory;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.el.ELException;
-import javax.servlet.jsp.el.ExpressionEvaluator;
-import javax.servlet.jsp.el.VariableResolver;
 import javax.servlet.jsp.tagext.BodyContent;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.el.ELContextImpl;
-import org.apache.jasper.el.ExpressionEvaluatorImpl;
-import org.apache.jasper.el.FunctionMapperImpl;
-import org.apache.jasper.el.VariableResolverImpl;
 import org.apache.jasper.security.SecurityUtil;
-import org.apache.jasper.util.Enumerator;
 
 /**
  * Implementation of the PageContext class from the JSP spec. Also doubles as a
  * VariableResolver for the EL.
- * 
+ *
  * @author Anil K. Vijendran
  * @author Larry Cable
  * @author Hans Bergsten
@@ -71,8 +69,8 @@ import org.apache.jasper.util.Enumerator;
  */
 public class PageContextImpl extends PageContext {
 
-    private static JspFactory jspf = JspFactory.getDefaultFactory();
-    
+    private static final JspFactory jspf = JspFactory.getDefaultFactory();
+
 	private BodyContentImpl[] outs;
 
 	private int depth;
@@ -89,7 +87,7 @@ public class PageContextImpl extends PageContext {
 	private String errorPageURL;
 
 	// page-scope attributes
-	private transient HashMap<String, Object> attributes;
+    private final transient HashMap<String, Object> attributes;
 
 	// per-request state
 	private transient ServletRequest request;
@@ -97,12 +95,12 @@ public class PageContextImpl extends PageContext {
 	private transient ServletResponse response;
 
 	private transient HttpSession session;
-	
+
 	private transient ELContextImpl elContext;
 
 	private boolean isIncluded;
-	
-	
+
+
 	// initial output stream
 	private transient JspWriter out;
 
@@ -113,20 +111,12 @@ public class PageContextImpl extends PageContext {
 	 */
 	PageContextImpl() {
 		this.outs = new BodyContentImpl[0];
-		this.attributes = new HashMap<String, Object>(16);
+        this.attributes = new HashMap<>(16);
 		this.depth = -1;
 	}
 
+    @Override
 	public void initialize(Servlet servlet, ServletRequest request,
-			ServletResponse response, String errorPageURL,
-			boolean needsSession, int bufferSize, boolean autoFlush)
-			throws IOException {
-
-		_initialize(servlet, request, response, errorPageURL, needsSession,
-				bufferSize, autoFlush);
-	}
-
-	private void _initialize(Servlet servlet, ServletRequest request,
 			ServletResponse response, String errorPageURL,
 			boolean needsSession, int bufferSize, boolean autoFlush)
 			throws IOException {
@@ -138,7 +128,7 @@ public class PageContextImpl extends PageContext {
 		this.errorPageURL = errorPageURL;
 		this.request = request;
 		this.response = response;
-		
+
 		// initialize application context
 		this.applicationContext = JspApplicationContextImpl.getInstance(context);
 
@@ -173,9 +163,11 @@ public class PageContextImpl extends PageContext {
 		setAttribute(PAGECONTEXT, this);
 		setAttribute(APPLICATION, context);
 
-		isIncluded = request.getAttribute("javax.servlet.include.servlet_path") != null;
+        isIncluded = request.getAttribute(
+                RequestDispatcher.INCLUDE_SERVLET_PATH) != null;
 	}
 
+    @Override
 	public void release() {
 		out = baseOut;
 		try {
@@ -205,9 +197,13 @@ public class PageContextImpl extends PageContext {
 		    baseOut.recycle();
 		    session = null;
 		    attributes.clear();
+            for (BodyContentImpl body: outs) {
+                body.recycle();
+            }
         }
 	}
 
+    @Override
 	public Object getAttribute(final String name) {
 
 		if (name == null) {
@@ -215,7 +211,9 @@ public class PageContextImpl extends PageContext {
 		}
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			return AccessController.doPrivileged(new PrivilegedAction() {
+            return AccessController.doPrivileged(
+                    new PrivilegedAction<Object>() {
+                @Override
 				public Object run() {
 					return doGetAttribute(name);
 				}
@@ -230,6 +228,7 @@ public class PageContextImpl extends PageContext {
 		return attributes.get(name);
 	}
 
+    @Override
 	public Object getAttribute(final String name, final int scope) {
 
 		if (name == null) {
@@ -237,7 +236,9 @@ public class PageContextImpl extends PageContext {
 		}
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			return AccessController.doPrivileged(new PrivilegedAction() {
+            return AccessController.doPrivileged(
+                    new PrivilegedAction<Object>() {
+                @Override
 				public Object run() {
 					return doGetAttribute(name, scope);
 				}
@@ -277,8 +278,9 @@ public class PageContextImpl extends PageContext {
 		}
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                @Override
+                public Void run() {
 					doSetAttribute(name, attribute);
 					return null;
 				}
@@ -296,6 +298,7 @@ public class PageContextImpl extends PageContext {
 		}
 	}
 
+    @Override
 	public void setAttribute(final String name, final Object o, final int scope) {
 
 		if (name == null) {
@@ -303,8 +306,9 @@ public class PageContextImpl extends PageContext {
 		}
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                @Override
+                public Void run() {
 					doSetAttribute(name, o, scope);
 					return null;
 				}
@@ -345,14 +349,16 @@ public class PageContextImpl extends PageContext {
 		}
 	}
 
+    @Override
 	public void removeAttribute(final String name, final int scope) {
 
 		if (name == null) {
 			throw MESSAGES.nullAttributeName();
 		}
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                @Override
+                public Void run() {
 					doRemoveAttribute(name, scope);
 					return null;
 				}
@@ -395,10 +401,11 @@ public class PageContextImpl extends PageContext {
 		}
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			return ((Integer) AccessController
-					.doPrivileged(new PrivilegedAction() {
-						public Object run() {
-							return new Integer(doGetAttributeScope(name));
+            return (AccessController
+                    .doPrivileged(new PrivilegedAction<Integer>() {
+                        @Override
+                        public Integer run() {
+                            return Integer.valueOf(doGetAttributeScope(name));
 						}
 					})).intValue();
 		} else {
@@ -429,9 +436,12 @@ public class PageContextImpl extends PageContext {
 		return 0;
 	}
 
+    @Override
 	public Object findAttribute(final String name) {
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			return AccessController.doPrivileged(new PrivilegedAction() {
+            return AccessController.doPrivileged(
+                    new PrivilegedAction<Object>() {
+                @Override
 				public Object run() {
 					if (name == null) {
 						throw MESSAGES.nullAttributeName();
@@ -473,11 +483,13 @@ public class PageContextImpl extends PageContext {
 		return context.getAttribute(name);
 	}
 
+    @Override
 	public Enumeration<String> getAttributeNamesInScope(final int scope) {
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			return (Enumeration) AccessController
-					.doPrivileged(new PrivilegedAction() {
-						public Object run() {
+            return AccessController.doPrivileged(
+                    new PrivilegedAction<Enumeration<String>>() {
+                        @Override
+                        public Enumeration<String> run() {
 							return doGetAttributeNamesInScope(scope);
 						}
 					});
@@ -486,10 +498,10 @@ public class PageContextImpl extends PageContext {
 		}
 	}
 
-	private Enumeration doGetAttributeNamesInScope(int scope) {
+    private Enumeration<String> doGetAttributeNamesInScope(int scope) {
 		switch (scope) {
 		case PAGE_SCOPE:
-			return new Enumerator(attributes.keySet().iterator());
+            return Collections.enumeration(attributes.keySet());
 
 		case REQUEST_SCOPE:
 			return request.getAttributeNames();
@@ -508,6 +520,7 @@ public class PageContextImpl extends PageContext {
 		}
 	}
 
+    @Override
 	public void removeAttribute(final String name) {
 
 		if (name == null) {
@@ -515,8 +528,9 @@ public class PageContextImpl extends PageContext {
 		}
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
-			AccessController.doPrivileged(new PrivilegedAction() {
-				public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                @Override
+                public Void run() {
 					doRemoveAttribute(name);
 					return null;
 				}
@@ -540,41 +554,45 @@ public class PageContextImpl extends PageContext {
         removeAttribute(name, APPLICATION_SCOPE);
 	}
 
+    @Override
 	public JspWriter getOut() {
 		return out;
 	}
 
+    @Override
 	public HttpSession getSession() {
 		return session;
 	}
 
-	public Servlet getServlet() {
-		return servlet;
-	}
-
+    @Override
 	public ServletConfig getServletConfig() {
 		return config;
 	}
 
+    @Override
 	public ServletContext getServletContext() {
 		return config.getServletContext();
 	}
 
+    @Override
 	public ServletRequest getRequest() {
 		return request;
 	}
 
+    @Override
 	public ServletResponse getResponse() {
 		return response;
 	}
 
 	/**
-	 * Returns the exception associated with this page context, if any. <p/>
+     * Returns the exception associated with this page context, if any.
+     * <p>
 	 * Added wrapping for Throwables to avoid ClassCastException: see Bugzilla
 	 * 31171 for details.
-	 * 
+     *
 	 * @return The Exception associated with this page context, if any.
 	 */
+    @Override
 	public Exception getException() {
 		Throwable t = JspRuntimeLibrary.getThrowable(request);
 
@@ -586,6 +604,7 @@ public class PageContextImpl extends PageContext {
 		return (Exception) t;
 	}
 
+    @Override
 	public Object getPage() {
 		return servlet;
 	}
@@ -594,8 +613,8 @@ public class PageContextImpl extends PageContext {
 		String path = relativeUrlPath;
 
 		if (!path.startsWith("/")) {
-			String uri = (String) request
-					.getAttribute("javax.servlet.include.servlet_path");
+            String uri = (String) request.getAttribute(
+                    RequestDispatcher.INCLUDE_SERVLET_PATH);
 			if (uri == null)
 				uri = ((HttpServletRequest) request).getServletPath();
 			String baseURI = uri.substring(0, uri.lastIndexOf('/'));
@@ -605,18 +624,22 @@ public class PageContextImpl extends PageContext {
 		return path;
 	}
 
+    @Override
 	public void include(String relativeUrlPath) throws ServletException,
 			IOException {
 		JspRuntimeLibrary
 				.include(request, response, relativeUrlPath, out, true);
 	}
 
+    @Override
 	public void include(final String relativeUrlPath, final boolean flush)
 			throws ServletException, IOException {
 		if (SecurityUtil.isPackageProtectionEnabled()) {
 			try {
-				AccessController.doPrivileged(new PrivilegedExceptionAction() {
-					public Object run() throws Exception {
+                AccessController.doPrivileged(
+                        new PrivilegedExceptionAction<Void>() {
+                    @Override
+                    public Void run() throws Exception {
 						doInclude(relativeUrlPath, flush);
 						return null;
 					}
@@ -640,16 +663,22 @@ public class PageContextImpl extends PageContext {
 				flush);
 	}
 
-	public VariableResolver getVariableResolver() {
-		return new VariableResolverImpl(this.getELContext());
+    @Override
+    @Deprecated
+    public javax.servlet.jsp.el.VariableResolver getVariableResolver() {
+        return new org.apache.jasper.el.VariableResolverImpl(
+                this.getELContext());
 	}
 
+    @Override
 	public void forward(final String relativeUrlPath) throws ServletException,
 			IOException {
 		if (SecurityUtil.isPackageProtectionEnabled()) {
 			try {
-				AccessController.doPrivileged(new PrivilegedExceptionAction() {
-					public Object run() throws Exception {
+                AccessController.doPrivileged(
+                        new PrivilegedExceptionAction<Void>() {
+                    @Override
+                    public Void run() throws Exception {
 						doForward(relativeUrlPath);
 						return null;
 					}
@@ -673,6 +702,7 @@ public class PageContextImpl extends PageContext {
 		// JSP.4.5 If the buffer was flushed, throw IllegalStateException
 		try {
 			out.clear();
+            baseOut.clear();
 		} catch (IOException ex) {
 			throw MESSAGES.illegalClearAfterFlush(ex);
 		}
@@ -683,23 +713,26 @@ public class PageContextImpl extends PageContext {
 		}
 
 		final String path = getAbsolutePathRelativeToContext(relativeUrlPath);
-		String includeUri = (String) request
-				.getAttribute(Constants.INC_SERVLET_PATH);
+        String includeUri = (String) request.getAttribute(
+                RequestDispatcher.INCLUDE_SERVLET_PATH);
 
 		if (includeUri != null)
-			request.removeAttribute(Constants.INC_SERVLET_PATH);
+            request.removeAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
 		try {
 			context.getRequestDispatcher(path).forward(request, response);
 		} finally {
 			if (includeUri != null)
-				request.setAttribute(Constants.INC_SERVLET_PATH, includeUri);
+                request.setAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH,
+                        includeUri);
 		}
 	}
 
+    @Override
 	public BodyContent pushBody() {
 		return (BodyContent) pushBody(null);
 	}
 
+    @Override
 	public JspWriter pushBody(Writer writer) {
 		depth++;
 		if (depth >= outs.length) {
@@ -721,6 +754,7 @@ public class PageContextImpl extends PageContext {
 		return outs[depth];
 	}
 
+    @Override
 	public JspWriter popBody() {
 		depth--;
 		if (depth >= 0) {
@@ -741,10 +775,14 @@ public class PageContextImpl extends PageContext {
 	 * Container must return a valid instance of an ExpressionEvaluator that can
 	 * parse EL expressions.
 	 */
-	public ExpressionEvaluator getExpressionEvaluator() {
-		return new ExpressionEvaluatorImpl(this.applicationContext.getExpressionFactory());
+    @Override
+    @Deprecated
+    public javax.servlet.jsp.el.ExpressionEvaluator getExpressionEvaluator() {
+        return new org.apache.jasper.el.ExpressionEvaluatorImpl(
+                this.applicationContext.getExpressionFactory());
 	}
 
+    @Override
 	public void handlePageException(Exception ex) throws IOException,
 			ServletException {
 		// Should never be called since handleException() called with a
@@ -752,6 +790,7 @@ public class PageContextImpl extends PageContext {
 		handlePageException((Throwable) ex);
 	}
 
+    @Override
 	public void handlePageException(final Throwable t) throws IOException,
 			ServletException {
 		if (t == null)
@@ -759,8 +798,10 @@ public class PageContextImpl extends PageContext {
 
 		if (SecurityUtil.isPackageProtectionEnabled()) {
 			try {
-				AccessController.doPrivileged(new PrivilegedExceptionAction() {
-					public Object run() throws Exception {
+                AccessController.doPrivileged(
+                        new PrivilegedExceptionAction<Void>() {
+                    @Override
+                    public Void run() throws Exception {
 						doHandlePageException(t);
 						return null;
 					}
@@ -779,6 +820,7 @@ public class PageContextImpl extends PageContext {
 
 	}
 
+    @SuppressWarnings("deprecation") // Still jave to support old JSP EL
 	private void doHandlePageException(Throwable t) throws IOException,
 			ServletException {
 
@@ -793,13 +835,13 @@ public class PageContextImpl extends PageContext {
 			 * not been committed (the response will have been committed if the
 			 * error page is a JSP page).
 			 */
-			request.setAttribute("javax.servlet.jsp.jspException", t);
-			request.setAttribute("javax.servlet.error.status_code",
+            request.setAttribute(PageContext.EXCEPTION, t);
+            request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE,
 					new Integer(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
-			request.setAttribute("javax.servlet.error.request_uri",
+            request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI,
 					((HttpServletRequest) request).getRequestURI());
-			request.setAttribute("javax.servlet.error.servlet_name", config
-					.getServletName());
+            request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME,
+                    config.getServletName());
 			try {
 				forward(errorPageURL);
 			} catch (IllegalStateException ise) {
@@ -808,19 +850,19 @@ public class PageContextImpl extends PageContext {
 
 			// The error page could be inside an include.
 
-			Object newException = request
-					.getAttribute("javax.servlet.error.exception");
+            Object newException =
+                    request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
 
 			// t==null means the attribute was not set.
 			if ((newException != null) && (newException == t)) {
-				request.removeAttribute("javax.servlet.error.exception");
+                request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
 			}
 
 			// now clear the error code - to prevent double handling.
-			request.removeAttribute("javax.servlet.error.status_code");
-			request.removeAttribute("javax.servlet.error.request_uri");
-			request.removeAttribute("javax.servlet.error.status_code");
-			request.removeAttribute("javax.servlet.jsp.jspException");
+            request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+            request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+            request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
+            request.removeAttribute(PageContext.EXCEPTION);
 
 		} else {
 			// Otherwise throw the exception wrapped inside a ServletException.
@@ -834,10 +876,9 @@ public class PageContextImpl extends PageContext {
 				throw (RuntimeException) t;
 
 			Throwable rootCause = null;
-			if (t instanceof JspException) {
-				rootCause = ((JspException) t).getRootCause();
-			} else if (t instanceof ELException) {
-				rootCause = ((ELException) t).getRootCause();
+            if (t instanceof JspException || t instanceof ELException ||
+                    t instanceof javax.servlet.jsp.el.ELException) {
+                rootCause =t.getCause();
 			}
 
 			if (rootCause != null) {
@@ -854,7 +895,7 @@ public class PageContextImpl extends PageContext {
 	 * go away once the EL interpreter moves out of JSTL and into its own
 	 * project. For now, this is necessary because the standard machinery is too
 	 * slow.
-	 * 
+     *
 	 * @param expression
 	 *            The expression to be evaluated
 	 * @param expectedType
@@ -866,45 +907,36 @@ public class PageContextImpl extends PageContext {
 	 * @return The result of the evaluation
 	 */
 	public static Object proprietaryEvaluate(final String expression,
-			final Class expectedType, final PageContext pageContext,
-			final ProtectedFunctionMapper functionMap, final boolean escape)
+            final Class<?> expectedType, final PageContext pageContext,
+            final ProtectedFunctionMapper functionMap)
 			throws ELException {
-		Object retValue;
         final ExpressionFactory exprFactory = jspf.getJspApplicationContext(pageContext.getServletContext()).getExpressionFactory();
-		if (SecurityUtil.isPackageProtectionEnabled()) {
-			try {
-				retValue = AccessController
-						.doPrivileged(new PrivilegedExceptionAction() {
-
-							public Object run() throws Exception {
                                 ELContextImpl ctx = (ELContextImpl) pageContext.getELContext();
-                                ctx.setFunctionMapper(new FunctionMapperImpl(functionMap));
+        ctx.setFunctionMapper(functionMap);
 								ValueExpression ve = exprFactory.createValueExpression(ctx, expression, expectedType);
                                 return ve.getValue(ctx);
 							}
-						});
-			} catch (PrivilegedActionException ex) {
-				Exception realEx = ex.getException();
-				if (realEx instanceof ELException) {
-					throw (ELException) realEx;
-				} else {
-					throw new ELException(realEx);
-				}
-			}
-		} else {
-            ELContextImpl ctx = (ELContextImpl) pageContext.getELContext();
-            ctx.setFunctionMapper(new FunctionMapperImpl(functionMap));
-            ValueExpression ve = exprFactory.createValueExpression(ctx, expression, expectedType);
-            retValue = ve.getValue(ctx);
-		}
-		return retValue;
-	}
 
-	public ELContext getELContext() {
-		if (this.elContext == null) {
-			this.elContext = this.applicationContext.createELContext(this);
+    @Override
+    public ELContext getELContext() {
+        if (elContext == null) {
+            elContext = applicationContext.createELContext(this);
+            if (servlet instanceof JspSourceImports) {
+                ImportHandler ih = elContext.getImportHandler();
+                Set<String> packageImports = ((JspSourceImports) servlet).getPackageImports();
+                if (packageImports != null) {
+                    for (String packageImport : packageImports) {
+                        ih.importPackage(packageImport);
+                    }
+				}
+                Set<String> classImports = ((JspSourceImports) servlet).getClassImports();
+                if (classImports != null) {
+                    for (String classImport : classImports) {
+                        ih.importClass(classImport);
+			}
+		}
+	}
 		}
 		return this.elContext;
 	}
-
 }
