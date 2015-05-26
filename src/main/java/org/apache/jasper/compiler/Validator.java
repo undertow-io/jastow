@@ -1557,7 +1557,10 @@ class Validator {
 
                     if (uri == null) {
                         if (prefix == null) {
-                            err.jspError(n, MESSAGES.missingFunctionPrefix(function));
+                            // This can occur when lambda expressions define
+                            // functions and when functions are imported. No
+                            // longer able to be sure this is an error.
+                            return;
                         } else {
                             err.jspError(n, MESSAGES.unknownFunctionPrefix(prefix));
                         }
