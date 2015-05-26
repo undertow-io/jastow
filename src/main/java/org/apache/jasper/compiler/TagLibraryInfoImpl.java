@@ -144,7 +144,9 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         }
         Jar jar = null;
         try {
-            jar = JarFactory.newInstance(jarFileUrl);
+            if (jarFileUrl != null) {
+                jar = JarFactory.newInstance(jarFileUrl);
+            }
         } catch (IOException e) {
             throw new JasperException(e);
         }
