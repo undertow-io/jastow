@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import javax.el.ELManager;
 import javax.el.ExpressionFactory;
 import javax.servlet.jsp.tagext.TagLibraryInfo;
 
@@ -78,8 +79,7 @@ class PageInfo {
     // JSP 2.1
     private String deferredSyntaxAllowedAsLiteralValue;
     private boolean deferredSyntaxAllowedAsLiteral = false;
-    private final ExpressionFactory expressionFactory =
-        ExpressionFactory.newInstance();
+    private final ExpressionFactory expressionFactory = ELManager.getExpressionFactory();
     private String trimDirectiveWhitespacesValue;
     private boolean trimDirectiveWhitespaces = false;
 
