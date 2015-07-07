@@ -55,14 +55,6 @@ public final class SecurityClassLoad {
 
             loader.loadClass( basePackage +
                 "runtime.ProtectedFunctionMapper");
-            loader.loadClass( basePackage +
-                "runtime.ProtectedFunctionMapper$1");
-            loader.loadClass( basePackage +
-                "runtime.ProtectedFunctionMapper$2"); 
-            loader.loadClass( basePackage +
-                "runtime.ProtectedFunctionMapper$3");
-            loader.loadClass( basePackage +
-                "runtime.ProtectedFunctionMapper$4"); 
 
             loader.loadClass( basePackage +
                 "runtime.PageContextImpl");
@@ -90,8 +82,6 @@ public final class SecurityClassLoad {
                 "runtime.PageContextImpl$11");
             loader.loadClass( basePackage +
                 "runtime.PageContextImpl$12");      
-            loader.loadClass( basePackage +
-                "runtime.PageContextImpl$13");      
 
             loader.loadClass( basePackage +
                 "runtime.JspContextWrapper");
@@ -102,8 +92,6 @@ public final class SecurityClassLoad {
             loader.loadClass( basePackage +
                 "servlet.JspServletWrapper");
 
-            loader.loadClass( basePackage +
-                "runtime.JspWriterImpl$1");
         } catch (ClassNotFoundException ex) {
             JasperLogger.ROOT_LOGGER.errorLoadingCoreClass(ex);
         }
