@@ -19,12 +19,16 @@ package org.apache.jasper.servlet;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessControlContext;
+import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
+import java.security.PrivilegedExceptionAction;
 
 import org.apache.jasper.Constants;
 
@@ -40,16 +44,20 @@ public class JasperLoader extends URLClassLoader {
     private final PermissionCollection permissionCollection;
     private final ClassLoader parent;
     private final SecurityManager securityManager;
+    private final CodeSource codeSource;
+    private final AccessControlContext acc;
 
     public JasperLoader(URL[] urls, ClassLoader parent,
-                        PermissionCollection permissionCollection) {
+                        PermissionCollection permissionCollection, CodeSource codeSource) {
 	super(urls, parent);
-	this.permissionCollection = permissionCollection;
-	this.parent = parent;
-	this.securityManager = System.getSecurityManager();
+	    this.permissionCollection = permissionCollection;
+	    this.parent = parent;
+        this.codeSource = codeSource;
+        this.securityManager = System.getSecurityManager();
+        this.acc = AccessController.getContext();
     }
 
-    /**
+     /**
      * Load the class with the specified name.  This method searches for
      * classes in the same manner as <code>loadClass(String, boolean)</code>
      * with <code>false</code> as the second argument.
@@ -130,6 +138,45 @@ public class JasperLoader extends URLClassLoader {
         return findClass(name);
     }
 
+    @Override
+    protected Class<?> findClass(final String name) throws ClassNotFoundException {
+        try {
+            return AccessController.doPrivileged(
+                    new PrivilegedExceptionAction<Class>() {
+                        public Class run() throws ClassNotFoundException {
+                            String path = name.replace('.', '/').concat(".class");
+                            URL res = findResource(path);
+                            if (res != null) {
+                                try {
+                                    byte[] bytes = getBytes(res);
+                                    return defineClass(name, bytes, 0, bytes.length, codeSource);
+                                } catch (IOException e) {
+                                    throw new ClassNotFoundException(name, e);
+                                }
+                            } else {
+                                throw new ClassNotFoundException(name);
+                            }
+                        }
+                    }, acc);
+        } catch (java.security.PrivilegedActionException pae) {
+            throw (ClassNotFoundException) pae.getException();
+        }
+    }
+
+    private byte[] getBytes(URL resource)throws IOException{
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        try (InputStream stream = resource.openStream()){
+            byte[] chunk = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = stream.read(chunk)) > 0) {
+                outputStream.write(chunk, 0, bytesRead);
+            }
+
+        }
+        return outputStream.toByteArray();
+    }
 
     /**
      * Delegate to parent
