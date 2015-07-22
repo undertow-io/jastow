@@ -22,6 +22,9 @@ import java.io.CharArrayWriter;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
+
 import javax.servlet.jsp.tagext.TagAttributeInfo;
 import javax.servlet.jsp.tagext.TagFileInfo;
 import javax.servlet.jsp.tagext.TagInfo;
@@ -84,6 +87,12 @@ class Parser implements TagConstants {
             System.getProperty(
                     "org.apache.jasper.compiler.Parser.STRICT_WHITESPACE",
                     "true")).booleanValue();
+
+    private static final boolean OPTIMIZE_JSP_SCRIPTLETS = Boolean.valueOf( 
+            System.getProperty(
+                    "org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS", 
+                    "false")).booleanValue();
+
     /**
      * The constructor
      */
@@ -677,9 +686,59 @@ class Parser implements TagConstants {
             err.jspError(start, MESSAGES.unterminatedTag("&lt;%="));
         }
 
-        @SuppressWarnings("unused")
-        Node unused = new Node.Expression(
-                parseScriptText(reader.getText(start, stop)), start, parent);
+        String expression = reader.getText(start, stop);
+        // check for string concatenation inside expressions, separating from expression allows for optimizations later on
+        if(!OPTIMIZE_JSP_SCRIPTLETS){
+            new Node.Expression(parseScriptText(expression),
+                    start, parent);
+        }
+        else {
+            if (!matchesConcat(expression)) {
+                new Node.Expression(parseScriptText(expression),
+                        start, parent);
+            } else {
+                //need to separate expressions being concatenated
+                expression = expression.replaceAll("\\+\\s*\"", "\\+ \"").replaceAll("\"\\s*\\+", "\" \\+");
+                String[] tokens = expression.split("((?=\\+\\s\")|(?<=\"\\s\\+))");
+                if (tokens.length > 1) {
+                    for (String token : tokens) {
+                        if (matchesStringLiteral(token) && !matchesStringParam(token)) {
+                            //maybe evaluate the expression here before storing as text node?
+                            new Node.TemplateText(cleanTextToken(token),
+                                    start, parent);
+                        } else {
+                            new Node.Expression(parseScriptText(cleanExprToken(token)),
+                                    start, parent);
+                        }
+                    }
+                } else {
+                    //only have one token, therefore there is no string concatenation occurring and string literal is being used as part of expression
+                    new Node.Expression(parseScriptText(tokens[0]),
+                            start, parent);
+
+                }
+            }
+        }
+    }
+
+    private boolean matchesStringLiteral(String token) {
+        return Pattern.compile("\"").matcher(token).find() || "".equals(token.trim());
+    }
+
+    private boolean matchesStringParam(String token) {
+        return Pattern.compile("\"\\s*\\)|\\(\\s*\"").matcher(token).find();
+    }
+
+    private boolean matchesConcat(String token) {
+        return Pattern.compile("\\+\\s*\"|\"\\s*\\+").matcher(token).find();
+    }
+
+    private String cleanTextToken(String token) {
+        return cleanExprToken(token.trim().replaceAll("(?<!\\\\)\"|\t|\n|\r", "").replaceAll("\\\\\"","\""));
+    }
+
+    private String cleanExprToken(String token) {
+        return token.trim().replaceAll("^\\+|\\+$","").trim();
     }
 
     /*
