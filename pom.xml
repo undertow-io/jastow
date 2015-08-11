@@ -170,7 +170,6 @@
             <groupId>org.eclipse.jdt.core.compiler</groupId>
             <artifactId>ecj</artifactId>
             <version>${version.org.eclipse.jdt.core.compiler.ecj}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
