@@ -149,7 +149,6 @@
             <groupId>org.glassfish</groupId>
             <artifactId>javax.el</artifactId>
             <version>${version.org.glassfish.javax.el}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
