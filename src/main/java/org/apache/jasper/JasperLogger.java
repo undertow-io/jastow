@@ -210,4 +210,7 @@ public interface JasperLogger extends BasicLogger {
     @Message(id = 5038, value = "Failed to delete generated class file(s)")
     void failedToDeleteGeneratedFiles(@Cause Exception e);
 
+    @LogMessage(level = ERROR)
+    @Message(id = 5039, value = "Invalid optimiseScriptlets value %s, must be true or false")
+    void invalidOptimiseScriptletsValue(String optimiseScriptlets);
 }

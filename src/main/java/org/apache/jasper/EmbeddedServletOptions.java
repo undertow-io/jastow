@@ -187,6 +187,8 @@ public final class EmbeddedServletOptions implements Options {
      */
     private int jspIdleTimeout = -1;
 
+    private boolean optimiseJspScriptlets = Boolean.getBoolean("org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS");
+
     public String getProperty(String name ) {
         return settings.getProperty( name );
     }
@@ -419,6 +421,11 @@ public final class EmbeddedServletOptions implements Options {
     @Override
     public int getJspIdleTimeout() {
         return jspIdleTimeout;
+    }
+
+    @Override
+    public boolean isOptimiseJSPScriptlets() {
+        return optimiseJspScriptlets;
     }
 
     /**
@@ -688,6 +695,18 @@ public final class EmbeddedServletOptions implements Options {
 
         // Create a Tag plugin instance
         tagPluginManager = new TagPluginManager(context);
+
+        String optimiseScriptlets = config.getInitParameter("optimiseScriptlets");
+        if (optimiseScriptlets != null) {
+            if (optimiseScriptlets.equalsIgnoreCase("true")) {
+                optimiseJspScriptlets = true;
+            } else if (optimiseScriptlets.equalsIgnoreCase("false")) {
+                optimiseJspScriptlets = false;
+            } else {
+                JasperLogger.ROOT_LOGGER.invalidOptimiseScriptletsValue(optimiseScriptlets);
+            }
+        }
+
     }
 
 }

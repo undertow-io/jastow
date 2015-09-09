@@ -88,10 +88,6 @@ class Parser implements TagConstants {
                     "org.apache.jasper.compiler.Parser.STRICT_WHITESPACE",
                     "true")).booleanValue();
 
-    private static final boolean OPTIMIZE_JSP_SCRIPTLETS = Boolean.valueOf( 
-            System.getProperty(
-                    "org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS", 
-                    "false")).booleanValue();
 
     /**
      * The constructor
@@ -688,7 +684,7 @@ class Parser implements TagConstants {
 
         String expression = reader.getText(start, stop);
         // check for string concatenation inside expressions, separating from expression allows for optimizations later on
-        if(!OPTIMIZE_JSP_SCRIPTLETS){
+        if(!this.ctxt.getOptions().isOptimiseJSPScriptlets()){
             new Node.Expression(parseScriptText(expression),
                     start, parent);
         }

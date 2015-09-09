@@ -218,4 +218,6 @@ public interface Options {
      * If unset or less or equal than 0, no jsps are unloaded.
      */
     public int getJspIdleTimeout();
+
+    boolean isOptimiseJSPScriptlets();
 }
