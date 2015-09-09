@@ -22,7 +22,6 @@ import java.io.CharArrayWriter;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.servlet.jsp.tagext.TagAttributeInfo;
@@ -684,7 +683,7 @@ class Parser implements TagConstants {
 
         String expression = reader.getText(start, stop);
         // check for string concatenation inside expressions, separating from expression allows for optimizations later on
-        if(!this.ctxt.getOptions().isOptimiseJSPScriptlets()){
+        if(!this.ctxt.getOptions().isOptimizeJSPScriptlets()){
             new Node.Expression(parseScriptText(expression),
                     start, parent);
         }

@@ -219,5 +219,5 @@ public interface Options {
      */
     public int getJspIdleTimeout();
 
-    boolean isOptimiseJSPScriptlets();
+    boolean isOptimizeJSPScriptlets();
 }
