@@ -20,10 +20,12 @@ package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -136,7 +138,18 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
             try {
                 URL jarUrl = ctxt.getServletContext().getResource(location[0]);
                 if (jarUrl != null) {
-                    jarFileUrl = new URL("jar:" + jarUrl + "!/");
+                	boolean localExplodedJar = false;
+                	try {
+                		// If the uri is to an exploded folder, we must not set jarFileUrl
+	                	if( "file".equals(jarUrl.getProtocol()) && new File(jarUrl.toURI()).isDirectory()) {
+	                		localExplodedJar = true;
+	                	}
+                	} catch(URISyntaxException urise) {
+                	} catch(IllegalArgumentException iae) {
+                	}
+                	if( !localExplodedJar) {
+                        jarFileUrl = new URL("jar:" + jarUrl + "!/");
+                	}
                 }
             } catch (MalformedURLException ex) {
                 err.jspError(MESSAGES.fileNotFound(uriIn));
