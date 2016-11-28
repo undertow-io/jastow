@@ -294,6 +294,7 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener, Re
             // against verb tampering
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                     MESSAGES.forbiddenHttpMethod());
+            return;
         }
 
         String jspFileAttr = (String) request.getAttribute(Constants.JSP_FILE);
