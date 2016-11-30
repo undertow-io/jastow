@@ -1,0 +1,3 @@
+<%
+    response.setStatus(200);
+%>

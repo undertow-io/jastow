@@ -18,11 +18,6 @@
 
 package io.undertow.test.jsp.basic;
 
-import java.io.IOException;
-import java.util.HashMap;
-
-import javax.servlet.ServletException;
-
 import io.undertow.jsp.HackInstanceManager;
 import io.undertow.jsp.JspFileHandler;
 import io.undertow.jsp.JspServletBuilder;
@@ -35,9 +30,12 @@ import io.undertow.servlet.test.util.TestClassIntrospector;
 import io.undertow.servlet.test.util.TestResourceLoader;
 import io.undertow.testutils.DefaultServer;
 import io.undertow.testutils.HttpClientUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import io.undertow.testutils.TestHttpClient;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.util.EntityUtils;
 import org.apache.jasper.deploy.JspPropertyGroup;
 import org.apache.jasper.deploy.TagLibraryInfo;
 import org.apache.jasper.servlet.JspServlet;
@@ -46,6 +44,10 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * @author Stuart Douglas
@@ -60,7 +62,6 @@ public class SimpleJspTestCase {
 
         final PathHandler servletPath = new PathHandler();
         final ServletContainer container = ServletContainer.Factory.newInstance();
-
 
 
         DeploymentInfo builder = new DeploymentInfo()
@@ -86,7 +87,7 @@ public class SimpleJspTestCase {
     }
 
     @AfterClass
-    public static void after(){
+    public static void after() {
         System.getProperties().remove(KEY);
     }
 
@@ -118,4 +119,30 @@ public class SimpleJspTestCase {
         }
     }
 
+    /**
+     * Tests that accessing a JSP via HTTP methods other than GET/POST/HEAD isn't allowed
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testUnAllowedHTTPMethods() throws Exception {
+        final TestHttpClient client = new TestHttpClient();
+        try {
+            // invoke a DELETE on a JSP whose code sets the HTTP response code to 200
+            final HttpDelete httpDelete = new HttpDelete(DefaultServer.getDefaultServerURL() + "/servletContext/200.jsp");
+            final HttpResponse deleteResponse = client.execute(httpDelete);
+            // we expect the return code to be 405
+            Assert.assertEquals("Unexpected response code from " + httpDelete.getMethod() + " request to a JSP", 405, deleteResponse.getStatusLine().getStatusCode());
+            EntityUtils.consumeQuietly(deleteResponse.getEntity());
+
+            // invoke a PUT on a JSP whose code sets the HTTP response code to 200
+            final HttpPut httpPut = new HttpPut(DefaultServer.getDefaultServerURL() + "/servletContext/200.jsp");
+            final HttpResponse putResponse = client.execute(httpPut);
+            // we expect the return code to be 405
+            Assert.assertEquals("Unexpected response code from " + httpPut.getMethod() + " request to a JSP", 405, putResponse.getStatusLine().getStatusCode());
+
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
 }
