@@ -624,11 +624,20 @@ public final class JspRuntimeContext {
     }
 
     public void handleFileChange(Set<String> changedResource) {
-        for (String resource : changedResource) {
-            String slashResource = resource.startsWith("/") ? resource : "/" + resource;
-            JspServletWrapper wrapper = jsps.get(slashResource);
-            if (wrapper != null) {
-                wrapper.jspFileChanged();
+        if (options.getCheckInterval() > 0 && !options.getDevelopment()) {
+
+            long now = System.currentTimeMillis();
+            if(now > (lastCompileCheck + (options.getCheckInterval() * 1000L))) {
+
+                for (String resource : changedResource) {
+                    String slashResource = resource.startsWith("/") ? resource : "/" + resource;
+                    JspServletWrapper wrapper = jsps.get(slashResource);
+                    if (wrapper != null) {
+                        wrapper.jspFileChanged();
+                    }
+                }
+
+                lastCompileCheck = System.currentTimeMillis();
             }
         }
     }
