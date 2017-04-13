@@ -702,8 +702,11 @@ class Parser implements TagConstants {
                             new Node.TemplateText(cleanTextToken(token),
                                     start, parent);
                         } else {
-                            new Node.Expression(parseScriptText(cleanExprToken(token)),
-                                    start, parent);
+                            String parsedScripText = parseScriptText(cleanExprToken(token));
+                            if ( ! "".equals( parsedScripText )){
+                                new Node.Expression(parsedScripText,
+                                        start, parent);
+                            }
                         }
                     }
                 } else {
@@ -733,7 +736,7 @@ class Parser implements TagConstants {
     }
 
     private String cleanExprToken(String token) {
-        return token.trim().replaceAll("^\\+|\\+$","").trim();
+        return token.replaceAll("^\\+\\s|^\\+|\\+$|\\s\\+$","").replaceAll( "\\s{2}", " " );
     }
 
     /*
