@@ -186,8 +186,21 @@ public final class EmbeddedServletOptions implements Options {
      * If unset or less or equal than 0, no jsps are unloaded.
      */
     private int jspIdleTimeout = -1;
-
+   
     private boolean optimizeJspScriptlets = Boolean.getBoolean("org.apache.jasper.compiler.Parser.OPTIMIZE_SCRIPTLETS");
+
+
+    /**
+     * Should JSP.1.6 be applied strictly to attributes defined using scriptlet
+     * expressions?
+     */
+    private boolean strictQuoteEscaping = true;
+
+    /**
+     * When EL is used in JSP attribute values, should the rules for quoting of
+     * attributes described in JSP.1.6 be applied to the expression?
+     */
+    private boolean quoteAttributeEL = true;
 
     public String getProperty(String name ) {
         return settings.getProperty( name );
@@ -197,6 +210,15 @@ public final class EmbeddedServletOptions implements Options {
         if (name != null && value != null){
             settings.setProperty( name, value );
         }
+    }
+
+    public void setQuoteAttributeEL(boolean b) {
+        this.quoteAttributeEL = b;
+    }
+
+    @Override
+    public boolean getQuoteAttributeEL() {
+        return quoteAttributeEL;
     }
 
     /**
@@ -427,10 +449,17 @@ public final class EmbeddedServletOptions implements Options {
     public boolean isOptimizeJSPScriptlets() {
         return optimizeJspScriptlets;
     }
+  
+    @Override
+    public boolean getStrictQuoteEscaping() {
+        return strictQuoteEscaping;
+    }
 
     /**
      * Create an EmbeddedServletOptions object using data available from
      * ServletConfig and ServletContext.
+     * @param config The Servlet config
+     * @param context The Servlet context
      */
     public EmbeddedServletOptions(ServletConfig config,
             ServletContext context) {
@@ -687,6 +716,28 @@ public final class EmbeddedServletOptions implements Options {
                 this.jspIdleTimeout = Integer.parseInt(jspIdleTimeout);
             } catch(NumberFormatException ex) {
                 JasperLogger.ROOT_LOGGER.invalidJspIdleTimeout(this.jspIdleTimeout);
+            }
+        }
+
+        String strictQuoteEscaping = config.getInitParameter("strictQuoteEscaping");
+        if (strictQuoteEscaping != null) {
+            if (strictQuoteEscaping.equalsIgnoreCase("true")) {
+                this.strictQuoteEscaping = true;
+            } else if (strictQuoteEscaping.equalsIgnoreCase("false")) {
+                this.strictQuoteEscaping = false;
+            } else {
+                JasperLogger.ROOT_LOGGER.invalidStrictQuoteEscaping(strictQuoteEscaping);
+            }
+        }
+
+        String quoteAttributeEL = config.getInitParameter("quoteAttributeEL");
+        if (quoteAttributeEL != null) {
+            if (quoteAttributeEL.equalsIgnoreCase("true")) {
+                this.quoteAttributeEL = true;
+            } else if (quoteAttributeEL.equalsIgnoreCase("false")) {
+                this.quoteAttributeEL = false;
+            } else {
+              JasperLogger.ROOT_LOGGER.invalidQuoteAttributeEL(quoteAttributeEL);
             }
         }
 

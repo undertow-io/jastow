@@ -95,13 +95,15 @@ public class Util {
      * Returns <tt>true</tt> if our current URL is absolute,
      * <tt>false</tt> otherwise.
      * taken from org.apache.taglibs.standard.tag.common.core.ImportSupport
+     * @param url The URL
+     * @return <tt>true</tt> if the URL is absolute
      */
     public static boolean isAbsoluteUrl(String url){
         if(url == null){
             return false;
         }
 
-        int colonPos = url.indexOf(":");
+        int colonPos = url.indexOf(':');
         if(colonPos == -1){
             return false;
         }
@@ -119,6 +121,9 @@ public class Util {
      * Get the value associated with a content-type attribute.
      * Syntax defined in RFC 2045, section 5.1.
      * taken from org.apache.taglibs.standard.tag.common.core.Util
+     * @param input The attribute string
+     * @param name The attribute name
+     * @return the attribute value
      */
     public static String getContentTypeAttribute(String input, String name) {
         int begin;
@@ -152,14 +157,16 @@ public class Util {
      * and either EOS or a subsequent ';' (exclusive).
      *
      * taken from org.apache.taglibs.standard.tag.common.core.ImportSupport
+     * @param url The URL
+     * @return the URL without a user submitted session id parameter
      */
     public static String stripSession(String url) {
         StringBuilder u = new StringBuilder(url);
         int sessionStart;
         while ((sessionStart = u.toString().indexOf(";" + Constants.SESSION_PARAMETER_NAME + "=")) != -1) {
-            int sessionEnd = u.toString().indexOf(";", sessionStart + 1);
+            int sessionEnd = u.toString().indexOf(';', sessionStart + 1);
             if (sessionEnd == -1)
-                sessionEnd = u.toString().indexOf("?", sessionStart + 1);
+                sessionEnd = u.toString().indexOf('?', sessionStart + 1);
             if (sessionEnd == -1) 				// still
                 sessionEnd = u.length();
             u.delete(sessionStart, sessionEnd);
@@ -181,6 +188,8 @@ public class Util {
      * See also OutSupport.writeEscapedXml().
      *
      * taken from org.apache.taglibs.standard.tag.common.core.Util
+     * @param buffer Data to escape
+     * @return escaped data
      */
     public static String escapeXml(String buffer) {
         String result = escapeXml(buffer.toCharArray(), buffer.length());
@@ -226,8 +235,14 @@ public class Util {
         return escapedBuffer.toString();
     }
 
-    /** Utility methods
+    /**
+     * Utility methods
      * taken from org.apache.taglibs.standard.tag.common.core.UrlSupport
+     * @param url The URL
+     * @param context The context
+     * @param pageContext The page context
+     * @return the absolute URL
+     * @throws JspException If the URL doesn't start with '/'
      */
     public static String resolveUrl(
             String url, String context, PageContext pageContext)
@@ -294,7 +309,6 @@ public class Util {
 
         public ImportResponseWrapper(HttpServletResponse arg0) {
             super(arg0);
-            // TODO Auto-generated constructor stub
         }
 
         @Override

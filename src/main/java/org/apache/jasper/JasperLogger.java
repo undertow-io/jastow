@@ -212,5 +212,13 @@ public interface JasperLogger extends BasicLogger {
 
     @LogMessage(level = ERROR)
     @Message(id = 5039, value = "Invalid optimizeScriptlets value %s, must be true or false")
-    void invalidOptimizeScriptletsValue(String optimiseScriptlets);
+    void invalidOptimizeScriptletsValue(String optimiseScriptlets); 
+
+    @LogMessage(level = WARN)
+    @Message(id = 5040, value = "Invalid strictQuoteEscaping value %s, must be true or false")
+    void invalidStrictQuoteEscaping(String strictQuoteEscaping);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5041, value = "Invalid quoteAttributeEL value %s, must be true or false")
+    void invalidQuoteAttributeEL(String quoteAttributeEL);
 }

@@ -331,7 +331,7 @@ public class JspConfig {
         String isTrimDirectiveWhitespaces = defaultTrimDirectiveWhitespaces;
         String defaultContentType = defaultDefaultContentType;
         String buffer = defaultBuffer;
-        String errorOnUndelcaredNamespace = defaultErrorOnUndeclaredNamespace;
+        String errorOnUndeclaredNamespace = defaultErrorOnUndeclaredNamespace;
 
         if (isXmlMatch != null) {
             isXml = isXmlMatch.getJspProperty().isXml();
@@ -362,19 +362,21 @@ public class JspConfig {
             buffer = bufferMatch.getJspProperty().getBuffer();
         }
         if (errorOnUndeclaredNamespaceMatch != null) {
-            errorOnUndelcaredNamespace =
+            errorOnUndeclaredNamespace =
                 errorOnUndeclaredNamespaceMatch.getJspProperty().isErrorOnUndeclaredNamespace();
         }
 
         return new JspProperty(isXml, isELIgnored, isScriptingInvalid,
                 pageEncoding, includePreludes, includeCodas,
                 isDeferedSyntaxAllowedAsLiteral, isTrimDirectiveWhitespaces,
-                defaultContentType, buffer, errorOnUndelcaredNamespace);
+                defaultContentType, buffer, errorOnUndeclaredNamespace);
     }
 
     /**
      * To find out if an uri matches an url pattern in jsp config.  If so,
      * then the uri is a JSP page.  This is used primarily for jspc.
+     * @param uri The path to check
+     * @return <code>true</code> if the path denotes a JSP page
      */
     public boolean isJspPage(String uri) {
 

@@ -144,15 +144,7 @@ public class TagHandlerPool {
             }
         }
         // There is no need for other threads to wait for us to release
-        handler.release();
-            try {
-                instanceManager.destroyInstance(handler);
-            } catch (Exception e) {
-            Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
-            ExceptionUtils.handleThrowable(t);
-            log.warn("Error processing preDestroy on tag instance of " +
-                    handler.getClass().getName(), t);
-        }
+        JspRuntimeLibrary.releaseTag(handler, instanceManager);
     }
 
     /**
@@ -161,18 +153,10 @@ public class TagHandlerPool {
      */
     public synchronized void release() {
         for (int i = current; i >= 0; i--) {
-            Tag handler = handlers[i];
-            handler.release();
-                try {
-                instanceManager.destroyInstance(handler);
-                } catch (Exception e) {
-                Throwable t = ExceptionUtils.unwrapInvocationTargetException(e);
-                ExceptionUtils.handleThrowable(t);
-                log.warn("Error processing preDestroy on tag instance of "
-                        + handler.getClass().getName(), t);
-            }
+            JspRuntimeLibrary.releaseTag(handlers[i], instanceManager);
         }
     }
+
 
     protected static String getOption(ServletConfig config, String name,
             String defaultV) {
