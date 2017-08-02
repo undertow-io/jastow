@@ -46,14 +46,12 @@ public class SmapStratum {
         private int outputLineIncrement = 1;
         private boolean lineFileIDSet = false;
 
-        /** Sets InputStartLine. */
         public void setInputStartLine(int inputStartLine) {
             if (inputStartLine < 0)
                 throw MESSAGES.invalidNegativeSmapPosition(inputStartLine);
             this.inputStartLine = inputStartLine;
         }
 
-        /** Sets OutputStartLine. */
         public void setOutputStartLine(int outputStartLine) {
             if (outputStartLine < 0)
                 throw MESSAGES.invalidNegativeSmapPosition(outputStartLine);
@@ -65,6 +63,8 @@ public class SmapStratum {
              * that of prior LineInfo object (in any given context) or 0
              * if the current LineInfo has no (logical) predecessor.
              * <tt>LineInfo</tt> will print this file number no matter what.
+         *
+         * @param lineFileID The new line file ID
              */
         public void setLineFileID(int lineFileID) {
             if (lineFileID < 0)
@@ -73,14 +73,12 @@ public class SmapStratum {
             this.lineFileIDSet = true;
         }
 
-        /** Sets InputLineCount. */
         public void setInputLineCount(int inputLineCount) {
             if (inputLineCount < 0)
                 throw MESSAGES.invalidNegativeSmapPosition(inputLineCount);
             this.inputLineCount = inputLineCount;
         }
 
-        /** Sets OutputLineIncrement. */
         public void setOutputLineIncrement(int outputLineIncrement) {
             if (outputLineIncrement < 0)
                 throw MESSAGES.invalidNegativeSmapPosition(outputLineIncrement);
@@ -88,8 +86,8 @@ public class SmapStratum {
         }
 
         /**
-         * Retrieves the current LineInfo as a String, print all values
-         * only when appropriate (but LineInfoID if and only if it's been
+         * @return the current LineInfo as a String, print all values only when
+         *         appropriate (but LineInfoID if and only if it's been
          * specified, as its necessity is sensitive to context).
          */
         public String getString() {
@@ -282,14 +280,14 @@ public class SmapStratum {
     // Methods to retrieve information
 
     /**
-     * Returns the name of the stratum.
+     * @return the name of the stratum.
      */
     public String getStratumName() {
         return stratumName;
     }
 
     /**
-     * Returns the given stratum as a String:  a StratumSection,
+     * @return the given stratum as a String:  a StratumSection,
      * followed by at least one FileSection and at least one LineSection.
      */
     public String getString() {

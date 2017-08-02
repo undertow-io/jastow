@@ -683,21 +683,21 @@ class Validator {
         @Override
         public void visit(Node.Declaration n) throws JasperException {
             if (pageInfo.isScriptingInvalid()) {
-                err.jspError(n, MESSAGES.invalidScriptingElement());
+                err.jspError(n.getStart(), MESSAGES.invalidScriptingElement());
             }
         }
 
         @Override
         public void visit(Node.Expression n) throws JasperException {
             if (pageInfo.isScriptingInvalid()) {
-                err.jspError(n, MESSAGES.invalidScriptingElement());
+                err.jspError(n.getStart(), MESSAGES.invalidScriptingElement());
             }
         }
 
         @Override
         public void visit(Node.Scriptlet n) throws JasperException {
             if (pageInfo.isScriptingInvalid()) {
-                err.jspError(n, MESSAGES.invalidScriptingElement());
+                err.jspError(n.getStart(), MESSAGES.invalidScriptingElement());
             }
         }
 

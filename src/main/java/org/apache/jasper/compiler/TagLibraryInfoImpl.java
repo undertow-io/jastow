@@ -68,15 +68,15 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
     public static final int ROOT_REL_URI = 1;
     public static final int NOROOT_REL_URI = 2;
 
-    private JspCompilationContext ctxt;
-    
-    private PageInfo pi;
+    private final JspCompilationContext ctxt;
 
-    private ErrorDispatcher err;
+    private final PageInfo pi;
 
-    private ParserController parserController;
+    private final ErrorDispatcher err;
 
-    private final void print(String name, String value, PrintWriter w) {
+    private final ParserController parserController;
+
+    private static void print(String name, String value, PrintWriter w) {
         if (value != null) {
             w.print(name + " = {\n\t");
             w.print(value);
@@ -84,6 +84,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         }
     }
 
+    @Override
     public String toString() {
         StringWriter sw = new StringWriter();
         PrintWriter out = new PrintWriter(sw);
@@ -95,14 +96,17 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         print("uri", uri, out);
         print("tagLibraryValidator", "" + tagLibraryValidator, out);
 
-        for (int i = 0; i < tags.length; i++)
-            out.println(tags[i].toString());
+        for (TagInfo tag : tags) {
+            out.println(tag.toString());
+        }
 
-        for (int i = 0; i < tagFiles.length; i++)
-            out.println(tagFiles[i].toString());
+        for (TagFileInfo tagFile : tagFiles) {
+            out.println(tagFile.toString());
+        }
 
-        for (int i = 0; i < functions.length; i++)
-            out.println(functions[i].toString());
+        for (FunctionInfo function : functions) {
+            out.println(function.toString());
+        }
 
         return sw.toString();
     }
@@ -536,7 +540,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
 
     /**
      * The instance (if any) for the TagLibraryValidator class.
-     * 
+     *
      * @return The TagLibraryValidator instance, if any.
      */
     public TagLibraryValidator getTagLibraryValidator() {
@@ -547,7 +551,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
      * Translation-time validation of the XML document associated with the JSP
      * page. This is a convenience method on the associated TagLibraryValidator
      * class.
-     * 
+     *
      * @param thePage
      *            The JSP page object
      * @return A string indicating whether the page is valid or not.
@@ -565,5 +569,5 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         return tlv.validate(getPrefixString(), uri, thePage);
     }
 
-    protected TagLibraryValidator tagLibraryValidator;
+    private TagLibraryValidator tagLibraryValidator;
 }

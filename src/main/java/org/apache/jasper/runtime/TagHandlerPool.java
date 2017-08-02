@@ -22,8 +22,6 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 
 import org.apache.jasper.Constants;
-import org.apache.jasper.JasperLogger;
-import org.apache.jasper.util.ExceptionUtils;
 import org.apache.tomcat.InstanceManager;
 
 /**
@@ -37,9 +35,6 @@ public class TagHandlerPool {
 
     public static final String OPTION_TAGPOOL = "tagpoolClassName";
     public static final String OPTION_MAXSIZE = "tagpoolMaxSize";
-
-//todo logging
-    private static final JasperLogger log = JasperLogger.ROOT_LOGGER;
 
     // index of next available tag handler
     private int current;

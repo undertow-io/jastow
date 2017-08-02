@@ -39,8 +39,7 @@ public final class ExpressionEvaluatorImpl extends ExpressionEvaluator {
             @SuppressWarnings("rawtypes") Class expectedType,
             FunctionMapper fMapper) throws ELException {
         try {
-            ELContextImpl ctx =
-                new ELContextImpl(ELContextImpl.getDefaultResolver(factory));
+            ELContextImpl ctx = new ELContextImpl(factory);
             if (fMapper != null) {
                 ctx.setFunctionMapper(new FunctionMapperImpl(fMapper));
             }

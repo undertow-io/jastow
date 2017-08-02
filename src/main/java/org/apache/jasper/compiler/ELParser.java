@@ -110,7 +110,7 @@ public class ELParser {
         while (hasNext()) {
             curToken = nextToken();
             if (curToken instanceof Char) {
-                if (curToken.toChar() == '}' && (index == expression.lastIndexOf('}') + 1)) {
+                if (curToken.toChar() == '}') {
                     break;
                 }
                 buf.append(curToken.toString());

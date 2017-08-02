@@ -21,6 +21,7 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.util.Iterator;
 import java.util.Objects;
+
 import javax.el.ELContext;
 import javax.el.ELException;
 import javax.el.ELResolver;
@@ -37,7 +38,7 @@ public final class ELResolverImpl extends ELResolver {
     public ELResolverImpl(VariableResolver variableResolver,
             ExpressionFactory factory) {
         this.variableResolver = variableResolver;
-        this.elResolver = ELContextImpl.getDefaultResolver(factory);
+        this.elResolver = new ELContextImpl(factory).getELResolver();
     }
 
     @Override

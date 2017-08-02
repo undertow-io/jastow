@@ -20,12 +20,13 @@ package org.apache.jasper.compiler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import javax.servlet.ServletContext;
 import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.descriptor.JspPropertyGroupDescriptor;
 
+import org.apache.jasper.Constants;
 import org.apache.jasper.JasperLogger;
 
 /**
@@ -81,16 +82,17 @@ public class JspConfig {
                     }
 
         jspProperties = new Vector<>();
-        Collection<JspPropertyGroupDescriptor> jspPropertyGroups =
-                jspConfig.getJspPropertyGroups();
+        HashMap<String, org.apache.jasper.deploy.JspPropertyGroup> jspPropertyGroups =
+                                (HashMap<String, org.apache.jasper.deploy.JspPropertyGroup>)
+                                ctxt.getAttribute(Constants.JSP_PROPERTY_GROUPS);
 
-        for (JspPropertyGroupDescriptor jspPropertyGroup : jspPropertyGroups) {
-
+        for (String key : jspPropertyGroups.keySet()) {
+            org.apache.jasper.deploy.JspPropertyGroup jspPropertyGroup =  jspPropertyGroups.get(key);
             Collection<String> urlPatterns = jspPropertyGroup.getUrlPatterns();
 
             if (urlPatterns.size() == 0) {
                 continue;
-                    }
+            }
 
             JspProperty property = new JspProperty(jspPropertyGroup.getIsXml(),
                     jspPropertyGroup.getElIgnored(),

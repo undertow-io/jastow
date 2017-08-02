@@ -37,8 +37,7 @@ public final class ExpressionImpl extends Expression {
 
     @Override
     public Object evaluate(VariableResolver vResolver) throws ELException {
-        ELContext ctx =
-                new ELContextImpl(new ELResolverImpl(vResolver, factory));
+        ELContextImpl ctx = new ELContextImpl(new ELResolverImpl(vResolver, factory),factory);
         return ve.getValue(ctx);
     }
 }

@@ -328,13 +328,11 @@ public class Util {
             return sos;
         }
 
-        /** Has no effect. */
         @Override
         public void setContentType(String x) {
             // ignore
         }
 
-        /** Has no effect. */
         @Override
         public void setLocale(Locale x) {
             // ignore

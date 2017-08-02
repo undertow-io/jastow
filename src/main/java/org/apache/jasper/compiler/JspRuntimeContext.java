@@ -68,12 +68,12 @@ public final class JspRuntimeContext {
     // Logger
     private final JasperLogger log = JasperLogger.ROOT_LOGGER;
 
-    /*
+    /**
      * Counts how many times the webapp's JSPs have been reloaded.
      */
     private final AtomicInteger jspReloadCount = new AtomicInteger(0);
 
-    /*
+    /**
      * Counts how many times JSPs have been unloaded in this webapp.
      */
     private final AtomicInteger jspUnloadCount = new AtomicInteger(0);
@@ -116,6 +116,7 @@ public final class JspRuntimeContext {
      * Loads in any previously generated dependencies from file.
      *
      * @param context ServletContext for web application
+     * @param options The main Jasper options
      */
     public JspRuntimeContext(ServletContext context, Options options) {
 
@@ -187,8 +188,7 @@ public final class JspRuntimeContext {
     /**
      * Maps JSP pages to their JspServletWrapper's
      */
-    private final Map<String, JspServletWrapper> jsps =
-            new ConcurrentHashMap<>();
+    private final Map<String, JspServletWrapper> jsps = new ConcurrentHashMap<>();
 
     /**
      * Keeps JSP pages ordered by last access.
@@ -401,14 +401,14 @@ public final class JspRuntimeContext {
     }
 
     /**
-     * The classpath that is passed off to the Java compiler.
+     * @return the classpath that is passed off to the Java compiler.
      */
     public String getClassPath() {
         return classpath;
     }
 
     /**
-     * Last time the update background task has run
+     * @return Last time the update background task has run
      */
     public long getLastJspQueueUpdate() {
         return lastJspQueueUpdate;
@@ -420,6 +420,7 @@ public final class JspRuntimeContext {
 
     /**
      * Method used to initialize classpath for compiles.
+     * @return the compilation classpath
      */
     private String initClassPath() {
 
@@ -459,7 +460,9 @@ public final class JspRuntimeContext {
         return path;
     }
 
-    // Helper class to allow initSecurity() to return two items
+    /**
+     * Helper class to allow initSecurity() to return two items
+     */
     private static class SecurityHolder{
         private final CodeSource cs;
         private final PermissionCollection pc;
@@ -541,35 +544,6 @@ public final class JspRuntimeContext {
                 // Allow the JSP to access org.apache.jasper.runtime.HttpJspBase
                 permissions.add( new RuntimePermission(
                     "accessClassInPackage.org.apache.jasper.runtime") );
-
-                if (parentClassLoader instanceof URLClassLoader) {
-                    URL [] urls = ((URLClassLoader)parentClassLoader).getURLs();
-                    String jarUrl = null;
-                    String jndiUrl = null;
-                    for (int i=0; i<urls.length; i++) {
-                        if (jndiUrl == null
-                                && urls[i].toString().startsWith("jndi:") ) {
-                            jndiUrl = urls[i].toString() + "-";
-                        }
-                        if (jarUrl == null
-                                && urls[i].toString().startsWith("jar:jndi:")
-                                ) {
-                            jarUrl = urls[i].toString();
-                            jarUrl = jarUrl.substring(0,jarUrl.length() - 2);
-                            jarUrl = jarUrl.substring(0,
-                                     jarUrl.lastIndexOf('/')) + "/-";
-                        }
-                    }
-                    if (jarUrl != null) {
-                        permissions.add(
-                                new FilePermission(jarUrl,"read"));
-                        permissions.add(
-                                new FilePermission(jarUrl.substring(4),"read"));
-                    }
-                    if (jndiUrl != null)
-                        permissions.add(
-                                new FilePermission(jndiUrl,"read") );
-                }
             } catch(Exception e) {
                 context.log(MESSAGES.errorInitializingSecurity(), e);
             }

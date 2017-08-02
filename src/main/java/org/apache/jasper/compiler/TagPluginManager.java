@@ -36,7 +36,6 @@ import org.apache.jasper.compiler.tagplugin.TagPluginContext;
  *
  * @author Kin-man Chung
  */
-
 public class TagPluginManager {
 
     private static final String TAG_PLUGINS_XML = "/WEB-INF/tagPlugins.xml";
