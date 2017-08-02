@@ -47,7 +47,7 @@ public class TestCompiler extends TomcatBaseTest {
         assertEcho(result, "OK");
 
         // Check content type
-        assertTrue(headers.get("Content-Type").get(0).startsWith("text/plain"));
+        assertTrue(headers.get("Content-Type").get(0).startsWith("text/html"));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class TestCompiler extends TomcatBaseTest {
         assertEcho(result, "OK");
 
         // Check content type
-        assertTrue(headers.get("Content-Type").get(0).startsWith("text/html"));
+        assertTrue(headers.get("Content-Type").get(0).startsWith("text/plain"));
     }
 
     @Test

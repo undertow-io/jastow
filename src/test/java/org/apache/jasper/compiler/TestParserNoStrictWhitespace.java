@@ -25,6 +25,9 @@ import java.util.List;
 
 import io.undertow.test.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -34,11 +37,16 @@ import org.junit.Test;
  */
 public class TestParserNoStrictWhitespace extends TomcatBaseTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void prepare() {
         System.setProperty(
                 "org.apache.jasper.compiler.Parser.STRICT_WHITESPACE",
                 "false");
+
+    }
+    @After
+    public void cleanup() {
+        System.clearProperty("org.apache.jasper.compiler.Parser.STRICT_WHITESPACE");
 
     }
 

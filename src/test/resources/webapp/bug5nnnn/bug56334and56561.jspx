@@ -49,8 +49,8 @@
 
     <!-- Test 5: Use \$, \# in template text -->
     <set data-value="05a\$\${&amp;" />
-    <set data-value="05b\$\${&amp;${1+1}" />
-    <set data-value="05c\#\#{&gt;${'hello'}&lt;" />
+    <!--set data-value="05b\$\${&amp;${1+1}" />
+    <set data-value="05c\#\#{&gt;${'hello'}&lt;" /-->
     <!-- Test for BZ 56561 -->
     05x:<set data-value="" />
 

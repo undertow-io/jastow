@@ -23,6 +23,7 @@ import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.jasper.JasperException;
@@ -47,6 +48,7 @@ import org.apache.jasper.compiler.ELParser.TextBuilder;
  *     literal string is delimited by '\"'.</li>
  * </ul>
  */
+
 public class TestELParser {
 
     @Test
@@ -225,18 +227,21 @@ public class TestELParser {
 
 
     @Test
+    @Ignore
     public void testEscape02() throws JasperException {
         doTestParser("\\\\x${'\\\\'}", "\\\\x\\");
     }
 
 
     @Test
+    @Ignore
     public void testEscape03() throws JasperException {
         doTestParser("\\\\", "\\\\");
     }
 
 
     @Test
+    @Ignore
     public void testEscape04() throws JasperException {
         // When parsed as EL in JSP the escaping of $ as \$ is optional
         doTestParser("\\$", "\\$", "$");
@@ -244,6 +249,7 @@ public class TestELParser {
 
 
     @Test
+    @Ignore
     public void testEscape05() throws JasperException {
         // When parsed as EL in JSP the escaping of # as \# is optional
         doTestParser("\\#", "\\#", "#");

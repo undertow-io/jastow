@@ -48,7 +48,7 @@
         <version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>1.0.0.Final</version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>
         <version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>1.0.1.Final</version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>
         <version.org.eclipse.jdt.core.compiler.ecj>4.6.1</version.org.eclipse.jdt.core.compiler.ecj>
-        <version.io.undertow>1.4.14.Final</version.io.undertow>
+        <version.io.undertow>1.4.18.Final</version.io.undertow>
         <version.org.apache.httpcomponents>4.5.3</version.org.apache.httpcomponents>
         <version.junit>4.12</version.junit>
     </properties>
@@ -214,7 +214,30 @@
             <artifactId>tomcat-jasper-el</artifactId>
             <version>8.5.16</version>
             <scope>test</scope>
-            
+        </dependency>
+        <dependency>
+            <groupId>org.apache.taglibs</groupId>
+            <artifactId>taglibs-standard-impl</artifactId>
+            <version>1.2.6-RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.taglibs</groupId>
+            <artifactId>taglibs-standard-spec</artifactId>
+            <version>1.2.6-RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.taglibs</groupId>
+            <artifactId>taglibs-standard-jstlel</artifactId>
+            <version>1.2.6-RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.metadata</groupId>
+            <artifactId>jboss-metadata-web</artifactId>
+            <version>10.0.2.Final</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -21,16 +21,16 @@ import java.util.Collection;
 import java.util.List;
 
 import io.undertow.test.TomcatBaseTest;
+import io.undertow.testutils.DefaultServer;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import org.apache.tomcat.util.buf.ByteChunk;
 
-@RunWith(Parameterized.class)
+@RunWith(DefaultServer.Parameterized.class)
 public class TestEncodingDetector extends TomcatBaseTest {
 
     @Parameters

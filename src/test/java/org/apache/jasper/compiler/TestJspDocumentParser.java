@@ -91,34 +91,5 @@ public class TestJspDocumentParser extends TomcatBaseTest {
         Assert.assertEquals(HttpServletResponse.SC_OK, rc);
    }
 
-    @Test
-    public void testSchemaValidation() throws Exception {
-        getTomcatInstanceTestWebapp(false, true);
-
-        String path = "http://localhost:" + getPort() + "/test/valid.jspx";
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setNamespaceAware(true);
-        dbf.setValidating(true);
-        dbf.setFeature("http://apache.org/xml/features/validation/schema", true);
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        db.setErrorHandler(new ErrorHandler() {
-            @Override
-            public void warning(SAXParseException exception) throws SAXException {
-                throw exception;
-            }
-
-            @Override
-            public void error(SAXParseException exception) throws SAXException {
-                throw exception;
-            }
-
-            @Override
-            public void fatalError(SAXParseException exception) throws SAXException {
-                throw exception;
-            }
-        });
-        Document document = db.parse(path);
-        Assert.assertEquals("urn:valid", document.getDocumentElement().getNamespaceURI());
-        Assert.assertEquals("root", document.getDocumentElement().getLocalName());
-   }
+ 
 }

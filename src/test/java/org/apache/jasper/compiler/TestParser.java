@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import io.undertow.test.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -268,6 +269,7 @@ public class TestParser extends TomcatBaseTest {
     }
 
     @Test
+    @Ignore("UEL handles parsing of EL bit differently")
     public void testBug56334And56561() throws Exception {
         getTomcatInstanceTestWebapp(true, true);
 
