@@ -26,13 +26,15 @@ import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 import io.undertow.servlet.test.util.TestClassIntrospector;
+import io.undertow.testutils.AjpIgnore;
 import io.undertow.testutils.DefaultServer;
 import io.undertow.testutils.HttpClientUtils;
+import io.undertow.testutils.HttpOneOnly;
+import io.undertow.testutils.HttpsIgnore;
 import io.undertow.testutils.TestHttpClient;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.jasper.compiler.TestGenerator;
 import org.apache.jasper.deploy.FunctionInfo;
 import org.apache.jasper.deploy.JspPropertyGroup;
 import org.apache.jasper.deploy.TagAttributeInfo;
@@ -57,8 +59,12 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Tomaz Cerar (c) 2017 Red Hat Inc.
+ * This class is just a substition class for TomcatBaseTest from tomcat codebase but adapted to work with undertow & jastow.
  */
 @RunWith(DefaultServer.class)
+@HttpOneOnly
+@HttpsIgnore
+@AjpIgnore
 public abstract class TomcatBaseTest {
 
     @BeforeClass
@@ -74,7 +80,6 @@ public abstract class TomcatBaseTest {
                 .setClassIntrospecter(TestClassIntrospector.INSTANCE)
                 .setDeploymentName("test.war")
                 .setResourceManager(new PathResourceManager(root))
-                //.setResourceManager(new ClassPathResourceManager(Thread.currentThread().getContextClassLoader(), "webapp"))
                 .addServlet(JspServletBuilder.createServlet("Default Jsp Servlet", "*.jsp").addMapping("*.jspx"));
         JspServletBuilder.setupDeployment(builder, getGroupDescriptors(), getTaglibConfig(root), new HackInstanceManager());
 
@@ -87,6 +92,7 @@ public abstract class TomcatBaseTest {
     }
 
     protected void getTomcatInstanceTestWebapp(boolean a, boolean b) {
+        //no-op just to make as little changes to base tests as possible
 
     }
 
@@ -98,7 +104,6 @@ public abstract class TomcatBaseTest {
         try (TestHttpClient client = new TestHttpClient()) {
             HttpGet get = new HttpGet(url);
             HttpResponse result = client.execute(get);
-            //Assert.assertEquals(200, result.getStatusLine().getStatusCode());
             final String response = HttpClientUtils.readResponse(result);
             return new ByteChunk(response);
         }
@@ -180,74 +185,7 @@ public abstract class TomcatBaseTest {
     private static Map<String, TagLibraryInfo> getTaglibConfig(Path root) throws Exception {
 
         Map<String, TagLibraryInfo> tags = new HashMap<>();
-       /* TagLibraryInfo bugsTLD = new TagLibraryInfo();
-        bugsTLD.setUri("http://tomcat.apache.org/bugs");
-        bugsTLD.setPath("/bugs.tld");
-        bugsTLD.setVersion("2.0");
-        bugsTLD.setTlibversion("1.1");
-
-        //Bug56529
-        TagInfo ti = new TagInfo();
-        ti.setTagName("Bug56529");
-        ti.setTagClassName(TestGenerator.Bug56529.class.getName());
-        ti.setBodyContent("empty");
-        TagAttributeInfo attributeInfo = new TagAttributeInfo();
-        attributeInfo.setName("attribute1");
-        ti.addTagAttributeInfo(attributeInfo);
-        attributeInfo = new TagAttributeInfo();
-        attributeInfo.setName("attribute2");
-        ti.addTagAttributeInfo(attributeInfo);
-        bugsTLD.addTagInfo(ti);
-
-        //Bug48701a
-        ti = new TagInfo();
-        ti.setTagName("Bug48701a");
-        ti.setTagClassName(TestGenerator.Bug48701.class.getName());
-        ti.setTagExtraInfo(TestGenerator.Bug48701TEI.class.getName());
-        ti.setBodyContent("empty");
-
-        bugsTLD.addTagInfo(ti);
-
-
-        //Bug48701b
-        ti = new TagInfo();
-        ti.setTagName("Bug48701b");
-        ti.setTagClassName(TestGenerator.Bug48701.class.getName());
-        ti.setBodyContent("empty");
-
-        TagVariableInfo variableInfo = new TagVariableInfo();
-        variableInfo.setNameGiven("now");
-        variableInfo.setClassName(TestGenerator.Bean.class.getName());
-        variableInfo.setScope("AT_END");
-        ti.addTagVariableInfo(variableInfo);
-        bugsTLD.addTagInfo(ti);
-
-
-        //Bug48701c
-        ti = new TagInfo();
-        ti.setTagName("Bug48701c");
-        ti.setTagClassName(TestGenerator.Bug48701.class.getName());
-        ti.setBodyContent("empty");
-        attributeInfo = new TagAttributeInfo();
-        attributeInfo.setName("beanName");
-        ti.addTagAttributeInfo(attributeInfo);
-        variableInfo.setNameFromAttribute("beanName");
-        variableInfo.setClassName(TestGenerator.Bean.class.getName());
-        variableInfo.setScope("AT_END");
-        ti.addTagVariableInfo(variableInfo);
-        bugsTLD.addTagInfo(ti);
-
-
-        tags.put("/bugs.tld", bugsTLD);
-        tags.put("http://tomcat.apache.org/bugs", bugsTLD);
-
-
-        TagLibraryInfo testTLD = new TagLibraryInfo();
-        testTLD.setVersion("2.0");
-        testTLD.setTlibversion("1.0");
-        tags.put("/WEB-INF/test.tld", testTLD);*/
-
-        registerTaglibsFromWebInf(tags,root);
+        registerTaglibsFromWebInf(tags, root);
         registerTaglibsFromClassPath(tags);
 
         return tags;
@@ -264,13 +202,20 @@ public abstract class TomcatBaseTest {
     private static void registerTaglibsFromWebInf(Map<String, TagLibraryInfo> tags, Path root) throws Exception {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(root.resolve("WEB-INF"), "*.tld")) {
             for (Path tldFile : stream) {
-                String location = "/"+tldFile.subpath(root.getNameCount(), tldFile.getNameCount()).toString().replaceAll("\\\\","/");
+                String location = "/" + tldFile.subpath(root.getNameCount(), tldFile.getNameCount()).toString().replaceAll("\\\\", "/");
                 parseTLD(tags, tldFile, location);
             }
         }
     }
 
+    private static Map<String, TagLibraryInfo> TAGS_CACHE = new HashMap<>();
+
     private static void registerTaglibsFromClassPath(Map<String, TagLibraryInfo> tags) throws Exception {
+        if (!TAGS_CACHE.isEmpty()){
+            tags.putAll(TAGS_CACHE);
+            return;
+        }
+        //this is ugly and will break on JDK9
         for (final String cp : System.getProperty("java.class.path").split(File.pathSeparator)) {
             Path jar = Paths.get(cp);
             if (Files.isDirectory(jar)) {
@@ -284,6 +229,7 @@ public abstract class TomcatBaseTest {
                 }
             }
         }
+        TAGS_CACHE.putAll(tags);
     }
 
     private static void parseTLD(Map<String, TagLibraryInfo> tags, Path tldFile, String location) throws Exception {
@@ -302,150 +248,150 @@ public abstract class TomcatBaseTest {
         }
     }
 
-
+    //copied over from wildfly's undertow subsystem UndertowDeploymentProcessor.java
     private static TagLibraryInfo createTldInfo(final String location, final TldMetaData tldMetaData, final Map<String, TagLibraryInfo> ret) {
-            String relativeLocation = location;
-            String jarPath = null;
-            if (relativeLocation != null && relativeLocation.startsWith("/WEB-INF/lib/")) {
-                int pos = relativeLocation.indexOf('/', "/WEB-INF/lib/".length());
-                if (pos > 0) {
-                    jarPath = relativeLocation.substring(pos);
-                    if (jarPath.startsWith("/")) {
-                        jarPath = jarPath.substring(1);
-                    }
-                    relativeLocation = relativeLocation.substring(0, pos);
+        String relativeLocation = location;
+        String jarPath = null;
+        if (relativeLocation != null && relativeLocation.startsWith("/WEB-INF/lib/")) {
+            int pos = relativeLocation.indexOf('/', "/WEB-INF/lib/".length());
+            if (pos > 0) {
+                jarPath = relativeLocation.substring(pos);
+                if (jarPath.startsWith("/")) {
+                    jarPath = jarPath.substring(1);
                 }
+                relativeLocation = relativeLocation.substring(0, pos);
             }
-
-            TagLibraryInfo tagLibraryInfo = new TagLibraryInfo();
-            tagLibraryInfo.setTlibversion(tldMetaData.getTlibVersion());
-            if (tldMetaData.getJspVersion() == null) {
-                tagLibraryInfo.setJspversion(tldMetaData.getVersion());
-            } else {
-                tagLibraryInfo.setJspversion(tldMetaData.getJspVersion());
-            }
-            tagLibraryInfo.setShortname(tldMetaData.getShortName());
-            tagLibraryInfo.setUri(tldMetaData.getUri());
-            if (tldMetaData.getDescriptionGroup() != null) {
-                tagLibraryInfo.setInfo(tldMetaData.getDescriptionGroup().getDescription());
-            }
-            // Validator
-            if (tldMetaData.getValidator() != null) {
-                TagLibraryValidatorInfo tagLibraryValidatorInfo = new TagLibraryValidatorInfo();
-                tagLibraryValidatorInfo.setValidatorClass(tldMetaData.getValidator().getValidatorClass());
-                if (tldMetaData.getValidator().getInitParams() != null) {
-                    for (ParamValueMetaData paramValueMetaData : tldMetaData.getValidator().getInitParams()) {
-                        tagLibraryValidatorInfo.addInitParam(paramValueMetaData.getParamName(), paramValueMetaData.getParamValue());
-                    }
-                }
-                tagLibraryInfo.setValidator(tagLibraryValidatorInfo);
-            }
-            // Tag
-            if (tldMetaData.getTags() != null) {
-                for (TagMetaData tagMetaData : tldMetaData.getTags()) {
-                    TagInfo tagInfo = new TagInfo();
-                    tagInfo.setTagName(tagMetaData.getName());
-                    tagInfo.setTagClassName(tagMetaData.getTagClass());
-                    tagInfo.setTagExtraInfo(tagMetaData.getTeiClass());
-                    if (tagMetaData.getBodyContent() != null) {
-                        tagInfo.setBodyContent(tagMetaData.getBodyContent().toString());
-                    }
-                    tagInfo.setDynamicAttributes(tagMetaData.getDynamicAttributes());
-                    // Description group
-                    if (tagMetaData.getDescriptionGroup() != null) {
-                        DescriptionGroupMetaData descriptionGroup = tagMetaData.getDescriptionGroup();
-                        if (descriptionGroup.getIcons() != null && descriptionGroup.getIcons().value() != null
-                                && (descriptionGroup.getIcons().value().length > 0)) {
-                            Icon icon = descriptionGroup.getIcons().value()[0];
-                            tagInfo.setLargeIcon(icon.largeIcon());
-                            tagInfo.setSmallIcon(icon.smallIcon());
-                        }
-                        tagInfo.setInfoString(descriptionGroup.getDescription());
-                        tagInfo.setDisplayName(descriptionGroup.getDisplayName());
-                    }
-                    // Variable
-                    if (tagMetaData.getVariables() != null) {
-                        for (VariableMetaData variableMetaData : tagMetaData.getVariables()) {
-                            TagVariableInfo tagVariableInfo = new TagVariableInfo();
-                            tagVariableInfo.setNameGiven(variableMetaData.getNameGiven());
-                            tagVariableInfo.setNameFromAttribute(variableMetaData.getNameFromAttribute());
-                            tagVariableInfo.setClassName(variableMetaData.getVariableClass());
-                            tagVariableInfo.setDeclare(variableMetaData.getDeclare());
-                            if (variableMetaData.getScope() != null) {
-                                tagVariableInfo.setScope(variableMetaData.getScope().toString());
-                            }
-                            tagInfo.addTagVariableInfo(tagVariableInfo);
-                        }
-                    }
-                    // Attribute
-                    if (tagMetaData.getAttributes() != null) {
-                        for (AttributeMetaData attributeMetaData : tagMetaData.getAttributes()) {
-                            TagAttributeInfo tagAttributeInfo = new TagAttributeInfo();
-                            tagAttributeInfo.setName(attributeMetaData.getName());
-                            tagAttributeInfo.setType(attributeMetaData.getType());
-                            tagAttributeInfo.setReqTime(attributeMetaData.getRtexprvalue());
-                            tagAttributeInfo.setRequired(attributeMetaData.getRequired());
-                            tagAttributeInfo.setFragment(attributeMetaData.getFragment());
-                            if (attributeMetaData.getDeferredValue() != null) {
-                                tagAttributeInfo.setDeferredValue("true");
-                                tagAttributeInfo.setExpectedTypeName(attributeMetaData.getDeferredValue().getType());
-                            } else {
-                                tagAttributeInfo.setDeferredValue("false");
-                            }
-                            if (attributeMetaData.getDeferredMethod() != null) {
-                                tagAttributeInfo.setDeferredMethod("true");
-                                tagAttributeInfo.setMethodSignature(attributeMetaData.getDeferredMethod().getMethodSignature());
-                            } else {
-                                tagAttributeInfo.setDeferredMethod("false");
-                            }
-                            tagInfo.addTagAttributeInfo(tagAttributeInfo);
-                        }
-                    }
-                    tagLibraryInfo.addTagInfo(tagInfo);
-                }
-            }
-            // Tag files
-            if (tldMetaData.getTagFiles() != null) {
-                for (TagFileMetaData tagFileMetaData : tldMetaData.getTagFiles()) {
-                    TagFileInfo tagFileInfo = new TagFileInfo();
-                    tagFileInfo.setName(tagFileMetaData.getName());
-                    tagFileInfo.setPath(tagFileMetaData.getPath());
-                    tagLibraryInfo.addTagFileInfo(tagFileInfo);
-                }
-            }
-            // Function
-            if (tldMetaData.getFunctions() != null) {
-                for (FunctionMetaData functionMetaData : tldMetaData.getFunctions()) {
-                    FunctionInfo functionInfo = new FunctionInfo();
-                    functionInfo.setName(functionMetaData.getName());
-                    functionInfo.setFunctionClass(functionMetaData.getFunctionClass());
-                    functionInfo.setFunctionSignature(functionMetaData.getFunctionSignature());
-                    tagLibraryInfo.addFunctionInfo(functionInfo);
-                }
-            }
-
-            if (jarPath == null && relativeLocation == null) {
-                if (!ret.containsKey(tagLibraryInfo.getUri())) {
-                    ret.put(tagLibraryInfo.getUri(), tagLibraryInfo);
-                }
-            } else if (jarPath == null) {
-                tagLibraryInfo.setLocation("");
-                tagLibraryInfo.setPath(relativeLocation);
-                if (!ret.containsKey(tagLibraryInfo.getUri())) {
-                    ret.put(tagLibraryInfo.getUri(), tagLibraryInfo);
-                }
-                ret.put(relativeLocation, tagLibraryInfo);
-            } else {
-                tagLibraryInfo.setLocation(relativeLocation);
-                tagLibraryInfo.setPath(jarPath);
-                if (!ret.containsKey(tagLibraryInfo.getUri())) {
-                    ret.put(tagLibraryInfo.getUri(), tagLibraryInfo);
-                }
-                if (jarPath.equals("META-INF/taglib.tld")) {
-                    ret.put(relativeLocation, tagLibraryInfo);
-                }
-            }
-            return tagLibraryInfo;
         }
+
+        TagLibraryInfo tagLibraryInfo = new TagLibraryInfo();
+        tagLibraryInfo.setTlibversion(tldMetaData.getTlibVersion());
+        if (tldMetaData.getJspVersion() == null) {
+            tagLibraryInfo.setJspversion(tldMetaData.getVersion());
+        } else {
+            tagLibraryInfo.setJspversion(tldMetaData.getJspVersion());
+        }
+        tagLibraryInfo.setShortname(tldMetaData.getShortName());
+        tagLibraryInfo.setUri(tldMetaData.getUri());
+        if (tldMetaData.getDescriptionGroup() != null) {
+            tagLibraryInfo.setInfo(tldMetaData.getDescriptionGroup().getDescription());
+        }
+        // Validator
+        if (tldMetaData.getValidator() != null) {
+            TagLibraryValidatorInfo tagLibraryValidatorInfo = new TagLibraryValidatorInfo();
+            tagLibraryValidatorInfo.setValidatorClass(tldMetaData.getValidator().getValidatorClass());
+            if (tldMetaData.getValidator().getInitParams() != null) {
+                for (ParamValueMetaData paramValueMetaData : tldMetaData.getValidator().getInitParams()) {
+                    tagLibraryValidatorInfo.addInitParam(paramValueMetaData.getParamName(), paramValueMetaData.getParamValue());
+                }
+            }
+            tagLibraryInfo.setValidator(tagLibraryValidatorInfo);
+        }
+        // Tag
+        if (tldMetaData.getTags() != null) {
+            for (TagMetaData tagMetaData : tldMetaData.getTags()) {
+                TagInfo tagInfo = new TagInfo();
+                tagInfo.setTagName(tagMetaData.getName());
+                tagInfo.setTagClassName(tagMetaData.getTagClass());
+                tagInfo.setTagExtraInfo(tagMetaData.getTeiClass());
+                if (tagMetaData.getBodyContent() != null) {
+                    tagInfo.setBodyContent(tagMetaData.getBodyContent().toString());
+                }
+                tagInfo.setDynamicAttributes(tagMetaData.getDynamicAttributes());
+                // Description group
+                if (tagMetaData.getDescriptionGroup() != null) {
+                    DescriptionGroupMetaData descriptionGroup = tagMetaData.getDescriptionGroup();
+                    if (descriptionGroup.getIcons() != null && descriptionGroup.getIcons().value() != null
+                            && (descriptionGroup.getIcons().value().length > 0)) {
+                        Icon icon = descriptionGroup.getIcons().value()[0];
+                        tagInfo.setLargeIcon(icon.largeIcon());
+                        tagInfo.setSmallIcon(icon.smallIcon());
+                    }
+                    tagInfo.setInfoString(descriptionGroup.getDescription());
+                    tagInfo.setDisplayName(descriptionGroup.getDisplayName());
+                }
+                // Variable
+                if (tagMetaData.getVariables() != null) {
+                    for (VariableMetaData variableMetaData : tagMetaData.getVariables()) {
+                        TagVariableInfo tagVariableInfo = new TagVariableInfo();
+                        tagVariableInfo.setNameGiven(variableMetaData.getNameGiven());
+                        tagVariableInfo.setNameFromAttribute(variableMetaData.getNameFromAttribute());
+                        tagVariableInfo.setClassName(variableMetaData.getVariableClass());
+                        tagVariableInfo.setDeclare(variableMetaData.getDeclare());
+                        if (variableMetaData.getScope() != null) {
+                            tagVariableInfo.setScope(variableMetaData.getScope().toString());
+                        }
+                        tagInfo.addTagVariableInfo(tagVariableInfo);
+                    }
+                }
+                // Attribute
+                if (tagMetaData.getAttributes() != null) {
+                    for (AttributeMetaData attributeMetaData : tagMetaData.getAttributes()) {
+                        TagAttributeInfo tagAttributeInfo = new TagAttributeInfo();
+                        tagAttributeInfo.setName(attributeMetaData.getName());
+                        tagAttributeInfo.setType(attributeMetaData.getType());
+                        tagAttributeInfo.setReqTime(attributeMetaData.getRtexprvalue());
+                        tagAttributeInfo.setRequired(attributeMetaData.getRequired());
+                        tagAttributeInfo.setFragment(attributeMetaData.getFragment());
+                        if (attributeMetaData.getDeferredValue() != null) {
+                            tagAttributeInfo.setDeferredValue("true");
+                            tagAttributeInfo.setExpectedTypeName(attributeMetaData.getDeferredValue().getType());
+                        } else {
+                            tagAttributeInfo.setDeferredValue("false");
+                        }
+                        if (attributeMetaData.getDeferredMethod() != null) {
+                            tagAttributeInfo.setDeferredMethod("true");
+                            tagAttributeInfo.setMethodSignature(attributeMetaData.getDeferredMethod().getMethodSignature());
+                        } else {
+                            tagAttributeInfo.setDeferredMethod("false");
+                        }
+                        tagInfo.addTagAttributeInfo(tagAttributeInfo);
+                    }
+                }
+                tagLibraryInfo.addTagInfo(tagInfo);
+            }
+        }
+        // Tag files
+        if (tldMetaData.getTagFiles() != null) {
+            for (TagFileMetaData tagFileMetaData : tldMetaData.getTagFiles()) {
+                TagFileInfo tagFileInfo = new TagFileInfo();
+                tagFileInfo.setName(tagFileMetaData.getName());
+                tagFileInfo.setPath(tagFileMetaData.getPath());
+                tagLibraryInfo.addTagFileInfo(tagFileInfo);
+            }
+        }
+        // Function
+        if (tldMetaData.getFunctions() != null) {
+            for (FunctionMetaData functionMetaData : tldMetaData.getFunctions()) {
+                FunctionInfo functionInfo = new FunctionInfo();
+                functionInfo.setName(functionMetaData.getName());
+                functionInfo.setFunctionClass(functionMetaData.getFunctionClass());
+                functionInfo.setFunctionSignature(functionMetaData.getFunctionSignature());
+                tagLibraryInfo.addFunctionInfo(functionInfo);
+            }
+        }
+
+        if (jarPath == null && relativeLocation == null) {
+            if (!ret.containsKey(tagLibraryInfo.getUri())) {
+                ret.put(tagLibraryInfo.getUri(), tagLibraryInfo);
+            }
+        } else if (jarPath == null) {
+            tagLibraryInfo.setLocation("");
+            tagLibraryInfo.setPath(relativeLocation);
+            if (!ret.containsKey(tagLibraryInfo.getUri())) {
+                ret.put(tagLibraryInfo.getUri(), tagLibraryInfo);
+            }
+            ret.put(relativeLocation, tagLibraryInfo);
+        } else {
+            tagLibraryInfo.setLocation(relativeLocation);
+            tagLibraryInfo.setPath(jarPath);
+            if (!ret.containsKey(tagLibraryInfo.getUri())) {
+                ret.put(tagLibraryInfo.getUri(), tagLibraryInfo);
+            }
+            if (jarPath.equals("META-INF/taglib.tld")) {
+                ret.put(relativeLocation, tagLibraryInfo);
+            }
+        }
+        return tagLibraryInfo;
+    }
 
 }
