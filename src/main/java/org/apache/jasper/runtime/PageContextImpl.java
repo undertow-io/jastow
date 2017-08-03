@@ -778,7 +778,7 @@ public class PageContextImpl extends PageContext {
     @Override
     @Deprecated
     public javax.servlet.jsp.el.ExpressionEvaluator getExpressionEvaluator() {
-        return new org.apache.jasper.el.ExpressionEvaluatorImpl(
+        return new org.apache.jasper.el.ExpressionEvaluatorImpl(this,
                 this.applicationContext.getExpressionFactory());
 	}
 

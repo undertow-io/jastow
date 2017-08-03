@@ -18,6 +18,7 @@ package org.apache.jasper.el;
 
 import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
+import javax.servlet.jsp.JspContext;
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.ELParseException;
 import javax.servlet.jsp.el.Expression;
@@ -29,9 +30,12 @@ import javax.servlet.jsp.el.VariableResolver;
 public final class ExpressionEvaluatorImpl extends ExpressionEvaluator {
 
     private final ExpressionFactory factory;
+    private final ELContextImpl ctx;
 
-    public ExpressionEvaluatorImpl(ExpressionFactory factory) {
+    public ExpressionEvaluatorImpl(JspContext pageContext, ExpressionFactory factory) {
         this.factory = factory;
+        this.ctx = new ELContextImpl(factory);
+        ctx.putContext(JspContext.class, pageContext);
     }
 
     @Override
@@ -39,12 +43,11 @@ public final class ExpressionEvaluatorImpl extends ExpressionEvaluator {
             @SuppressWarnings("rawtypes") Class expectedType,
             FunctionMapper fMapper) throws ELException {
         try {
-            ELContextImpl ctx = new ELContextImpl(factory);
             if (fMapper != null) {
                 ctx.setFunctionMapper(new FunctionMapperImpl(fMapper));
             }
             ValueExpression ve = this.factory.createValueExpression(ctx, expression, expectedType);
-            return new ExpressionImpl(ve, factory);
+            return new ExpressionImpl(ve, ctx);
         } catch (javax.el.ELException e) {
             throw new ELParseException(e.getMessage());
         }

@@ -35,10 +35,9 @@ public final class ELResolverImpl extends ELResolver {
     private final VariableResolver variableResolver;
     private final ELResolver elResolver;
 
-    public ELResolverImpl(VariableResolver variableResolver,
-            ExpressionFactory factory) {
+    public ELResolverImpl(VariableResolver variableResolver, ELContext elContext) {
         this.variableResolver = variableResolver;
-        this.elResolver = new ELContextImpl(factory).getELResolver();
+        this.elResolver = elContext.getELResolver();
     }
 
     @Override
