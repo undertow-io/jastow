@@ -102,7 +102,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 
 		// alert all ELContextListeners
         fireListeners(ctx);
-
+        this.instantiated = true;
         return ctx;
     }
 

@@ -21,7 +21,11 @@ package io.undertow.test.jsp.expression;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import javax.el.CompositeELResolver;
+import javax.el.ELContext;
 import javax.servlet.ServletException;
+import javax.servlet.jsp.JspApplicationContext;
+import javax.servlet.jsp.JspFactory;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.el.Expression;
@@ -67,7 +71,7 @@ public class ExpressionJspTestCase {
                 .setClassIntrospecter(TestClassIntrospector.INSTANCE)
                 .setDeploymentName("servletContext.war")
                 .setResourceManager(new TestResourceLoader(ExpressionJspTestCase.class))
-                .addServlet(JspServletBuilder.createServlet("Default Jsp Servlet", "*.jsp"));
+                .addServlet(JspServletBuilder.createServlet("Default Jsp Servlet", "*.jsp").addMapping("*.jspx"));
 
 
         JspServletBuilder.setupDeployment(builder, new HashMap<String, JspPropertyGroup>(), new HashMap<>(), new HackInstanceManager());
@@ -81,74 +85,108 @@ public class ExpressionJspTestCase {
 
 
     @Test
-    public void testSimpleHttpServlet() throws IOException {
+    public void testLegacyExpressions() throws IOException {
         TestHttpClient client = new TestHttpClient();
         try {
             HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/expression.jsp");
             HttpResponse result = client.execute(get);
             Assert.assertEquals(200, result.getStatusLine().getStatusCode());
             final String response = HttpClientUtils.readResponse(result).trim();
-            //Assert.assertTrue("test failed, full response:\n" + response, response.contains("PASSED"));
+            Assert.assertEquals("test failed, full response:\n" + response, "Test PASSED", response);
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
+    @Test
+    public void testPostInitEL() throws IOException {
+        TestHttpClient client = new TestHttpClient();
+        try {
+            HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/IIllegal.jsp");
+            HttpResponse result = client.execute(get);
+            Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+            final String response = HttpClientUtils.readResponse(result).trim();
             Assert.assertEquals("test failed, full response:\n" + response, "Test PASSED", response);
         } finally {
             client.getConnectionManager().shutdown();
         }
     }
 
+    @Test
+    public void testEncoding() throws IOException {
+        TestHttpClient client = new TestHttpClient();
+        try {
+            HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/I18NPageEncTest.jspx");
+            HttpResponse result = client.execute(get);
+            Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+            final String response = HttpClientUtils.readResponse(result).trim();
+            Assert.assertTrue("test failed, full response:\n" + response, response.contains("Test PASSED"));
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
+
     public static void evaluate(JspWriter out, PageContext pc, String qualifiedMethodExpression, String unqualifiedMethodExpression, String variableExpression) throws Exception {
-        if (pc != null) {
-            TSFunctionMapper mapper = new TSFunctionMapper();
-            ExpressionEvaluator eval = pc.getExpressionEvaluator();
-            VariableResolver resolver = pc.getVariableResolver();
-            if (eval != null) {
-                Expression expr = eval.parseExpression(qualifiedMethodExpression, java.lang.String.class, mapper);
-                if (expr != null) {
-                    String result = (String) expr.evaluate(resolver);
-                    if (result != null) {
-                        if (result.equals("string")) {
-                            Expression expr2 = eval.parseExpression(variableExpression, javax.servlet.jsp.PageContext.class, null);
-                            if (expr2 != null) {
-                                PageContext pageContext = (PageContext) expr2.evaluate(resolver);
-                                if (pageContext != pc) {
-                                    out.println("Test FAILED.  Resolution didn't return expected value.");
-                                    out.println("PageContext returned is not the same instance as expected.");
-                                }
-                                Expression expr3 = eval.parseExpression(unqualifiedMethodExpression, java.lang.String.class, mapper);
-                                if (expr3 != null) {
-                                    result = (String) expr3.evaluate(resolver);
-                                    if (result != null) {
-                                        if (result.equals("string")) {
-                                            out.println("Test PASSED");
-                                        } else {
-                                            out.println("Test FAILED. (l3) Expression evaluation returned unexpected value.");
-                                            out.println("Expected 'string', received '" + result + "'");
-                                        }
-                                    } else {
-                                        out.println("Test FAILED.  (l3) Expression evaluation returned null.");
-                                    }
-                                } else {
-                                    out.println("Test FAILED. (l3) ExpressionEvaluator.parseExpression" +
-                                            " returned null.");
-                                }
+        assert pc != null;
+        TSFunctionMapper mapper = new TSFunctionMapper();
+        ExpressionEvaluator eval = pc.getExpressionEvaluator();
+        VariableResolver resolver = pc.getVariableResolver();
+        assert eval != null : "Unable to obtain ExpressionEvaluator";
+        Expression expr = eval.parseExpression(qualifiedMethodExpression, java.lang.String.class, mapper);
+        assert expr != null;
+        String result = (String) expr.evaluate(resolver);
+        if (result != null) {
+            if (result.equals("string")) {
+                Expression expr2 = eval.parseExpression(variableExpression, javax.servlet.jsp.PageContext.class, null);
+                if (expr2 != null) {
+                    PageContext pageContext = (PageContext) expr2.evaluate(resolver);
+                    if (pageContext != pc) {
+                        out.println("Test FAILED.  Resolution didn't return expected value.");
+                        out.println("PageContext returned is not the same instance as expected.");
+                    }
+                    Expression expr3 = eval.parseExpression(unqualifiedMethodExpression, java.lang.String.class, mapper);
+                    if (expr3 != null) {
+                        result = (String) expr3.evaluate(resolver);
+                        if (result != null) {
+                            if (result.equals("string")) {
+                                out.println("Test PASSED");
                             } else {
-                                out.println("Test FAILED. (l2) ExpressionEvaluator returned null.");
+                                out.println("Test FAILED. (l3) Expression evaluation returned unexpected value.");
+                                out.println("Expected 'string', received '" + result + "'");
                             }
                         } else {
-                            out.println("Test FAILED.  (l1) Expression evaluation returned unexpected result.");
-                            out.println("Expected 'string', Received '" + result + "'");
+                            out.println("Test FAILED.  (l3) Expression evaluation returned null.");
                         }
                     } else {
-                        out.println("Test FAILED. (l1) Expression evaluation returned null.");
+                        out.println("Test FAILED. (l3) ExpressionEvaluator.parseExpression" +
+                                " returned null.");
                     }
                 } else {
-                    out.println("Test FAILED. (l1) ExpressionEvaluator.parseExpression  returned null.");
+                    out.println("Test FAILED. (l2) ExpressionEvaluator returned null.");
                 }
-
             } else {
-                out.println("Unable to obtain ExpressionEvaluator");
+                out.println("Test FAILED.  (l1) Expression evaluation returned unexpected result.");
+                out.println("Expected 'string', Received '" + result + "'");
             }
         } else {
-            out.println("Test FAILED.  Unable to obtain PageContext.");
+            out.println("Test FAILED. (l1) Expression evaluation returned null.");
+        }
+
+
+    }
+
+    public static void testIIllegalState(PageContext pageContext, JspWriter out) throws Exception {
+        assert pageContext != null;
+        ELContext elContext = pageContext.getELContext();
+        assert elContext != null;
+        JspApplicationContext jaContext = JspFactory.getDefaultFactory().getJspApplicationContext(
+                pageContext.getServletContext());
+        assert jaContext != null;
+
+        try {
+            jaContext.addELResolver(new CompositeELResolver());
+            out.println("addELResolver call succeeded. Test FAILED.");
+        } catch (IllegalStateException ise) {
+            out.println("Test PASSED");
         }
     }
 

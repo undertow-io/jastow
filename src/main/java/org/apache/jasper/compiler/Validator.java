@@ -349,7 +349,7 @@ class Validator {
                 if (!pageDirEnc.equals(pageEnc)
                         && (!pageDirEnc.startsWith("UTF-16") || !pageEnc
                                 .startsWith("UTF-16"))) {
-                    err.jspError(pageDir.getStart(),
+                    err.jspError(pageDir,
                             MESSAGES.pageEncodingConflictProlog(pageEnc, pageDirEnc));
                 } else {
                     return pageEnc;
