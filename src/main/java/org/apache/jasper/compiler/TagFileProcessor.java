@@ -19,7 +19,6 @@ package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -186,6 +185,7 @@ class TagFileProcessor {
             return result;
         }
 
+        @Override
         public void visit(Node.AttributeDirective n) throws JasperException {
 
             JspUtil.checkAttributes(TagConstants.ATTRIBUTE_DIRECTIVE_ACTION, n,
@@ -285,6 +285,7 @@ class TagFileProcessor {
             checkUniqueName(attrName, ATTR_NAME, n, tagAttributeInfo);
         }
 
+        @Override
         public void visit(Node.VariableDirective n) throws JasperException {
 
             JspUtil.checkAttributes(TagConstants.VARIABLE_DIRECTIVE_ACTION, n,
@@ -422,7 +423,7 @@ class TagFileProcessor {
         private void checkUniqueName(String name, String type, Node n,
                 TagAttributeInfo attr) throws JasperException {
 
-            HashMap<String, NameEntry> table = (type == VAR_NAME_FROM) ? nameFromTable : nameTable;
+            HashMap<String, NameEntry> table = (VAR_NAME_FROM.equals(type)) ? nameFromTable : nameTable;
             NameEntry nameEntry = table.get(name);
             if (nameEntry != null) {
                 if (!TAG_DYNAMIC.equals(type) ||
@@ -441,15 +442,14 @@ class TagFileProcessor {
          */
         void postCheck() throws JasperException {
             // Check that var.name-from-attributes has valid values.
-            Iterator<String> iter = nameFromTable.keySet().iterator();
-            while (iter.hasNext()) {
-                String nameFrom = iter.next();
-                NameEntry nameEntry = nameTable.get(nameFrom);
-                NameEntry nameFromEntry = nameFromTable.get(nameFrom);
+            for (Entry<String, NameEntry> entry : nameFromTable.entrySet()) {
+                String key = entry.getKey();
+                NameEntry nameEntry = nameTable.get(key);
+                NameEntry nameFromEntry = entry.getValue();
                 Node nameFromNode = nameFromEntry.getNode();
                 if (nameEntry == null) {
-                    err.jspError(nameFromNode.getStart(),
-                            MESSAGES.cannotFindAttribute(nameFrom));
+                    err.jspError(nameFromNode,
+                            MESSAGES.cannotFindAttribute(key));
                 } else {
                     Node node = nameEntry.getNode();
                     TagAttributeInfo tagAttr = nameEntry.getTagAttributeInfo();
@@ -457,7 +457,7 @@ class TagFileProcessor {
                             || !tagAttr.isRequired()
                             || tagAttr.canBeRequestTime()) {
                         err.jspError(nameFromNode.getStart(), MESSAGES.invalidAttributeFound(node.getStart()
-                                        .getLineNumber(), nameFrom));
+                                        .getLineNumber(), key));
                     }
                 }
             }
@@ -481,6 +481,8 @@ class TagFileProcessor {
      * @param tagLibInfo
      *            the TagLibraryInfo object associated with this TagInfo
      * @return a TagInfo object assembled from the directives in the tag file.
+     *
+     * @throws JasperException If an error occurs during parsing
      */
     @SuppressWarnings("null") // page can't be null
     public static TagInfo parseTagFileDirectives(ParserController pc,
@@ -493,8 +495,6 @@ class TagFileProcessor {
         Node.Nodes page = null;
         try {
             page = pc.parseTagFileDirectives(path, jar);
-        } catch (FileNotFoundException e) {
-            err.jspError(MESSAGES.fileNotFound(path));
         } catch (IOException e) {
             err.jspError(MESSAGES.fileNotFound(path));
         }
@@ -672,6 +672,11 @@ class TagFileProcessor {
      * tag files used in a JSP files. The directives in the tag files are
      * assumed to have been processed and encapsulated as TagFileInfo in the
      * CustomTag nodes.
+     *
+     * @param compiler Compiler to use to compile tag files
+     * @param page     The page from to scan for tag files to compile
+     *
+     * @throws JasperException If an error occurs during the scan or compilation
      */
     public void loadTagFiles(Compiler compiler, Node.Nodes page)
             throws JasperException {

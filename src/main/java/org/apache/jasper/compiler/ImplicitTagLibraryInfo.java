@@ -20,6 +20,8 @@ package org.apache.jasper.compiler;
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -100,9 +102,7 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
         // Populate mapping of tag names to tag file paths
         Set<String> dirList = ctxt.getResourcePaths(tagdir);
         if (dirList != null) {
-            Iterator it = dirList.iterator();
-            while (it.hasNext()) {
-                String path = (String) it.next();
+            for (String path : dirList) {
                 if (path.endsWith(TAG_FILE_SUFFIX)
                         || path.endsWith(TAGX_FILE_SUFFIX)) {
                     /*
@@ -110,11 +110,9 @@ class ImplicitTagLibraryInfo extends TagLibraryInfo {
                      * .tagx extension, respectively, as the <name> subelement
                      * of the "imaginary" <tag-file> element
                      */
-                    String suffix = path.endsWith(TAG_FILE_SUFFIX) ?
-                            TAG_FILE_SUFFIX : TAGX_FILE_SUFFIX; 
-                    String tagName = path.substring(path.lastIndexOf("/") + 1);
-                    tagName = tagName.substring(0,
-                            tagName.lastIndexOf(suffix));
+                    String tagPath = Paths.get(path).getFileName().toString();
+                    String tagName = tagPath.substring(0, tagPath.lastIndexOf('.'));
+
                     tagFileMap.put(tagName, path);
                 } else if (path.endsWith(IMPLICIT_TLD)) {
                     InputStream is = null;

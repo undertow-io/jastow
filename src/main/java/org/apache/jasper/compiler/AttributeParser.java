@@ -30,12 +30,6 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
  */
 public class AttributeParser {
 
-    /* System property that controls if the strict quoting rules are applied. */
-    private static final boolean STRICT_QUOTE_ESCAPING = Boolean.valueOf(
-            System.getProperty(
-                    "org.apache.jasper.compiler.Parser.STRICT_QUOTE_ESCAPING",
-                    "true")).booleanValue();
-
     /**
      * Parses the provided input String as a JSP attribute and returns an
      * unquoted value.
@@ -47,38 +41,19 @@ public class AttributeParser {
      *                      where the JSP attribute is defined.
      * @param isDeferredSyntaxAllowedAsLiteral
      *                      Are deferred expressions treated as literals?
+     * @param strict        Should the rules of JSP.1.6 for escaping of quotes
+     *                      be strictly applied?
+     * @param quoteAttributeEL Should the rules of JSP.1.6 for escaping in
+     *                      attributes be applied to EL in attribute values?
      * @return              An unquoted JSP attribute that, if it contains
      *                      expression language can be safely passed to the EL
      *                      processor without fear of ambiguity.
      */
     public static String getUnquoted(String input, char quote,
-            boolean isELIgnored, boolean isDeferredSyntaxAllowedAsLiteral) {
-        return (new AttributeParser(input, quote, isELIgnored,
-                isDeferredSyntaxAllowedAsLiteral,
-                STRICT_QUOTE_ESCAPING)).getUnquoted();
-    }
-
-    /**
-     * Provided solely for unit test purposes and allows per call overriding of
-     * the STRICT_QUOTE_ESCAPING system property.
-     *
-     * @param input         The input.
-     * @param quote         The quote character for the attribute or 0 for
-     *                      scripting expressions.
-     * @param isELIgnored   Is expression language being ignored on the page
-     *                      where the JSP attribute is defined.
-     * @param isDeferredSyntaxAllowedAsLiteral
-     *                      Are deferred expressions treated as literals?
-     * @param strict        The value to use for STRICT_QUOTE_ESCAPING.
-     * @return              An unquoted JSP attribute that, if it contains
-     *                      expression language can be safely passed to the EL
-     *                      processor without fear of ambiguity.
-     */
-    protected static String getUnquoted(String input, char quote,
             boolean isELIgnored, boolean isDeferredSyntaxAllowedAsLiteral,
-            boolean strict) {
+            boolean strict, boolean quoteAttributeEL) {
         return (new AttributeParser(input, quote, isELIgnored,
-                isDeferredSyntaxAllowedAsLiteral, strict)).getUnquoted();
+                isDeferredSyntaxAllowedAsLiteral, strict, quoteAttributeEL)).getUnquoted();
     }
 
     /* The quoted input string. */
@@ -94,8 +69,12 @@ public class AttributeParser {
     /* Are deferred expression treated as literals */
     private final boolean isDeferredSyntaxAllowedAsLiteral;
 
-    /* Overrides the STRICT_QUOTE_ESCAPING. Used for Unit tests only. */
+    /* If a quote appears that matches quote, must it always be escaped? See
+     * JSP.1.6.
+     */
     private final boolean strict;
+
+    private final boolean quoteAttributeEL;
 
     /* The type ($ or #) of expression. Literals have a type of null. */
     private final char type;
@@ -121,13 +100,14 @@ public class AttributeParser {
      */
     private AttributeParser(String input, char quote,
             boolean isELIgnored, boolean isDeferredSyntaxAllowedAsLiteral,
-            boolean strict) {
+            boolean strict, boolean quoteAttributeEL) {
         this.input = input;
         this.quote = quote;
         this.isELIgnored = isELIgnored;
         this.isDeferredSyntaxAllowedAsLiteral =
             isDeferredSyntaxAllowedAsLiteral;
         this.strict = strict;
+        this.quoteAttributeEL = quoteAttributeEL;
         this.type = getType(input);
         this.size = input.length();
         result = new StringBuilder(size);
@@ -204,11 +184,11 @@ public class AttributeParser {
     }
 
     /*
-     * For EL need to unquote everything but no need to convert anything. The
-     * EL is terminated by '}'. The only other valid location for '}' is inside
-     * a StringLiteral. The literals are delimited by '\'' or '\"'. The only
-     * other valid location for '\'' or '\"' is also inside a StringLiteral. A
-     * quote character inside a StringLiteral must be escaped if the same quote
+     * Once inside EL, no need to unquote or convert anything. The EL is
+     * terminated by '}'. The only other valid location for '}' is inside a
+     * StringLiteral. The literals are delimited by '\'' or '\"'. The only other
+     * valid location for '\'' or '\"' is also inside a StringLiteral. A quote
+     * character inside a StringLiteral must be escaped if the same quote
      * character is used to delimit the StringLiteral.
      */
     private void parseEL() {
@@ -216,7 +196,12 @@ public class AttributeParser {
         boolean insideLiteral = false;
         char literalQuote = 0;
         while (i < size && !endEL) {
-            char ch = nextChar();
+            char ch;
+            if (quoteAttributeEL) {
+                ch = nextChar();
+            } else {
+                ch = input.charAt(i++);
+            }
             if (ch == '\'' || ch == '\"') {
                 if (insideLiteral) {
                     if (literalQuote == ch) {
@@ -230,7 +215,11 @@ public class AttributeParser {
             } else if (ch == '\\') {
                 result.append(ch);
                 if (insideLiteral && size < i) {
+                    if (quoteAttributeEL) {
                     ch = nextChar();
+                    } else {
+                        ch = input.charAt(i++);
+                    }
                     result.append(ch);
                 }
             } else if (ch == '}') {

@@ -349,7 +349,7 @@ class Validator {
                 if (!pageDirEnc.equals(pageEnc)
                         && (!pageDirEnc.startsWith("UTF-16") || !pageEnc
                                 .startsWith("UTF-16"))) {
-                    err.jspError(pageDir.getStart(),
+                    err.jspError(pageDir,
                             MESSAGES.pageEncodingConflictProlog(pageEnc, pageDirEnc));
                 } else {
                     return pageEnc;
@@ -683,21 +683,21 @@ class Validator {
         @Override
         public void visit(Node.Declaration n) throws JasperException {
             if (pageInfo.isScriptingInvalid()) {
-                err.jspError(n, MESSAGES.invalidScriptingElement());
+                err.jspError(n.getStart(), MESSAGES.invalidScriptingElement());
             }
         }
 
         @Override
         public void visit(Node.Expression n) throws JasperException {
             if (pageInfo.isScriptingInvalid()) {
-                err.jspError(n, MESSAGES.invalidScriptingElement());
+                err.jspError(n.getStart(), MESSAGES.invalidScriptingElement());
             }
         }
 
         @Override
         public void visit(Node.Scriptlet n) throws JasperException {
             if (pageInfo.isScriptingInvalid()) {
-                err.jspError(n, MESSAGES.invalidScriptingElement());
+                err.jspError(n.getStart(), MESSAGES.invalidScriptingElement());
             }
         }
 

@@ -86,6 +86,7 @@ public abstract class Compiler {
      * return null. Used in development mode for generating detailed error
      * messages. http://bz.apache.org/bugzilla/show_bug.cgi?id=37062.
      * </p>
+     * @return the page nodes
      */
     public Node.Nodes getPageNodes() {
         return this.pageNodes;
@@ -96,6 +97,7 @@ public abstract class Compiler {
      *
      * @return a smap for the current JSP page, if one is generated, null
      *         otherwise
+     * @throws Exception Error generating Java source
      */
     protected String[] generateJava() throws Exception {
 
@@ -308,13 +310,21 @@ public abstract class Compiler {
 	}
 
     /**
-     * Compile the servlet from .java file to .class file
+     * Servlet compilation. This compiles the generated sources into
+     * Servlets.
+     * @param smap The SMAP files for source debugging
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     protected abstract void generateClass(String[] smap)
             throws FileNotFoundException, JasperException, Exception;
 
     /**
-     * Compile the jsp file from the current engine context
+     * Compile the jsp file from the current engine context.
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     public void compile() throws FileNotFoundException, JasperException,
             Exception {
@@ -328,6 +338,9 @@ public abstract class Compiler {
      * @param compileClass
      *            If true, generate both .java and .class file If false,
      *            generate only .java file
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     public void compile(boolean compileClass) throws FileNotFoundException,
             JasperException, Exception {
@@ -343,6 +356,9 @@ public abstract class Compiler {
      *            generate only .java file
      * @param jspcMode
      *            true if invoked from JspC, false otherwise
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     public void compile(boolean compileClass, boolean jspcMode)
             throws FileNotFoundException, JasperException, Exception {
@@ -359,9 +375,7 @@ public abstract class Compiler {
                 generateClass(smap);
                 // Fix for bugzilla 41606
                 // Set JspServletWrapper.servletClassLastModifiedTime after successful compile
-                String targetFileName = ctxt.getClassFileName();
-                if (targetFileName != null) {
-                    File targetFile = new File(targetFileName);
+                File targetFile = new File(ctxt.getClassFileName());
                     if (targetFile.exists()) {
                         targetFile.setLastModified(jspLastModified.longValue());
                         if (jsw != null) {
@@ -370,7 +384,6 @@ public abstract class Compiler {
                         }
                     }
                 }
-            }
         } finally {
             if (tfp != null && ctxt.isPrototypeMode()) {
                 tfp.removeProtoTypeFiles(null);
@@ -401,6 +414,8 @@ public abstract class Compiler {
     /**
      * This is a protected method intended to be overridden by subclasses of
      * Compiler. This is used by the compile method to do all the compilation.
+     * @return <code>true</code> if the source generation and compilation
+     *  should occur
      */
     public boolean isOutDated() {
         return isOutDated(true);
@@ -415,6 +430,8 @@ public abstract class Compiler {
      * @param checkClass
      *            If true, check against .class file, if false, check against
      *            .java file.
+     * @return <code>true</code> if the source generation and compilation
+     *  should occur
      */
     public boolean isOutDated(boolean checkClass) {
 
@@ -521,14 +538,14 @@ public abstract class Compiler {
     }
 
     /**
-     * Gets the error dispatcher.
+     * @return the error dispatcher.
      */
     public ErrorDispatcher getErrorDispatcher() {
         return errDispatcher;
     }
 
     /**
-     * Gets the info about the page under compilation
+     * @return the info about the page under compilation
      */
     public PageInfo getPageInfo() {
         return pageInfo;
@@ -545,15 +562,11 @@ public abstract class Compiler {
         removeGeneratedClassFiles();
 
         try {
-            String javaFileName = ctxt.getServletJavaFileName();
-            if (javaFileName != null) {
-                File javaFile = new File(javaFileName);
-                if (log.isDebugEnabled())
-                    log.debug("Deleting " + javaFile);
-                if (javaFile.exists()) {
-                    if (!javaFile.delete()) {
-                        JasperLogger.COMPILER_LOGGER.failedToDeleteGeneratedFile(javaFile);
-                    }
+            File javaFile = new File(ctxt.getServletJavaFileName());
+            if (log.isDebugEnabled()) { log.debug("Deleting " + javaFile); }
+            if (javaFile.exists()) {
+                if (!javaFile.delete()) {
+                    JasperLogger.COMPILER_LOGGER.failedToDeleteGeneratedFile(javaFile);
                 }
             }
         } catch (Exception e) {
@@ -564,16 +577,13 @@ public abstract class Compiler {
 
     public void removeGeneratedClassFiles() {
         try {
-            String classFileName = ctxt.getClassFileName();
-            if (classFileName != null) {
-                File classFile = new File(classFileName);
-                if (log.isDebugEnabled())
-                    log.debug("Deleting " + classFile);
-                if (classFile.exists()) {
-                    if (!classFile.delete()) {
-                        JasperLogger.COMPILER_LOGGER.failedToDeleteGeneratedFile(classFile);
-                    }
+            File classFile = new File(ctxt.getClassFileName());
+            if (log.isDebugEnabled()) { log.debug("Deleting " + classFile); }
+            if (classFile.exists()) {
+                if (!classFile.delete()) {
+                    JasperLogger.COMPILER_LOGGER.failedToDeleteGeneratedFile(classFile);
                 }
+
             }
         } catch (Exception e) {
             // Remove as much as possible, log possible exceptions

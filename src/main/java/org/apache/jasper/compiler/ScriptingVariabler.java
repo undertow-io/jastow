@@ -37,7 +37,7 @@ import org.apache.jasper.JasperException;
  */
 class ScriptingVariabler {
 
-    private static final Integer MAX_SCOPE = new Integer(Integer.MAX_VALUE);
+    private static final Integer MAX_SCOPE = Integer.valueOf(Integer.MAX_VALUE);
 
     /*
      * Assigns an identifier (of type integer) to every custom tag, in order
@@ -56,7 +56,7 @@ class ScriptingVariabler {
             parent = n;
             visitBody(n);
             parent = tmpParent;
-            n.setNumCount(new Integer(count++));
+            n.setNumCount(Integer.valueOf(count++));
         }
     }
 
@@ -132,7 +132,7 @@ class ScriptingVariabler {
                         varName = n.getTagData().getAttributeString(
                                 tagVarInfos[i].getNameFromAttribute());
                         if (varName == null) {
-                            err.jspError(n.getStart(), MESSAGES.cannotFindVariableNameFromAttribute
+                            err.jspError(n, MESSAGES.cannotFindVariableNameFromAttribute
                                     (tagVarInfos[i].getNameFromAttribute()));
                         }
                     }

@@ -20,6 +20,8 @@ package org.apache.jasper.el;
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.util.Iterator;
+import java.util.Objects;
+
 import javax.el.ELContext;
 import javax.el.ELException;
 import javax.el.ELResolver;
@@ -33,17 +35,14 @@ public final class ELResolverImpl extends ELResolver {
     private final VariableResolver variableResolver;
     private final ELResolver elResolver;
 
-    public ELResolverImpl(VariableResolver variableResolver,
-            ExpressionFactory factory) {
+    public ELResolverImpl(VariableResolver variableResolver, ELContext elContext) {
         this.variableResolver = variableResolver;
-        this.elResolver = ELContextImpl.getDefaultResolver(factory);
+        this.elResolver = elContext.getELResolver();
     }
 
     @Override
     public Object getValue(ELContext context, Object base, Object property) {
-        if (context == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);
@@ -66,9 +65,7 @@ public final class ELResolverImpl extends ELResolver {
 
     @Override
     public Class<?> getType(ELContext context, Object base, Object property) {
-        if (context == null) {
-            throw MESSAGES.elResolverNullContext();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);
@@ -93,9 +90,7 @@ public final class ELResolverImpl extends ELResolver {
     @Override
     public void setValue(ELContext context, Object base, Object property,
             Object value) {
-        if (context == null) {
-            throw MESSAGES.elResolverNullContext();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);
@@ -109,9 +104,7 @@ public final class ELResolverImpl extends ELResolver {
 
     @Override
     public boolean isReadOnly(ELContext context, Object base, Object property) {
-        if (context == null) {
-            throw MESSAGES.elResolverNullContext();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.el.CompositeELResolver;
+import javax.el.ELContext;
 import javax.el.ELContextEvent;
 import javax.el.ELContextListener;
 import javax.el.ELManager;
@@ -35,7 +36,6 @@ import javax.servlet.jsp.JspContext;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.el.ELContextImpl;
-import org.apache.jasper.el.JasperELResolver;
 
 /**
  * Implementation of JspApplicationContext
@@ -50,11 +50,9 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 
     private final List<ELContextListener> contextListeners = new ArrayList<>();
 
-    private final List<ELResolver> resolvers = new ArrayList<>();
+    private final CompositeELResolver resolvers = new CompositeELResolver();
 
 	private boolean instantiated = false;
-
-	private ELResolver resolver;
 
 	public JspApplicationContextImpl() {
 
@@ -87,38 +85,32 @@ public class JspApplicationContextImpl implements JspApplicationContext {
 		}
 
 		// create ELContext for JspContext
-        final ELResolver r = this.createELResolver();
         ELContextImpl ctx;
         if (Constants.IS_SECURITY_ENABLED) {
             ctx = AccessController.doPrivileged(
                     new PrivilegedAction<ELContextImpl>() {
                         @Override
                         public ELContextImpl run() {
-                            return new ELContextImpl(r);
+                            return new ELContextImpl(expressionFactory);
                         }
                     });
         } else {
-            ctx = new ELContextImpl(r);
+            ctx = new ELContextImpl(expressionFactory);
         }
+        ctx.addELResolver(resolvers); //register application resolvers
 		ctx.putContext(JspContext.class, context);
 
 		// alert all ELContextListeners
-		ELContextEvent event = new ELContextEvent(ctx);
+        fireListeners(ctx);
+        this.instantiated = true;
+        return ctx;
+    }
+
+    protected void fireListeners(ELContext elContext) {
+        ELContextEvent event = new ELContextEvent(elContext);
 		for (int i = 0; i < this.contextListeners.size(); i++) {
 			this.contextListeners.get(i).contextCreated(event);
 		}
-
-		return ctx;
-	}
-
-	private ELResolver createELResolver() {
-		this.instantiated = true;
-		if (this.resolver == null) {
-            CompositeELResolver r = new JasperELResolver(this.resolvers,
-                    expressionFactory.getStreamELResolver());
-            this.resolver = r;
-		}
-		return this.resolver;
 	}
 
     @Override

@@ -17,8 +17,8 @@
 package org.apache.jasper.el;
 
 import javax.el.ELContext;
-import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
+import javax.servlet.jsp.JspContext;
 import javax.servlet.jsp.el.ELException;
 import javax.servlet.jsp.el.Expression;
 import javax.servlet.jsp.el.VariableResolver;
@@ -27,18 +27,19 @@ import javax.servlet.jsp.el.VariableResolver;
 public final class ExpressionImpl extends Expression {
 
     private final ValueExpression ve;
-    private final ExpressionFactory factory;
+    private final ELContext context;
 
 
-    public ExpressionImpl(ValueExpression ve, ExpressionFactory factory) {
+    public ExpressionImpl(ValueExpression ve, ELContext context) {
         this.ve = ve;
-        this.factory = factory;
+        this.context = context;
     }
 
     @Override
     public Object evaluate(VariableResolver vResolver) throws ELException {
-        ELContext ctx =
-                new ELContextImpl(new ELResolverImpl(vResolver, factory));
+        ELContextImpl ctx = new ELContextImpl(context);
+        ctx.putContext(JspContext.class, context.getContext(JspContext.class));
+        ctx.addELResolver(new ELResolverImpl(vResolver, context));
         return ve.getValue(ctx);
     }
 }

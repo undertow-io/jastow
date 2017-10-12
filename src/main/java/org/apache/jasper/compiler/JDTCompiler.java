@@ -311,15 +311,18 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
             } else if(opt.equals("1.8")) {
                 settings.put(CompilerOptions.OPTION_Source,
                         CompilerOptions.VERSION_1_8);
+            } else if(opt.equals("1.9")) {
+                settings.put(CompilerOptions.OPTION_Source,
+                             CompilerOptions.VERSION_1_9);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownSourceJvm(opt);
                 settings.put(CompilerOptions.OPTION_Source,
-                        CompilerOptions.VERSION_1_7);
+                        CompilerOptions.VERSION_1_8);
             }
         } else {
-            // Default to 1.7
+            // Default to 1.8
             settings.put(CompilerOptions.OPTION_Source,
-                    CompilerOptions.VERSION_1_7);
+                    CompilerOptions.VERSION_1_8);
         }
 
         // Target JVM
@@ -357,17 +360,22 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                         CompilerOptions.VERSION_1_8);
                 settings.put(CompilerOptions.OPTION_Compliance,
                         CompilerOptions.VERSION_1_8);
-            } else {
-                JasperLogger.COMPILER_LOGGER.unknownTargetJvm(opt);
+            } else if(opt.equals("1.9")) {
                 settings.put(CompilerOptions.OPTION_TargetPlatform,
-                        CompilerOptions.VERSION_1_7);
+                             CompilerOptions.VERSION_1_9);
+                settings.put(CompilerOptions.OPTION_Compliance,
+                        CompilerOptions.VERSION_1_9);
+            } else {
+                log.warn("Unknown target VM " + opt + " ignored.");
+                settings.put(CompilerOptions.OPTION_TargetPlatform,
+                        CompilerOptions.VERSION_1_8);
             }
         } else {
-            // Default to 1.7
+            // Default to 1.8
             settings.put(CompilerOptions.OPTION_TargetPlatform,
-                    CompilerOptions.VERSION_1_7);
+                    CompilerOptions.VERSION_1_8);
             settings.put(CompilerOptions.OPTION_Compliance,
-                    CompilerOptions.VERSION_1_7);
+                    CompilerOptions.VERSION_1_8);
         }
 
         final IProblemFactory problemFactory =
@@ -409,12 +417,11 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                                 }
                                 byte[] bytes = classFile.getBytes();
                                 classFileName.append(".class");
-                                FileOutputStream fout =
-                                    new FileOutputStream(classFileName.toString());
-                                BufferedOutputStream bos =
-                                    new BufferedOutputStream(fout);
+                                try (FileOutputStream fout = new FileOutputStream(
+                                        classFileName.toString());
+                                        BufferedOutputStream bos = new BufferedOutputStream(fout);) {
                                 bos.write(bytes);
-                                bos.close();
+                                }
                             }
                         }
                     } catch (IOException exc) {

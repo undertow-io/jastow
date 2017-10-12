@@ -36,7 +36,9 @@ import javax.servlet.jsp.el.ScopedAttributeELResolver;
 /**
  * Jasper-specific CompositeELResolver that optimizes certain functions to avoid
  * unnecessary resolver calls.
+ * @deprecated no longer used in jastow fork
  */
+@Deprecated
 public class JasperELResolver extends CompositeELResolver {
 
     private static final int STANDARD_RESOLVERS_COUNT = 9;
