@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -224,7 +225,12 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                     if (result.equals(targetClassName)) {
                         return false;
                     }
-                    String resourceName = result.replace('.', '/') + ".class";
+                    String packageName = result.replace('.', '/');
+                    URL resourceUrl = classLoader.getResource(packageName);
+                    if(resourceUrl != null) {
+                        return true;
+                    }
+                    String resourceName = packageName + ".class";
                     try (InputStream is =
                         classLoader.getResourceAsStream(resourceName)) {
                     return is == null;
