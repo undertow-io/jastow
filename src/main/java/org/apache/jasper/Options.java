@@ -241,4 +241,6 @@ public interface Options {
     public boolean getQuoteAttributeEL();
 
     boolean isOptimizeJSPScriptlets();
+
+    boolean isPrintNullAsEmpty();
 }

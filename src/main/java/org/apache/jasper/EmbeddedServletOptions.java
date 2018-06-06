@@ -202,6 +202,11 @@ public final class EmbeddedServletOptions implements Options {
      */
     private boolean quoteAttributeEL = true;
 
+    /**
+     * If the null value should be printed as an empty string
+     */
+    private boolean printNullAsEmpty = false;
+
     public String getProperty(String name ) {
         return settings.getProperty( name );
     }
@@ -449,7 +454,12 @@ public final class EmbeddedServletOptions implements Options {
     public boolean isOptimizeJSPScriptlets() {
         return optimizeJspScriptlets;
     }
-  
+
+    @Override
+    public boolean isPrintNullAsEmpty() {
+        return printNullAsEmpty;
+    }
+
     @Override
     public boolean getStrictQuoteEscaping() {
         return strictQuoteEscaping;
@@ -758,6 +768,16 @@ public final class EmbeddedServletOptions implements Options {
             }
         }
 
+        String printNullAsEmptyVal = config.getInitParameter("printNullAsEmpty");
+        if (printNullAsEmptyVal != null) {
+            if (printNullAsEmptyVal.equalsIgnoreCase("true")) {
+                printNullAsEmpty = true;
+            } else if (printNullAsEmptyVal.equalsIgnoreCase("false")) {
+                printNullAsEmpty = false;
+            } else {
+                JasperLogger.ROOT_LOGGER.invalidPrintNullAsEmptyValue(optimizeScriptlets);
+            }
+        }
     }
 
 }

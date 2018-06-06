@@ -54,6 +54,7 @@ import org.apache.jasper.Constants;
 import org.apache.jasper.el.ELContextImpl;
 import org.apache.jasper.runtime.JspContextWrapper.ELContextWrapper;
 import org.apache.jasper.security.SecurityUtil;
+import org.apache.jasper.servlet.JspServletWrapper;
 
 /**
  * Implementation of the PageContext class from the JSP spec. Also doubles as a
@@ -143,8 +144,14 @@ public class PageContextImpl extends PageContext {
         if (bufferSize == JspWriter.DEFAULT_BUFFER) {
             bufferSize = Constants.DEFAULT_BUFFER_SIZE;
         }
+        boolean printNullEmpty = false;
+        Object printNullAsEmptyValue = request.getAttribute(JspServletWrapper.IO_UNDERTOW_JASTOW_PRINT_NULL_AS_EMPTY);
+        if(printNullAsEmptyValue != null) {
+			printNullEmpty = Boolean.parseBoolean(printNullAsEmptyValue.toString());
+		}
+
 		if (this.baseOut == null) {
-			this.baseOut = new JspWriterImpl(response, bufferSize, autoFlush);
+			this.baseOut = new JspWriterImpl(response, bufferSize, autoFlush, printNullEmpty);
 		} else {
 			this.baseOut.init(response, bufferSize, autoFlush);
 		}

@@ -221,4 +221,8 @@ public interface JasperLogger extends BasicLogger {
     @LogMessage(level = WARN)
     @Message(id = 5041, value = "Invalid quoteAttributeEL value %s, must be true or false")
     void invalidQuoteAttributeEL(String quoteAttributeEL);
+
+    @LogMessage(level = ERROR)
+    @Message(id = 5042, value = "Invalid printNullAsEmpty value %s, must be true or false")
+    void invalidPrintNullAsEmptyValue(String value);
 }

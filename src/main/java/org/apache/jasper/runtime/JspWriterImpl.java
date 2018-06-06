@@ -47,9 +47,11 @@ public class JspWriterImpl extends JspWriter {
     private int nextChar;
     private boolean flushed = false;
     private boolean closed = false;
+    private final boolean nullAsEmpty;
 
-    public JspWriterImpl() {
+    public JspWriterImpl(boolean nullAsEmpty) {
         super( Constants.DEFAULT_BUFFER_SIZE, true );
+        this.nullAsEmpty = nullAsEmpty;
     }
 
     /**
@@ -57,14 +59,16 @@ public class JspWriterImpl extends JspWriter {
      * buffer of the given size.
      *
      * @param  response A Servlet Response
-     * @param  sz   	Output-buffer size, a positive integer
+     * @param  sz    Output-buffer size, a positive integer
      * @param autoFlush <code>true</code> to automatically flush on buffer
      *  full, <code>false</code> to throw an overflow exception in that case
+     * @param nullAsEmpty
      * @exception  IllegalArgumentException  If sz is &lt;= 0
      */
     public JspWriterImpl(ServletResponse response, int sz,
-            boolean autoFlush) {
+                         boolean autoFlush, boolean nullAsEmpty) {
         super(sz, autoFlush);
+        this.nullAsEmpty = nullAsEmpty;
         if (sz < 0)
             throw MESSAGES.invalidNegativeBufferSize();
         this.response = response;
@@ -430,7 +434,8 @@ public class JspWriterImpl extends JspWriter {
 
     /**
      * Print a string.  If the argument is <code>null</code> then the string
-     * <code>"null"</code> is printed.  Otherwise, the string's characters are
+     * <code>"null"</code> is printed, unless nullAsEmpty is true in which case
+     * the empty string is printed. Otherwise, the string's characters are
      * converted into bytes according to the platform's default character
      * encoding, and these bytes are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
@@ -440,7 +445,11 @@ public class JspWriterImpl extends JspWriter {
     @Override
     public void print(String s) throws IOException {
         if (s == null) {
-            s = "null";
+            if(nullAsEmpty ) {
+                return;
+            } else {
+                s = "null";
+            }
         }
         write(s);
     }

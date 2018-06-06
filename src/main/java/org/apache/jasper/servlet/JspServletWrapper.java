@@ -71,6 +71,7 @@ public class JspServletWrapper {
 
     private static final Map<String,Long> ALWAYS_OUTDATED_DEPENDENCIES =
             new HashMap<>();
+    public static final String IO_UNDERTOW_JASTOW_PRINT_NULL_AS_EMPTY = "io.undertow.jastow.PRINT_NULL_AS_EMPTY";
 
     static {
         // If this is missing,
@@ -334,6 +335,8 @@ public class JspServletWrapper {
 
         Servlet servlet;
 
+
+
         try {
 
             if (ctxt.isRemoved()) {
@@ -423,6 +426,10 @@ public class JspServletWrapper {
                         }
                     }
             }
+        }
+
+        if(options.isPrintNullAsEmpty()) {
+                request.setAttribute(IO_UNDERTOW_JASTOW_PRINT_NULL_AS_EMPTY, true);
         }
 
             /*
