@@ -21,7 +21,9 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.Stack;
 
 import org.apache.jasper.JasperException;
@@ -513,6 +515,21 @@ class ParserController implements TagConstants {
     }
 
     /*
+     * Normalizes the filename. Done this way to always use "/"
+     * as the separator.
+     */
+    private String normalizeFileName(String inFileName) {
+        Path path = Paths.get(inFileName).normalize();
+        StringBuilder sb = new StringBuilder();
+        // it's always absolute
+        Iterator<Path> i = path.iterator();
+        while (i.hasNext()) {
+            sb.append("/").append(i.next().toString());
+        }
+        return sb.toString();
+    }
+
+    /*
      * Resolve the name of the file and update baseDirStack() to keep track of
      * the current base directory for each included file.
      * The 'root' file is always an 'absolute' path, so no need to put an
@@ -523,7 +540,7 @@ class ParserController implements TagConstants {
         boolean isAbsolute = fileName.startsWith("/");
         fileName = isAbsolute ? fileName
                 : baseDirStack.peek() + fileName;
-	fileName = Paths.get(fileName).normalize().toString();
+        fileName = normalizeFileName(fileName);
         String baseDir =
             fileName.substring(0, fileName.lastIndexOf("/") + 1);
         baseDirStack.push(baseDir);
