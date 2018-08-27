@@ -21,7 +21,6 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
 import java.util.Stack;
 
 import org.apache.jasper.JasperException;
@@ -502,7 +501,6 @@ class ParserController implements TagConstants {
         boolean isAbsolute = fileName.startsWith("/");
         fileName = isAbsolute ? fileName
                 : baseDirStack.peek() + fileName;
-	fileName = Paths.get(fileName).normalize().toString();
         String baseDir =
             fileName.substring(0, fileName.lastIndexOf("/") + 1);
         baseDirStack.push(baseDir);
