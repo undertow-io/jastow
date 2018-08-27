@@ -501,6 +501,7 @@ class ParserController implements TagConstants {
         boolean isAbsolute = fileName.startsWith("/");
         fileName = isAbsolute ? fileName
                 : baseDirStack.peek() + fileName;
+        fileName = CanonicalPathUtils.canonicalize(fileName);
         String baseDir =
             fileName.substring(0, fileName.lastIndexOf("/") + 1);
         baseDirStack.push(baseDir);
