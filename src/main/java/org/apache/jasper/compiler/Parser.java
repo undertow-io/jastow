@@ -688,7 +688,7 @@ class Parser implements TagConstants {
                     start, parent);
         }
         else {
-            if (!matchesConcat(expression)) {
+            if (!matchesConcat(expression) || matchesConcatInMethodArgs(expression)) {
                 new Node.Expression(parseScriptText(expression),
                         start, parent);
             } else {
@@ -731,6 +731,9 @@ class Parser implements TagConstants {
         return Pattern.compile("\\+\\s*\"|\"\\s*\\+").matcher(token).find();
     }
 
+    private boolean matchesConcatInMethodArgs(String token) {
+        return Pattern.compile("\\(.*?\\+.*?\\)").matcher(token).find();
+    }
     private String cleanTextToken(String token) {
         return cleanExprToken(token.trim().replaceAll("(?<!\\\\)\"|\t|\n|\r", "").replaceAll("\\\\\"","\""));
     }
