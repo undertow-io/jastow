@@ -48,7 +48,7 @@ public class ServletResponseWrapperInclude extends HttpServletResponseWrapper {
     public ServletResponseWrapperInclude(ServletResponse response,
                                          JspWriter jspWriter) {
         super((HttpServletResponse)response);
-        this.printWriter = new PrintWriter(jspWriter);
+        this.printWriter = new IncludePrintWriter(jspWriter);
         this.jspWriter = jspWriter;
     }
 
