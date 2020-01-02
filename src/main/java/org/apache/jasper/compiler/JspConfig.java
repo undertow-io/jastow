@@ -20,8 +20,8 @@ package org.apache.jasper.compiler;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 import javax.servlet.ServletContext;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -82,8 +82,8 @@ public class JspConfig {
                     }
 
         jspProperties = new Vector<>();
-        HashMap<String, org.apache.jasper.deploy.JspPropertyGroup> jspPropertyGroups =
-                                (HashMap<String, org.apache.jasper.deploy.JspPropertyGroup>)
+        Map<String, org.apache.jasper.deploy.JspPropertyGroup> jspPropertyGroups =
+                                (Map<String, org.apache.jasper.deploy.JspPropertyGroup>)
                                 ctxt.getAttribute(Constants.JSP_PROPERTY_GROUPS);
 
         for (String key : jspPropertyGroups.keySet()) {
