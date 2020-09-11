@@ -18,8 +18,13 @@
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
+import static org.apache.jasper.compiler.Constants.DISPATCHER_TYPE;
 import static org.apache.jasper.compiler.Constants.EXPRESSION_FACTORY;
 import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
+import static org.apache.jasper.compiler.Constants.SERVLET_CONFIG;
+import static org.apache.jasper.compiler.Constants.SERVLET_CONTEXT;
+import static org.apache.jasper.compiler.Constants.SERVLET_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
 import static org.apache.jasper.compiler.Constants.VALUE_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.VARIABLE_MAPPER;
 
@@ -508,7 +513,7 @@ class Generator {
     private void generateInit() {
 
         if (ctxt.isTagFile()) {
-            printilThreePart(out, "private void _jspInit(", "javax.servlet.ServletConfig", " config) {");
+            printilThreePart(out, "private void _jspInit(", SERVLET_CONFIG, " config) {");
         } else {
             out.printil("public void _jspInit() {");
         }
@@ -754,7 +759,7 @@ class Generator {
         out.printin("                 org.apache.jasper.runtime.JspSourceImports");
         if (!pageInfo.isThreadSafe()) {
             out.println(",");
-            printinTwoPart(out, "                 ", "javax.servlet.SingleThreadModel");
+            printinTwoPart(out, "                 ", SINGLE_THREAD_MODEL);
         }
         out.println(" {");
         out.pushIndent();
@@ -777,7 +782,7 @@ class Generator {
         printlnMultiPart(out, "(final ", "javax.servlet.http.HttpServletRequest", " request, final ", "javax.servlet.http.HttpServletResponse", " response)");
         out.pushIndent();
         out.pushIndent();
-        printilThreePart(out, "throws java.io.IOException, ", "javax.servlet.ServletException", " {");
+        printilThreePart(out, "throws java.io.IOException, ", SERVLET_EXCEPTION, " {");
         out.popIndent();
         out.println();
 
@@ -785,7 +790,7 @@ class Generator {
         if (!pageInfo.isErrorPage()) {
             out.printil("final java.lang.String _jspx_method = request.getMethod();");
             out.printin("if (!\"GET\".equals(_jspx_method) && !\"POST\".equals(_jspx_method) && !\"HEAD\".equals(_jspx_method) && ");
-            printlnThreePart(out, "!", "javax.servlet.DispatcherType", ".ERROR.equals(request.getDispatcherType())) {");
+            printlnThreePart(out, "!", DISPATCHER_TYPE, ".ERROR.equals(request.getDispatcherType())) {");
             out.pushIndent();
             out.printin("response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ");
             out.println("\"" + JasperMessages.MESSAGES.forbiddenHttpMethod()+ "\");");
@@ -810,8 +815,8 @@ class Generator {
             out.printil("}");
         }
 
-        printilThreePart(out, "final ", "javax.servlet.ServletContext", " application;");
-        printilThreePart(out, "final ", "javax.servlet.ServletConfig", " config;");
+        printilThreePart(out, "final ", SERVLET_CONTEXT, " application;");
+        printilThreePart(out, "final ", SERVLET_CONFIG, " config;");
         printilTwoPart(out, "javax.servlet.jsp.JspWriter", " out = null;");
         out.printil("final java.lang.Object page = this;");
 
@@ -1492,7 +1497,7 @@ class Generator {
                     out.popIndent();
                     out.printil("} catch (java.lang.Exception exc) {");
                     out.pushIndent();
-                    printinThreePart(out,"throw new ", "javax.servlet.ServletException", "(");
+                    printinThreePart(out,"throw new ", SERVLET_EXCEPTION, "(");
                     out.print("\"Cannot create bean of class \" + ");
                     out.print(binaryName);
                     out.println(", exc);");
@@ -3497,7 +3502,7 @@ class Generator {
 
         if (ci.hasUseBean()) {
             printilTwoPart(out, "javax.servlet.http.HttpSession", " session = _jspx_page_context.getSession();");
-            printilTwoPart(out, "javax.servlet.ServletContext", " application = _jspx_page_context.getServletContext();");
+            printilTwoPart(out, SERVLET_CONTEXT, " application = _jspx_page_context.getServletContext();");
         }
         if (ci.hasUseBean() || ci.hasIncludeAction() || ci.hasSetProperty()
                 || ci.hasParamAction()) {
@@ -3769,8 +3774,8 @@ class Generator {
         printilMultiPart(out, "javax.servlet.http.HttpServletResponse", " response = ",
                 "(", "javax.servlet.http.HttpServletResponse", ") _jspx_page_context.getResponse();");
         printilTwoPart(out, "javax.servlet.http.HttpSession", " session = _jspx_page_context.getSession();");
-        printilTwoPart(out, "javax.servlet.ServletContext", " application = _jspx_page_context.getServletContext();");
-        printilTwoPart(out, "javax.servlet.ServletConfig", " config = _jspx_page_context.getServletConfig();");
+        printilTwoPart(out, SERVLET_CONTEXT, " application = _jspx_page_context.getServletContext();");
+        printilTwoPart(out, SERVLET_CONFIG, " config = _jspx_page_context.getServletConfig();");
         printilTwoPart(out, "javax.servlet.jsp.JspWriter", " out = jspContext.getOut();");
         out.printil("_jspInit(config);");
 
