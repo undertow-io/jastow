@@ -20,6 +20,9 @@ package org.apache.jasper.compiler;
 import static org.apache.jasper.JasperMessages.MESSAGES;
 import static org.apache.jasper.compiler.Constants.DISPATCHER_TYPE;
 import static org.apache.jasper.compiler.Constants.EXPRESSION_FACTORY;
+import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_REQUEST;
+import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_RESPONSE;
+import static org.apache.jasper.compiler.Constants.HTTP_SESSION;
 import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONFIG;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONTEXT;
@@ -779,7 +782,7 @@ class Generator {
         // Now the service method
         out.printin("public void ");
         out.print(serviceMethodName);
-        printlnMultiPart(out, "(final ", "javax.servlet.http.HttpServletRequest", " request, final ", "javax.servlet.http.HttpServletResponse", " response)");
+        printlnMultiPart(out, "(final ", HTTP_SERVLET_REQUEST, " request, final ", HTTP_SERVLET_RESPONSE, " response)");
         out.pushIndent();
         out.pushIndent();
         printilThreePart(out, "throws java.io.IOException, ", SERVLET_EXCEPTION, " {");
@@ -804,13 +807,13 @@ class Generator {
         printilThreePart(out, "final ", "javax.servlet.jsp.PageContext", " pageContext;");
 
         if (pageInfo.isSession())
-            printilTwoPart(out, "javax.servlet.http.HttpSession", " session = null;");
+            printilTwoPart(out, HTTP_SESSION, " session = null;");
 
         if (pageInfo.isErrorPage()) {
             out.printil("java.lang.Throwable exception = org.apache.jasper.runtime.JspRuntimeLibrary.getThrowable(request);");
             out.printil("if (exception != null) {");
             out.pushIndent();
-            printilThreePart(out, "response.setStatus(", "javax.servlet.http.HttpServletResponse", ".SC_INTERNAL_SERVER_ERROR);");
+            printilThreePart(out, "response.setStatus(", HTTP_SERVLET_RESPONSE, ".SC_INTERNAL_SERVER_ERROR);");
             out.popIndent();
             out.printil("}");
         }
@@ -3501,15 +3504,15 @@ class Generator {
         }
 
         if (ci.hasUseBean()) {
-            printilTwoPart(out, "javax.servlet.http.HttpSession", " session = _jspx_page_context.getSession();");
+            printilTwoPart(out, HTTP_SESSION, " session = _jspx_page_context.getSession();");
             printilTwoPart(out, SERVLET_CONTEXT, " application = _jspx_page_context.getServletContext();");
         }
         if (ci.hasUseBean() || ci.hasIncludeAction() || ci.hasSetProperty()
                 || ci.hasParamAction()) {
-            printilMultiPart(out, "javax.servlet.http.HttpServletRequest", " request = (", "javax.servlet.http.HttpServletRequest", ")_jspx_page_context.getRequest();");
+            printilMultiPart(out, HTTP_SERVLET_REQUEST, " request = (", HTTP_SERVLET_REQUEST, ")_jspx_page_context.getRequest();");
         }
         if (ci.hasIncludeAction()) {
-            printilMultiPart(out, "javax.servlet.http.HttpServletResponse", " response = (", "javax.servlet.http.HttpServletResponse", ")_jspx_page_context.getResponse();");
+            printilMultiPart(out, HTTP_SERVLET_RESPONSE, " response = (", HTTP_SERVLET_RESPONSE, ")_jspx_page_context.getResponse();");
         }
     }
 
@@ -3769,11 +3772,11 @@ class Generator {
         printilMultiPart(out, "javax.servlet.jsp.PageContext", " _jspx_page_context = (", "javax.servlet.jsp.PageContext", ")jspContext;");
 
         // Declare implicit objects.
-        printilMultiPart(out, "javax.servlet.http.HttpServletRequest", " request = ",
-                "(", "javax.servlet.http.HttpServletRequest", ") _jspx_page_context.getRequest();");
-        printilMultiPart(out, "javax.servlet.http.HttpServletResponse", " response = ",
-                "(", "javax.servlet.http.HttpServletResponse", ") _jspx_page_context.getResponse();");
-        printilTwoPart(out, "javax.servlet.http.HttpSession", " session = _jspx_page_context.getSession();");
+        printilMultiPart(out, HTTP_SERVLET_REQUEST, " request = ",
+                "(", HTTP_SERVLET_REQUEST, ") _jspx_page_context.getRequest();");
+        printilMultiPart(out, HTTP_SERVLET_RESPONSE, " response = ",
+                "(", HTTP_SERVLET_RESPONSE, ") _jspx_page_context.getResponse();");
+        printilTwoPart(out, HTTP_SESSION, " session = _jspx_page_context.getSession();");
         printilTwoPart(out, SERVLET_CONTEXT, " application = _jspx_page_context.getServletContext();");
         printilTwoPart(out, SERVLET_CONFIG, " config = _jspx_page_context.getServletConfig();");
         printilTwoPart(out, "javax.servlet.jsp.JspWriter", " out = jspContext.getOut();");
