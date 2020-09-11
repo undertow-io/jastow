@@ -107,4 +107,29 @@ final class Constants {
     static final String TAG = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".Tag";
     static final String TAG_ADAPTER = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".TagAdapter";
 
+    // org.apache.jasper.compiler
+    private static final String PACKAGE_ORG_APACHE_JASPER_COMPILER = "org.apache.jasper.compiler";
+    static final String GENERATOR = PACKAGE_ORG_APACHE_JASPER_COMPILER + ".Generator";
+
+    // org.apache.jasper.el
+    private static final String PACKAGE_ORG_APACHE_JASPER_EL = "org.apache.jasper.el";
+    static final String EL_CONTEXT_WRAPPER = PACKAGE_ORG_APACHE_JASPER_EL + ".ELContextWrapper";
+    static final String JSP_METHOD_EXPRESSION = PACKAGE_ORG_APACHE_JASPER_EL + ".JspMethodExpression";
+    static final String JSP_VALUE_EXPRESSION = PACKAGE_ORG_APACHE_JASPER_EL + ".JspValueExpression";
+
+    // org.apache.jasper.runtime
+    private static final String PACKAGE_ORG_APACHE_JASPER_RUNTIME = "org.apache.jasper.runtime";
+    static final String INSTANCE_MANAGER_FACTORY = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".InstanceManagerFactory";
+    static final String JSP_CONTEXT_WRAPPER = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspContextWrapper";
+    static final String JSP_FRAGMENT_HELPER = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspFragmentHelper";
+    static final String JSP_RUNTIME_LIBRARY = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspRuntimeLibrary";
+    static final String JSP_SOURCE_DEPENDENT = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspSourceDependent";
+    static final String JSP_SOURCE_IMPORTS = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspSourceImports";
+    static final String PAGE_CONTEXT_IMPL = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".PageContextImpl";
+    static final String TAG_HANDLER_POOL = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".TagHandlerPool";
+
+    // org.apache.tomcat
+    private static final String PACKAGE_ORG_APACHE_TOMCAT = "org.apache.tomcat";
+    static final String INSTANCE_MANAGER = PACKAGE_ORG_APACHE_TOMCAT + ".InstanceManager";
+
 }
