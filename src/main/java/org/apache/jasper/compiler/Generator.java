@@ -19,6 +19,7 @@ package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 import static org.apache.jasper.compiler.Constants.ARRAY_LIST;
+import static org.apache.jasper.compiler.Constants.BEANS;
 import static org.apache.jasper.compiler.Constants.BODY_CONTENT;
 import static org.apache.jasper.compiler.Constants.BODY_TAG;
 import static org.apache.jasper.compiler.Constants.DISPATCHER_TYPE;
@@ -1505,7 +1506,7 @@ class Generator {
                     out.printin(name);
                     out.print(" = (");
                     out.print(type);
-                    out.print(") java.beans.Beans.instantiate(");
+                    out.print(") " + BEANS + ".instantiate(");
                     out.print("this.getClass().getClassLoader(), ");
                     out.print(binaryName);
                     out.println(");");
