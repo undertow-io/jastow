@@ -30,6 +30,7 @@ import static org.apache.jasper.compiler.Constants.HASH_SET;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_REQUEST;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_RESPONSE;
 import static org.apache.jasper.compiler.Constants.HTTP_SESSION;
+import static org.apache.jasper.compiler.Constants.IO_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.JSP_CONTEXT;
 import static org.apache.jasper.compiler.Constants.JSP_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.JSP_FACTORY;
@@ -47,10 +48,13 @@ import static org.apache.jasper.compiler.Constants.SIMPLE_TAG;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG_SUPPORT;
 import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
 import static org.apache.jasper.compiler.Constants.SKIP_PAGE_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.STRING_READER;
+import static org.apache.jasper.compiler.Constants.STRING_WRITER;
 import static org.apache.jasper.compiler.Constants.TAG;
 import static org.apache.jasper.compiler.Constants.TAG_ADAPTER;
 import static org.apache.jasper.compiler.Constants.VALUE_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.VARIABLE_MAPPER;
+import static org.apache.jasper.compiler.Constants.WRITER;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -741,7 +745,7 @@ class Generator {
         out.printin("public void ");
         out.print(serviceMethodName);
         printlnMultiPart(out, "(final ", HTTP_SERVLET_REQUEST, " request, final ", HTTP_SERVLET_RESPONSE, " response)");
-        printlnThreePart(out, "        throws java.io.IOException, ", SERVLET_EXCEPTION, " {");
+        printlnThreePart(out, "        throws " + IO_EXCEPTION + ", ", SERVLET_EXCEPTION, " {");
 
         out.pushIndent();
         out.println();
@@ -2220,7 +2224,7 @@ class Generator {
             String varReaderAttr = n.getTextAttribute("varReader");
             String varAttr = n.getTextAttribute("var");
             if (varReaderAttr != null || varAttr != null) {
-                out.printil("_jspx_sout = new java.io.StringWriter();");
+                out.printil("_jspx_sout = new " + STRING_WRITER + "();");
             } else {
                 out.printil("_jspx_sout = null;");
             }
@@ -2241,7 +2245,7 @@ class Generator {
                 out.printin("_jspx_page_context.setAttribute(");
                 if (varReaderAttr != null) {
                     out.print(quote(varReaderAttr));
-                    out.print(", new java.io.StringReader(_jspx_sout.toString())");
+                    out.print(", new " + STRING_READER + "(_jspx_sout.toString())");
                 } else {
                     out.print(quote(varAttr));
                     out.print(", _jspx_sout.toString()");
@@ -2269,7 +2273,7 @@ class Generator {
             String varReaderAttr = n.getTextAttribute("varReader");
             String varAttr = n.getTextAttribute("var");
             if (varReaderAttr != null || varAttr != null) {
-                out.printil("_jspx_sout = new java.io.StringWriter();");
+                out.printil("_jspx_sout = new " + STRING_WRITER + "();");
             } else {
                 out.printil("_jspx_sout = null;");
             }
@@ -2284,7 +2288,7 @@ class Generator {
                 out.printin("_jspx_page_context.setAttribute(");
                 if (varReaderAttr != null) {
                     out.print(quote(varReaderAttr));
-                    out.print(", new java.io.StringReader(_jspx_sout.toString())");
+                    out.print(", new " + STRING_READER + "(_jspx_sout.toString())");
                 } else {
                     out.print(quote(varAttr));
                     out.print(", _jspx_sout.toString()");
@@ -3523,7 +3527,7 @@ class Generator {
         out.popIndent();
         out.printil("}");
         out.popIndent();
-        out.printil("} catch (java.io.IOException e) {}");
+        out.printil("} catch (" + IO_EXCEPTION + " e) {}");
         out.popIndent();
         out.printil("if (_jspx_page_context != null) _jspx_page_context.handlePageException(t);");
         out.printil("else throw new ServletException(t);");
@@ -3689,7 +3693,7 @@ class Generator {
 
         // Declare writer used for storing result of fragment/body invocation
         // if 'varReader' or 'var' attribute is specified
-        out.printil("private java.io.Writer _jspx_sout;");
+        out.printil("private " + WRITER + " _jspx_sout;");
 
         // Class variable declarations
         genPreambleClassVariableDeclarations();
@@ -3705,7 +3709,7 @@ class Generator {
         genPreambleMethods();
 
         // Now the doTag() method
-        printilThreePart(out, "public void doTag() throws ", JSP_EXCEPTION, ", java.io.IOException {");
+        printilThreePart(out, "public void doTag() throws ", JSP_EXCEPTION, ", " + IO_EXCEPTION + " {");
 
         if (ctxt.isPrototypeMode()) {
             out.printil("}");
@@ -3755,8 +3759,8 @@ class Generator {
         out.pushIndent();
         printilThreePart(out, "if( t instanceof ", SKIP_PAGE_EXCEPTION, " )");
         printilThreePart(out, "    throw (", SKIP_PAGE_EXCEPTION, ") t;");
-        out.printil("if( t instanceof java.io.IOException )");
-        out.printil("    throw (java.io.IOException) t;");
+        out.printil("if( t instanceof " + IO_EXCEPTION + " )");
+        out.printil("    throw (" + IO_EXCEPTION + ") t;");
         out.printil("if( t instanceof java.lang.IllegalStateException )");
         out.printil("    throw (java.lang.IllegalStateException) t;");
         printilThreePart(out, "if( t instanceof ", JSP_EXCEPTION, " )");
@@ -4345,7 +4349,7 @@ class Generator {
             }
 
             // Generate postamble:
-            out.printil("public void invoke( java.io.Writer writer )");
+            out.printil("public void invoke( " + WRITER + " writer )");
             out.pushIndent();
             printilTwoPart(out, "throws ", JSP_EXCEPTION);
             out.popIndent();
