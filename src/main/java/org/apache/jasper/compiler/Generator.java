@@ -18,6 +18,10 @@
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
+import static org.apache.jasper.compiler.Constants.EXPRESSION_FACTORY;
+import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
+import static org.apache.jasper.compiler.Constants.VALUE_EXPRESSION;
+import static org.apache.jasper.compiler.Constants.VARIABLE_MAPPER;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -683,7 +687,7 @@ class Generator {
             }
             out.println();
         }
-        printinThreePart(out, "private volatile ", "javax.el.ExpressionFactory", " ");
+        printinThreePart(out, "private volatile ", EXPRESSION_FACTORY, " ");
         out.print(VAR_EXPRESSIONFACTORY);
         out.println(";");
         out.printin("private volatile org.apache.tomcat.InstanceManager ");
@@ -4036,11 +4040,11 @@ class Generator {
 
                 // we need to scope the modified VariableMapper for consistency and performance
                 if (!variableMapperVar) {
-                    printilTwoPart(out, "javax.el.VariableMapper", " _el_variablemapper = jspContext.getELContext().getVariableMapper();");
+                    printilTwoPart(out, VARIABLE_MAPPER, " _el_variablemapper = jspContext.getELContext().getVariableMapper();");
                     variableMapperVar = true;
                 }
 
-                printinTwoPart(out, "javax.el.ValueExpression", " _el_ve");
+                printinTwoPart(out, VALUE_EXPRESSION, " _el_ve");
                 out.print(i);
                 out.print(" = _el_variablemapper.setVariable(");
                 out.print(quote(attrName));
@@ -4048,7 +4052,7 @@ class Generator {
                 if (attrInfos[i].isDeferredMethod()) {
                     out.print("_jsp_getExpressionFactory().createValueExpression(");
                     out.print(toGetterMethod(attrName));
-                    printThreePart(out, ",", "javax.el.MethodExpression", ".class)");
+                    printThreePart(out, ",", METHOD_EXPRESSION, ".class)");
                 } else {
                     out.print(toGetterMethod(attrName));
                 }
