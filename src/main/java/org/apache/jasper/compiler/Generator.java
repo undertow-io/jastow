@@ -22,14 +22,20 @@ import static org.apache.jasper.compiler.Constants.ARRAY_LIST;
 import static org.apache.jasper.compiler.Constants.BEANS;
 import static org.apache.jasper.compiler.Constants.BODY_CONTENT;
 import static org.apache.jasper.compiler.Constants.BODY_TAG;
+import static org.apache.jasper.compiler.Constants.BOOLEAN;
+import static org.apache.jasper.compiler.Constants.CLASS;
+import static org.apache.jasper.compiler.Constants.CLASS_NOT_FOUND_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.DISPATCHER_TYPE;
 import static org.apache.jasper.compiler.Constants.DYNAMIC_ATTRIBUTES;
+import static org.apache.jasper.compiler.Constants.EXCEPTION;
 import static org.apache.jasper.compiler.Constants.EXPRESSION_FACTORY;
 import static org.apache.jasper.compiler.Constants.HASH_MAP;
 import static org.apache.jasper.compiler.Constants.HASH_SET;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_REQUEST;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_RESPONSE;
 import static org.apache.jasper.compiler.Constants.HTTP_SESSION;
+import static org.apache.jasper.compiler.Constants.ILLEGAL_STATE_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.INSTANTIATION_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.IO_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.JSP_CONTEXT;
 import static org.apache.jasper.compiler.Constants.JSP_EXCEPTION;
@@ -37,8 +43,10 @@ import static org.apache.jasper.compiler.Constants.JSP_FACTORY;
 import static org.apache.jasper.compiler.Constants.JSP_FRAGMENT;
 import static org.apache.jasper.compiler.Constants.JSP_TAG;
 import static org.apache.jasper.compiler.Constants.JSP_WRITER;
+import static org.apache.jasper.compiler.Constants.LONG;
 import static org.apache.jasper.compiler.Constants.MAP;
 import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
+import static org.apache.jasper.compiler.Constants.OBJECT;
 import static org.apache.jasper.compiler.Constants.PAGE_CONTEXT;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONFIG;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONTEXT;
@@ -48,10 +56,12 @@ import static org.apache.jasper.compiler.Constants.SIMPLE_TAG;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG_SUPPORT;
 import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
 import static org.apache.jasper.compiler.Constants.SKIP_PAGE_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.STRING;
 import static org.apache.jasper.compiler.Constants.STRING_READER;
 import static org.apache.jasper.compiler.Constants.STRING_WRITER;
 import static org.apache.jasper.compiler.Constants.TAG;
 import static org.apache.jasper.compiler.Constants.TAG_ADAPTER;
+import static org.apache.jasper.compiler.Constants.THROWABLE;
 import static org.apache.jasper.compiler.Constants.VALUE_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.VARIABLE_MAPPER;
 import static org.apache.jasper.compiler.Constants.WRITER;
@@ -272,7 +282,7 @@ class Generator {
                     return;
 
                 getServletInfoGenerated = true;
-                out.printil("public java.lang.String getServletInfo() {");
+                out.printil("public " + STRING + " getServletInfo() {");
                 out.pushIndent();
                 out.printin("return ");
                 out.print(quote(info));
@@ -632,13 +642,13 @@ class Generator {
         out.println();
 
         // Static data for getDependants()
-        out.printil("private static " + MAP + "<java.lang.String,java.lang.Long> _jspx_dependants;");
+        out.printil("private static " + MAP + "<" + STRING + "," + LONG + "> _jspx_dependants;");
         out.println();
         Map<String,Long> dependants = pageInfo.getDependants();
         if (!dependants.isEmpty()) {
             out.printil("static {");
             out.pushIndent();
-            out.printin("_jspx_dependants = new " + HASH_MAP + "<java.lang.String,java.lang.Long>(");
+            out.printin("_jspx_dependants = new " + HASH_MAP + "<" + STRING + "," + LONG + ">(");
             out.print("" + dependants.size());
             out.println(");");
             Iterator<Entry<String,Long>> iter = dependants.entrySet().iterator();
@@ -670,9 +680,9 @@ class Generator {
                 classes.add(trimmed);
             }
         }
-        out.printil("private static final " + SET + "<java.lang.String> _jspx_imports_packages;");
+        out.printil("private static final " + SET + "<" + STRING + "> _jspx_imports_packages;");
         out.println();
-        out.printil("private static final " + SET + "<java.lang.String> _jspx_imports_classes;");
+        out.printil("private static final " + SET + "<" + STRING + "> _jspx_imports_classes;");
         out.println();
         out.printil("static {");
         out.pushIndent();
@@ -735,7 +745,7 @@ class Generator {
      */
     private void genPreambleMethods() {
         // Implement JspSourceDependent
-        out.printil("public " + MAP + "<java.lang.String,java.lang.Long> getDependants() {");
+        out.printil("public " + MAP + "<" + STRING + "," + LONG + "> getDependants() {");
         out.pushIndent();
         out.printil("return _jspx_dependants;");
         out.popIndent();
@@ -743,13 +753,13 @@ class Generator {
         out.println();
 
         // Implement JspSourceImports
-        out.printil("public " + SET + "<java.lang.String> getPackageImports() {");
+        out.printil("public " + SET + "<" + STRING + "> getPackageImports() {");
         out.pushIndent();
         out.printil("return _jspx_imports_packages;");
         out.popIndent();
         out.printil("}");
         out.println();
-        out.printil("public " + SET + "<java.lang.String> getClassImports() {");
+        out.printil("public " + SET + "<" + STRING + "> getClassImports() {");
         out.pushIndent();
         out.printil("return _jspx_imports_classes;");
         out.popIndent();
@@ -816,7 +826,7 @@ class Generator {
 
         // Method check
         if (!pageInfo.isErrorPage()) {
-            out.printil("final java.lang.String _jspx_method = request.getMethod();");
+            out.printil("final " + STRING + " _jspx_method = request.getMethod();");
             out.printin("if (!\"GET\".equals(_jspx_method) && !\"POST\".equals(_jspx_method) && !\"HEAD\".equals(_jspx_method) && ");
             printlnThreePart(out, "!", DISPATCHER_TYPE, ".ERROR.equals(request.getDispatcherType())) {");
             out.pushIndent();
@@ -835,7 +845,7 @@ class Generator {
             printilTwoPart(out, HTTP_SESSION, " session = null;");
 
         if (pageInfo.isErrorPage()) {
-            out.printil("java.lang.Throwable exception = org.apache.jasper.runtime.JspRuntimeLibrary.getThrowable(request);");
+            out.printil(THROWABLE + " exception = org.apache.jasper.runtime.JspRuntimeLibrary.getThrowable(request);");
             out.printil("if (exception != null) {");
             out.pushIndent();
             printilThreePart(out, "response.setStatus(", HTTP_SERVLET_RESPONSE, ".SC_INTERNAL_SERVER_ERROR);");
@@ -846,7 +856,7 @@ class Generator {
         printilThreePart(out, "final ", SERVLET_CONTEXT, " application;");
         printilThreePart(out, "final ", SERVLET_CONFIG, " config;");
         printilTwoPart(out, JSP_WRITER, " out = null;");
-        out.printil("final java.lang.Object page = this;");
+        out.printil("final " + OBJECT + " page = this;");
 
         printilTwoPart(out, JSP_WRITER, " _jspx_out = null;");
         printilTwoPart(out, PAGE_CONTEXT, " _jspx_page_context = null;");
@@ -1482,7 +1492,7 @@ class Generator {
                  * If both class name and beanName is not specified, the bean
                  * must be found locally, otherwise it's an error
                  */
-                out.printin("throw new java.lang.InstantiationException(\"bean ");
+                out.printin("throw new " + INSTANTIATION_EXCEPTION + "(\"bean ");
                 out.print(name);
                 out.println(" not found within scope\");");
             } else {
@@ -1519,11 +1529,11 @@ class Generator {
                      * Note: Beans.instantiate throws ClassNotFoundException if
                      * the bean class is abstract.
                      */
-                    out.printil("} catch (java.lang.ClassNotFoundException exc) {");
+                    out.printil("} catch (" + CLASS_NOT_FOUND_EXCEPTION + " exc) {");
                     out.pushIndent();
-                    out.printil("throw new InstantiationException(exc.getMessage());");
+                    out.printil("throw new " + INSTANTIATION_EXCEPTION + "(exc.getMessage());");
                     out.popIndent();
-                    out.printil("} catch (java.lang.Exception exc) {");
+                    out.printil("} catch (" + EXCEPTION + " exc) {");
                     out.pushIndent();
                     printinThreePart(out,"throw new ", SERVLET_EXCEPTION, "(");
                     out.print("\"Cannot create bean of class \" + ");
@@ -1892,7 +1902,7 @@ class Generator {
                     out.print(pushBodyCountVar);
                 }
                 out.println(")");
-                out.printil("        throws java.lang.Throwable {");
+                out.printil("        throws " + THROWABLE + " {");
                 out.pushIndent();
 
                 // Initialize local variables used in this method.
@@ -2077,7 +2087,7 @@ class Generator {
                         nvp = " + \" " + attrs[i].getName() + "=\\\"\" + " +
                                 value + " + \"\\\"\"";
                 } else {
-                        nvp = " + (java.lang.Boolean.valueOf(" + omit + ")?\"\":\" " +
+                        nvp = " + (" + BOOLEAN + ".valueOf(" + omit + ")?\"\":\" " +
                                 attrs[i].getName() + "=\\\"\" + " + value +
                                 " + \"\\\"\")";
                 }
@@ -2606,7 +2616,7 @@ class Generator {
             // TryCatchFinally
             if (n.implementsTryCatchFinally()) {
                 out.popIndent(); // try
-                out.printil("} catch (java.lang.Throwable _jspx_exception) {");
+                out.printil("} catch (" + THROWABLE + " _jspx_exception) {");
                 out.pushIndent();
 
                 out.printin("while (");
@@ -3135,7 +3145,7 @@ class Generator {
                     sb.append(',');
                     sb.append(JspUtil.toJavaSourceTypeFromTld(attr.getExpectedTypeName()));
                     sb.append(',');
-                    sb.append("new java.lang.Class[] {");
+                    sb.append("new " + CLASS + "[] {");
 
                     String[] p = attr.getParameterTypeNames();
                     for (int i = 0; i < p.length; i++) {
@@ -3458,7 +3468,7 @@ class Generator {
                     Node bodyElement = body.getNode(0);
                     if (bodyElement instanceof Node.TemplateText) {
                         templateTextOptimization = true;
-                        out.printil("java.lang.String "
+                        out.printil(STRING + " "
                                 + varName
                                 + " = "
                                 + quote(((Node.TemplateText) bodyElement)
@@ -3472,14 +3482,14 @@ class Generator {
                 if (!templateTextOptimization) {
                     out.printil("out = _jspx_page_context.pushBody();");
                     visitBody(n);
-                    printilMultiPart(out, "java.lang.String ", varName, " = ",
+                    printilMultiPart(out, STRING + " ", varName, " = ",
                             "((", BODY_CONTENT, ")",
                             "out).getString();");
                     out.printil("out = _jspx_page_context.popBody();");
                 }
             } else {
                 // Empty body must be treated as ""
-                out.printil("java.lang.String " + varName + " = \"\";");
+                out.printil(STRING + " " + varName + " = \"\";");
             }
 
             return varName;
@@ -3574,7 +3584,7 @@ class Generator {
      */
     private void generatePostamble() {
         out.popIndent();
-        out.printil("} catch (java.lang.Throwable t) {");
+        out.printil("} catch (" + THROWABLE + " t) {");
         out.pushIndent();
         printilThreePart(out, "if (!(t instanceof ", SKIP_PAGE_EXCEPTION, ")){");
         out.pushIndent();
@@ -3824,14 +3834,14 @@ class Generator {
 
         // Have to catch Throwable because a classic tag handler
         // helper method is declared to throw Throwable.
-        out.printil("} catch( java.lang.Throwable t ) {");
+        out.printil("} catch( " + THROWABLE + " t ) {");
         out.pushIndent();
         printilThreePart(out, "if( t instanceof ", SKIP_PAGE_EXCEPTION, " )");
         printilThreePart(out, "    throw (", SKIP_PAGE_EXCEPTION, ") t;");
         out.printil("if( t instanceof " + IO_EXCEPTION + " )");
         out.printil("    throw (" + IO_EXCEPTION + ") t;");
-        out.printil("if( t instanceof java.lang.IllegalStateException )");
-        out.printil("    throw (java.lang.IllegalStateException) t;");
+        out.printil("if( t instanceof " + ILLEGAL_STATE_EXCEPTION + " )");
+        out.printil("    throw (" + ILLEGAL_STATE_EXCEPTION + ") t;");
         printilThreePart(out, "if( t instanceof ", JSP_EXCEPTION, " )");
         printilThreePart(out, "    throw (", JSP_EXCEPTION, ") t;");
         printilThreePart(out, "throw new ", JSP_EXCEPTION, "(t);");
@@ -4041,7 +4051,7 @@ class Generator {
      * variable can later be created for it.
      */
     public void generateSetDynamicAttribute() {
-        printilThreePart(out, "public void setDynamicAttribute(java.lang.String uri, java.lang.String localName, java.lang.Object value) throws ", JSP_EXCEPTION, " {");
+        printilThreePart(out, "public void setDynamicAttribute(" + STRING + " uri, " + STRING + " localName, " + OBJECT + " value) throws ", JSP_EXCEPTION, " {");
         out.pushIndent();
         /*
          * According to the spec, only dynamic attributes with no uri are to be
@@ -4380,7 +4390,7 @@ class Generator {
             out.pushIndent();
             // Note: Throwable required because methods like _jspx_meth_*
             // throw Throwable.
-            out.printil("throws java.lang.Throwable");
+            out.printil("throws " + THROWABLE);
             out.popIndent();
             out.printil("{");
             out.pushIndent();
@@ -4448,7 +4458,7 @@ class Generator {
 
             out.popIndent();
             out.printil("}"); // try
-            out.printil("catch( java.lang.Throwable e ) {");
+            out.printil("catch( " + THROWABLE + " e ) {");
             out.pushIndent();
             printilThreePart(out, "if (e instanceof ", SKIP_PAGE_EXCEPTION, ")");
             printilThreePart(out, "    throw (", SKIP_PAGE_EXCEPTION, ") e;");
