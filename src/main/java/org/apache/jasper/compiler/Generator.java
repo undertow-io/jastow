@@ -18,7 +18,10 @@
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
+import static org.apache.jasper.compiler.Constants.BODY_CONTENT;
+import static org.apache.jasper.compiler.Constants.BODY_TAG;
 import static org.apache.jasper.compiler.Constants.DISPATCHER_TYPE;
+import static org.apache.jasper.compiler.Constants.DYNAMIC_ATTRIBUTES;
 import static org.apache.jasper.compiler.Constants.EXPRESSION_FACTORY;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_REQUEST;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_RESPONSE;
@@ -26,14 +29,20 @@ import static org.apache.jasper.compiler.Constants.HTTP_SESSION;
 import static org.apache.jasper.compiler.Constants.JSP_CONTEXT;
 import static org.apache.jasper.compiler.Constants.JSP_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.JSP_FACTORY;
+import static org.apache.jasper.compiler.Constants.JSP_FRAGMENT;
+import static org.apache.jasper.compiler.Constants.JSP_TAG;
 import static org.apache.jasper.compiler.Constants.JSP_WRITER;
 import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.PAGE_CONTEXT;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONFIG;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONTEXT;
 import static org.apache.jasper.compiler.Constants.SERVLET_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.SIMPLE_TAG;
+import static org.apache.jasper.compiler.Constants.SIMPLE_TAG_SUPPORT;
 import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
 import static org.apache.jasper.compiler.Constants.SKIP_PAGE_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.TAG;
+import static org.apache.jasper.compiler.Constants.TAG_ADAPTER;
 import static org.apache.jasper.compiler.Constants.VALUE_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.VARIABLE_MAPPER;
 
@@ -1801,7 +1810,7 @@ class Generator {
                 out.print(tagMethod);
                 out.print("(");
                 if (parent != null) {
-                    out.print("javax.servlet.jsp.tagext.JspTag");
+                    out.print(JSP_TAG);
                     out.print(" ");
                     out.print(parent);
                     out.print(", ");
@@ -2392,7 +2401,7 @@ class Generator {
             if (!n.hasEmptyBody()) {
                 out.printin("if (");
                 out.print(tagEvalVar);
-                printlnThreePart(out, " != ", "javax.servlet.jsp.tagext.Tag", ".SKIP_BODY) {");
+                printlnThreePart(out, " != ", TAG, ".SKIP_BODY) {");
                 out.pushIndent();
 
                 // Declare NESTED scripting variables
@@ -2402,7 +2411,7 @@ class Generator {
                 if (n.implementsBodyTag()) {
                     out.printin("if (");
                     out.print(tagEvalVar);
-                    printlnThreePart(out, " != ", "javax.servlet.jsp.tagext.Tag", ".EVAL_BODY_INCLUDE) {");
+                    printlnThreePart(out, " != ", TAG, ".EVAL_BODY_INCLUDE) {");
                     // Assume EVAL_BODY_BUFFERED
                     out.pushIndent();
                     out.printil("out = _jspx_page_context.pushBody();");
@@ -2414,7 +2423,7 @@ class Generator {
                         out.println("[0]++;");
                     }
                     out.printin(tagHandlerVar);
-                    printilThreePart(out, ".setBodyContent((", "javax.servlet.jsp.tagext.BodyContent", ") out);");
+                    printilThreePart(out, ".setBodyContent((", BODY_CONTENT, ") out);");
                     out.printin(tagHandlerVar);
                     out.println(".doInitBody();");
 
@@ -2487,7 +2496,7 @@ class Generator {
                     syncScriptingVars(n, VariableInfo.AT_BEGIN);
                     syncScriptingVars(n, VariableInfo.NESTED);
 
-                    printilThreePart(out, "if (evalDoAfterBody != ", "javax.servlet.jsp.tagext.BodyTag", ".EVAL_BODY_AGAIN)");
+                    printilThreePart(out, "if (evalDoAfterBody != ", BODY_TAG, ".EVAL_BODY_AGAIN)");
                     out.pushIndent();
                     out.printil("break;");
                     out.popIndent();
@@ -2501,7 +2510,7 @@ class Generator {
                 if (n.implementsBodyTag()) {
                     out.printin("if (");
                     out.print(tagEvalVar);
-                    printlnThreePart(out, " != ", "javax.servlet.jsp.tagext.Tag", ".EVAL_BODY_INCLUDE) {");
+                    printlnThreePart(out, " != ", TAG, ".EVAL_BODY_INCLUDE) {");
                     out.pushIndent();
                     out.printil("out = _jspx_page_context.popBody();");
                     if (n.implementsTryCatchFinally()) {
@@ -2521,7 +2530,7 @@ class Generator {
 
             out.printin("if (");
             out.print(tagHandlerVar);
-            printlnThreePart(out, ".doEndTag() == ", "javax.servlet.jsp.tagext.Tag", ".SKIP_PAGE) {");
+            printlnThreePart(out, ".doEndTag() == ", TAG, ".SKIP_PAGE) {");
             out.pushIndent();
             if (!n.implementsTryCatchFinally()) {
                 if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
@@ -3158,19 +3167,19 @@ class Generator {
             if (isTagFile && parent == null) {
                 out.printin(tagHandlerVar);
                 out.print(".setParent(");
-                printThreePart(out, "new ", "javax.servlet.jsp.tagext.TagAdapter", "(");
-                printThreePart(out, "(", "javax.servlet.jsp.tagext.SimpleTag", ") this ));");
+                printThreePart(out, "new ", TAG_ADAPTER, "(");
+                printThreePart(out, "(", SIMPLE_TAG, ") this ));");
             } else if (!simpleTag) {
                 out.printin(tagHandlerVar);
                 out.print(".setParent(");
                 if (parent != null) {
                     if (isSimpleTagParent) {
-                        printThreePart(out, "new ", "javax.servlet.jsp.tagext.TagAdapter", "(");
-                        printThreePart(out, "(", "javax.servlet.jsp.tagext.SimpleTag", ") ");
+                        printThreePart(out, "new ", TAG_ADAPTER, "(");
+                        printThreePart(out, "(", SIMPLE_TAG, ") ");
                         out.print(parent);
                         out.println("));");
                     } else {
-                        printThreePart(out, "(", "javax.servlet.jsp.tagext.Tag", ") ");
+                        printThreePart(out, "(", TAG, ") ");
                         out.print(parent);
                         out.println(");");
                     }
@@ -3391,7 +3400,7 @@ class Generator {
                     out.printil("out = _jspx_page_context.pushBody();");
                     visitBody(n);
                     printilMultiPart(out, "java.lang.String ", varName, " = ",
-                            "((", "javax.servlet.jsp.tagext.BodyContent", ")",
+                            "((", BODY_CONTENT, ")",
                             "out).getString();");
                     out.printil("out = _jspx_page_context.popBody();");
                 }
@@ -3418,7 +3427,7 @@ class Generator {
                 String tagHandlerVar) throws JasperException {
             String varName = n.getTemporaryVariableName();
 
-            printinMultiPart(out,"javax.servlet.jsp.tagext.JspFragment", " ", varName, " = ");
+            printinMultiPart(out,JSP_FRAGMENT, " ", varName, " = ");
             generateJspFragment(n, tagHandlerVar);
             out.println(";");
 
@@ -3652,11 +3661,11 @@ class Generator {
         // Generate class declaration
         out.printin("public final class ");
         out.println(className);
-        printilTwoPart(out, "    extends ", "javax.servlet.jsp.tagext.SimpleTagSupport");
+        printilTwoPart(out, "    extends ", SIMPLE_TAG_SUPPORT);
         out.printin("    implements org.apache.jasper.runtime.JspSourceDependent");
         if (tagInfo.hasDynamicAttributes()) {
             out.println(",");
-            printinTwoPart(out, "               ", "javax.servlet.jsp.tagext.DynamicAttributes");
+            printinTwoPart(out, "               ", DYNAMIC_ATTRIBUTES);
         }
         out.println(" {");
         out.println();
@@ -3796,7 +3805,7 @@ class Generator {
         for (int i = 0; i < attrInfos.length; i++) {
             out.printin("private ");
             if (attrInfos[i].isFragment()) {
-                out.print("javax.servlet.jsp.tagext.JspFragment");
+                out.print(JSP_FRAGMENT);
                 out.print(" ");
             } else {
                 out.print(JspUtil.toJavaSourceType(attrInfos[i].getTypeName()));
@@ -3816,7 +3825,7 @@ class Generator {
                 // getter method
                 out.printin("public ");
                 if (attrInfos[i].isFragment()) {
-                    out.print("javax.servlet.jsp.tagext.JspFragment");
+                    out.print(JSP_FRAGMENT);
                     out.print(" ");
                 } else {
                 out.print(JspUtil.toJavaSourceType(attrInfos[i].getTypeName()));
@@ -3836,7 +3845,8 @@ class Generator {
                 out.printin("public void ");
                 out.print(toSetterMethodName(attrInfos[i].getName()));
                 if (attrInfos[i].isFragment()) {
-                    out.print("(javax.servlet.jsp.tagext.JspFragment");
+                    out.print("(");
+                    out.print(JSP_FRAGMENT);
                     out.print(" ");
                 } else {
                     out.print("(");
@@ -4258,12 +4268,12 @@ class Generator {
                     + "org.apache.jasper.runtime.JspFragmentHelper");
             out.printil("{");
             out.pushIndent();
-            printilThreePart(out, "private ", "javax.servlet.jsp.tagext.JspTag", " _jspx_parent;");
+            printilThreePart(out, "private ", JSP_TAG, " _jspx_parent;");
             out.printil("private int[] _jspx_push_body_count;");
             out.println();
             printilMultiPart(out, "public ", className
                     , "( int discriminator, ", JSP_CONTEXT, " jspContext, "
-                    , "javax.servlet.jsp.tagext.JspTag", " _jspx_parent, "
+                    , JSP_TAG, " _jspx_parent, "
                     , "int[] _jspx_push_body_count ) {");
             out.pushIndent();
             out.printil("super( discriminator, jspContext, _jspx_parent );");
