@@ -18,11 +18,14 @@
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
+import static org.apache.jasper.compiler.Constants.ARRAY_LIST;
 import static org.apache.jasper.compiler.Constants.BODY_CONTENT;
 import static org.apache.jasper.compiler.Constants.BODY_TAG;
 import static org.apache.jasper.compiler.Constants.DISPATCHER_TYPE;
 import static org.apache.jasper.compiler.Constants.DYNAMIC_ATTRIBUTES;
 import static org.apache.jasper.compiler.Constants.EXPRESSION_FACTORY;
+import static org.apache.jasper.compiler.Constants.HASH_MAP;
+import static org.apache.jasper.compiler.Constants.HASH_SET;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_REQUEST;
 import static org.apache.jasper.compiler.Constants.HTTP_SERVLET_RESPONSE;
 import static org.apache.jasper.compiler.Constants.HTTP_SESSION;
@@ -32,11 +35,13 @@ import static org.apache.jasper.compiler.Constants.JSP_FACTORY;
 import static org.apache.jasper.compiler.Constants.JSP_FRAGMENT;
 import static org.apache.jasper.compiler.Constants.JSP_TAG;
 import static org.apache.jasper.compiler.Constants.JSP_WRITER;
+import static org.apache.jasper.compiler.Constants.MAP;
 import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.PAGE_CONTEXT;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONFIG;
 import static org.apache.jasper.compiler.Constants.SERVLET_CONTEXT;
 import static org.apache.jasper.compiler.Constants.SERVLET_EXCEPTION;
+import static org.apache.jasper.compiler.Constants.SET;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG_SUPPORT;
 import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
@@ -622,13 +627,13 @@ class Generator {
         out.println();
 
         // Static data for getDependants()
-        out.printil("private static java.util.Map<java.lang.String,java.lang.Long> _jspx_dependants;");
+        out.printil("private static " + MAP + "<java.lang.String,java.lang.Long> _jspx_dependants;");
         out.println();
         Map<String,Long> dependants = pageInfo.getDependants();
         if (!dependants.isEmpty()) {
             out.printil("static {");
             out.pushIndent();
-            out.printin("_jspx_dependants = new java.util.HashMap<java.lang.String,java.lang.Long>(");
+            out.printin("_jspx_dependants = new " + HASH_MAP + "<java.lang.String,java.lang.Long>(");
             out.print("" + dependants.size());
             out.println(");");
             Iterator<Entry<String,Long>> iter = dependants.entrySet().iterator();
@@ -660,9 +665,9 @@ class Generator {
                 classes.add(trimmed);
             }
         }
-        out.printil("private static final java.util.Set<java.lang.String> _jspx_imports_packages;");
+        out.printil("private static final " + SET + "<java.lang.String> _jspx_imports_packages;");
         out.println();
-        out.printil("private static final java.util.Set<java.lang.String> _jspx_imports_classes;");
+        out.printil("private static final " + SET + "<java.lang.String> _jspx_imports_classes;");
         out.println();
         out.printil("static {");
         out.pushIndent();
@@ -670,7 +675,7 @@ class Generator {
             out.printin("_jspx_imports_packages = null;");
             out.println();
         } else {
-            out.printin("_jspx_imports_packages = new java.util.HashSet<>();");
+            out.printin("_jspx_imports_packages = new " + HASH_SET + "<>();");
             out.println();
             for (String packageName : packages) {
                 out.printin("_jspx_imports_packages.add(\"");
@@ -682,7 +687,7 @@ class Generator {
             out.printin("_jspx_imports_classes = null;");
             out.println();
         } else {
-            out.printin("_jspx_imports_classes = new java.util.HashSet<>();");
+            out.printin("_jspx_imports_classes = new " + HASH_SET + "<>();");
             out.println();
             for (String className : classes) {
                 out.printin("_jspx_imports_classes.add(\"");
@@ -725,7 +730,7 @@ class Generator {
      */
     private void genPreambleMethods() {
         // Implement JspSourceDependent
-        out.printil("public java.util.Map<java.lang.String,java.lang.Long> getDependants() {");
+        out.printil("public " + MAP + "<java.lang.String,java.lang.Long> getDependants() {");
         out.pushIndent();
         out.printil("return _jspx_dependants;");
         out.popIndent();
@@ -733,13 +738,13 @@ class Generator {
         out.println();
 
         // Implement JspSourceImports
-        out.printil("public java.util.Set<java.lang.String> getPackageImports() {");
+        out.printil("public " + SET + "<java.lang.String> getPackageImports() {");
         out.pushIndent();
         out.printil("return _jspx_imports_packages;");
         out.popIndent();
         out.printil("}");
         out.println();
-        out.printil("public java.util.Set<java.lang.String> getClassImports() {");
+        out.printil("public " + SET + "<java.lang.String> getClassImports() {");
         out.pushIndent();
         out.printil("return _jspx_imports_classes;");
         out.popIndent();
@@ -3173,10 +3178,10 @@ class Generator {
                         continue;
 
                     if (!aliasSeen) {
-                        out.printin("java.util.HashMap ");
+                        out.printin(HASH_MAP + " ");
                         aliasMapVar = tagHandlerVar + "_aliasMap";
                         out.print(aliasMapVar);
-                        out.println(" = new java.util.HashMap();");
+                        out.println(" = new " + HASH_MAP + "();");
                         aliasSeen = true;
                     }
                     out.printin(aliasMapVar);
@@ -3866,7 +3871,7 @@ class Generator {
     private void generateTagHandlerAttributes(TagInfo tagInfo) {
 
         if (tagInfo.hasDynamicAttributes()) {
-            out.printil("private java.util.HashMap _jspx_dynamic_attrs = new java.util.HashMap();");
+            out.printil("private " + HASH_MAP + " _jspx_dynamic_attrs = new " + HASH_MAP + "();");
         }
 
         // Declare attributes
@@ -3968,22 +3973,22 @@ class Generator {
         }
 
         if (aliasSeen) {
-            printilThreePart(out, "public void setJspContext(", JSP_CONTEXT, " ctx, java.util.Map aliasMap) {");
+            printilThreePart(out, "public void setJspContext(", JSP_CONTEXT, " ctx, " + MAP + " aliasMap) {");
         } else {
             printilThreePart(out, "public void setJspContext(", JSP_CONTEXT, " ctx) {");
         }
         out.pushIndent();
         out.printil("super.setJspContext(ctx);");
-        out.printil("java.util.ArrayList _jspx_nested = null;");
-        out.printil("java.util.ArrayList _jspx_at_begin = null;");
-        out.printil("java.util.ArrayList _jspx_at_end = null;");
+        out.printil(ARRAY_LIST + " _jspx_nested = null;");
+        out.printil(ARRAY_LIST + " _jspx_at_begin = null;");
+        out.printil(ARRAY_LIST + " _jspx_at_end = null;");
 
         for (int i = 0; i < tagVars.length; i++) {
 
             switch (tagVars[i].getScope()) {
             case VariableInfo.NESTED:
                 if (!nestedSeen) {
-                    out.printil("_jspx_nested = new java.util.ArrayList();");
+                    out.printil("_jspx_nested = new " + ARRAY_LIST + "();");
                     nestedSeen = true;
                 }
                 out.printin("_jspx_nested.add(");
@@ -3991,7 +3996,7 @@ class Generator {
 
             case VariableInfo.AT_BEGIN:
                 if (!atBeginSeen) {
-                    out.printil("_jspx_at_begin = new java.util.ArrayList();");
+                    out.printil("_jspx_at_begin = new " + ARRAY_LIST + "();");
                     atBeginSeen = true;
                 }
                 out.printin("_jspx_at_begin.add(");
@@ -3999,7 +4004,7 @@ class Generator {
 
             case VariableInfo.AT_END:
                 if (!atEndSeen) {
-                    out.printil("_jspx_at_end = new java.util.ArrayList();");
+                    out.printil("_jspx_at_end = new " + ARRAY_LIST + "();");
                     atEndSeen = true;
                 }
                 out.printin("_jspx_at_end.add(");
