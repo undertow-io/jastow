@@ -17,6 +17,18 @@
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
+import static org.apache.jasper.compiler.Constants.BOOLEAN;
+import static org.apache.jasper.compiler.Constants.BYTE;
+import static org.apache.jasper.compiler.Constants.CHARACTER;
+import static org.apache.jasper.compiler.Constants.DOUBLE;
+import static org.apache.jasper.compiler.Constants.FLOAT;
+import static org.apache.jasper.compiler.Constants.INTEGER;
+import static org.apache.jasper.compiler.Constants.JSP_RUNTIME_LIBRARY;
+import static org.apache.jasper.compiler.Constants.LONG;
+import static org.apache.jasper.compiler.Constants.PAGE_CONTEXT;
+import static org.apache.jasper.compiler.Constants.PAGE_CONTEXT_IMPL;
+import static org.apache.jasper.compiler.Constants.SHORT;
+import static org.apache.jasper.compiler.Constants.VOID;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
@@ -420,9 +432,9 @@ public class JspUtil {
                 "("
                         + returnType
                         + ") "
-               + "org.apache.jasper.runtime.PageContextImpl.proprietaryEvaluate"
+               + PAGE_CONTEXT_IMPL + ".proprietaryEvaluate"
                         + "(" + Generator.quote(expression) + ", " + targetType
-                        + ".class, " + "(javax.servlet.jsp.PageContext)" + jspCtxt + ", "
+                        + ".class, " + "(" + PAGE_CONTEXT + ")" + jspCtxt + ", "
                         + fnmapvar + ")");
 
     /*
@@ -439,7 +451,7 @@ public class JspUtil {
     public static String coerceToPrimitiveBoolean(String s,
                           boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToBoolean("
+            return JSP_RUNTIME_LIBRARY + ".coerceToBoolean("
                     + s + ")";
     } else {
             if (s == null || s.length() == 0) {
@@ -452,14 +464,14 @@ public class JspUtil {
 
     public static String coerceToBoolean(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Boolean) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Boolean.class)";
+            return "(" + BOOLEAN + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + BOOLEAN + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Boolean(false)";
+                return "new " + BOOLEAN + "(false)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Boolean(" + Boolean.valueOf(s).toString() + ")";
+                return "new " + BOOLEAN + "(" + Boolean.valueOf(s).toString() + ")";
         }
     }
     }
@@ -467,7 +479,7 @@ public class JspUtil {
     public static String coerceToPrimitiveByte(String s,
                            boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToByte("
+            return JSP_RUNTIME_LIBRARY + ".coerceToByte("
                     + s + ")";
     } else {
             if (s == null || s.length() == 0) {
@@ -480,21 +492,21 @@ public class JspUtil {
 
     public static String coerceToByte(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Byte) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Byte.class)";
+            return "(" + BYTE + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + BYTE + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Byte((byte) 0)";
+                return "new " + BYTE + "((byte) 0)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Byte((byte)" + Byte.valueOf(s).toString() + ")";
+                return "new " + BYTE + "((byte)" + Byte.valueOf(s).toString() + ")";
         }
     }
     }
 
     public static String coerceToChar(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToChar("
+            return JSP_RUNTIME_LIBRARY + ".coerceToChar("
                     + s + ")";
     } else {
         if (s == null || s.length() == 0) {
@@ -509,15 +521,15 @@ public class JspUtil {
 
     public static String coerceToCharacter(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Character) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Character.class)";
+            return "(" + CHARACTER + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + CHARACTER + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Character((char) 0)";
+                return "new " + CHARACTER + "((char) 0)";
         } else {
         char ch = s.charAt(0);
         // this trick avoids escaping issues
-                return "new java.lang.Character((char) " + (int) ch + ")";
+                return "new " + CHARACTER + "((char) " + (int) ch + ")";
         }
     }
     }
@@ -525,8 +537,7 @@ public class JspUtil {
     public static String coerceToPrimitiveDouble(String s,
                          boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToDouble("
-                    + s + ")";
+            return JSP_RUNTIME_LIBRARY + ".coerceToDouble(" + s + ")";
     } else {
             if (s == null || s.length() == 0) {
         return "(double) 0";
@@ -538,14 +549,14 @@ public class JspUtil {
 
     public static String coerceToDouble(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Double) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", Double.class)";
+            return "(" + DOUBLE + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + DOUBLE + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Double(0)";
+                return "new " + DOUBLE + "(0)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Double(" + Double.valueOf(s).toString() + ")";
+                return "new " + DOUBLE + "(" + Double.valueOf(s).toString() + ")";
         }
     }
     }
@@ -553,8 +564,7 @@ public class JspUtil {
     public static String coerceToPrimitiveFloat(String s,
                         boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToFloat("
-                    + s + ")";
+            return JSP_RUNTIME_LIBRARY + ".coerceToFloat(" + s + ")";
     } else {
             if (s == null || s.length() == 0) {
         return "(float) 0";
@@ -566,22 +576,21 @@ public class JspUtil {
 
     public static String coerceToFloat(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Float) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Float.class)";
+            return "(" + FLOAT + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + FLOAT + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Float(0)";
+                return "new " + FLOAT + "(0)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Float(" + Float.valueOf(s).toString() + "f)";
+                return "new " + FLOAT + "(" + Float.valueOf(s).toString() + "f)";
         }
     }
     }
 
     public static String coerceToInt(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToInt("
-                    + s + ")";
+            return JSP_RUNTIME_LIBRARY + ".coerceToInt(" + s + ")";
     } else {
             if (s == null || s.length() == 0) {
         return "0";
@@ -593,14 +602,14 @@ public class JspUtil {
 
     public static String coerceToInteger(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Integer) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Integer.class)";
+            return "(" + INTEGER + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + INTEGER + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Integer(0)";
+                return "new " + INTEGER + "(0)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Integer(" + Integer.valueOf(s).toString() + ")";
+                return "new " + INTEGER + "(" + Integer.valueOf(s).toString() + ")";
         }
     }
     }
@@ -608,8 +617,7 @@ public class JspUtil {
     public static String coerceToPrimitiveShort(String s,
                         boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToShort("
-                    + s + ")";
+            return JSP_RUNTIME_LIBRARY + ".coerceToShort(" + s + ")";
     } else {
             if (s == null || s.length() == 0) {
         return "(short) 0";
@@ -621,14 +629,14 @@ public class JspUtil {
 
     public static String coerceToShort(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Short) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Short.class)";
+            return "(" + SHORT + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + SHORT + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Short((short) 0)";
+                return "new " + SHORT + "((short) 0)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Short(\"" + Short.valueOf(s).toString() + "\")";
+                return "new " + SHORT + "(\"" + Short.valueOf(s).toString() + "\")";
         }
     }
     }
@@ -636,8 +644,7 @@ public class JspUtil {
     public static String coerceToPrimitiveLong(String s,
                            boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "org.apache.jasper.runtime.JspRuntimeLibrary.coerceToLong("
-                    + s + ")";
+            return JSP_RUNTIME_LIBRARY + ".coerceToLong(" + s + ")";
     } else {
             if (s == null || s.length() == 0) {
         return "(long) 0";
@@ -649,14 +656,14 @@ public class JspUtil {
 
     public static String coerceToLong(String s, boolean isNamedAttribute) {
     if (isNamedAttribute) {
-            return "(java.lang.Long) org.apache.jasper.runtime.JspRuntimeLibrary.coerce("
-                    + s + ", java.lang.Long.class)";
+            return "(" + LONG + ") " + JSP_RUNTIME_LIBRARY + ".coerce("
+                    + s + ", " + LONG + ".class)";
     } else {
         if (s == null || s.length() == 0) {
-                return "new java.lang.Long(0)";
+                return "new " + LONG + "(0)";
         } else {
         // Detect format error at translation time
-                return "new java.lang.Long(" + Long.valueOf(s).toString() + "l)";
+                return "new " + LONG + "(" + Long.valueOf(s).toString() + "l)";
         }
     }
     }
@@ -937,7 +944,7 @@ public class JspUtil {
      */
     public static String toJavaSourceTypeFromTld(String type) {
         if (type == null || "void".equals(type)) {
-            return "java.lang.Void.TYPE";
+            return VOID + ".TYPE";
         }
         return type + ".class";
     }
