@@ -19,6 +19,11 @@
 package org.apache.jasper.compiler;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
+import static org.apache.jasper.compiler.Constants.JSP_FRAGMENT;
+import static org.apache.jasper.compiler.Constants.METHOD_EXPRESSION;
+import static org.apache.jasper.compiler.Constants.OBJECT;
+import static org.apache.jasper.compiler.Constants.STRING;
+import static org.apache.jasper.compiler.Constants.VALUE_EXPRESSION;
 
 import java.io.File;
 import java.io.IOException;
@@ -403,20 +408,20 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         }
 
         if (deferredValue) {
-            type = "javax.el.ValueExpression";
+            type = VALUE_EXPRESSION;
             if (expectedType != null) {
                 expectedType = expectedType.trim();
             } else {
-                expectedType = "java.lang.Object";
+                expectedType = OBJECT;
             }
         }
         
         if (deferredMethod) {
-            type = "javax.el.MethodExpression";
+            type = METHOD_EXPRESSION;
             if (methodSignature != null) {
                 methodSignature = methodSignature.trim();
             } else {
-                methodSignature = "java.lang.Object method()";
+                methodSignature = OBJECT + " method()";
             }
         }
 
@@ -429,14 +434,14 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
              * javax.servlet.jsp.tagext.JspFragment, and 'rtexprvalue' is fixed
              * at true. See also JSP.8.5.2.
              */
-            type = "javax.servlet.jsp.tagext.JspFragment";
+            type = JSP_FRAGMENT;
             rtexprvalue = true;
         }
 
         if (!rtexprvalue && type == null) {
             // According to JSP spec, for static values (those determined at
             // translation time) the type is fixed at java.lang.String.
-            type = "java.lang.String";
+            type = STRING;
         }
         
         return new TagAttributeInfo(attributeInfo.getName(), required, 
@@ -459,7 +464,7 @@ class TagLibraryInfoImpl extends TagLibraryInfo implements TagConstants {
         }
         String className = variableInfo.getClassName();
         if (className == null) {
-            className = "java.lang.String";
+            className = STRING;
         }
         boolean declare = true;
         if (variableInfo.getDeclare() != null) {
