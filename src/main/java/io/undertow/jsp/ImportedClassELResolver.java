@@ -36,7 +36,7 @@ import javax.el.ImportHandler;
  *
  * @author Jaikiran Pai
  * @author Tomaz Cerar
- * @see Section 1.5.3 of EL 3.0 spec
+ * See section 1.5.3 of EL 3.0 spec
  */
 public class ImportedClassELResolver extends ELResolver {
 

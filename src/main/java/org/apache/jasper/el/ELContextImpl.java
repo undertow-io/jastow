@@ -234,7 +234,6 @@ public final class ELContextImpl extends ELContext {
      * <li>An {@link ArrayELResolver} for resolving array properties</li>
      * <li>A {@link BeanELResolver} for resolving bean properties</li>
      * </ol>
-     * </p>
      *
      * @return The ELResolver for this context.
      */

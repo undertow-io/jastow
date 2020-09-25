@@ -40,7 +40,7 @@ public class Constants {
 
     /**
      * The servlet context attribute under which we record the set of
-     * JSP property groups (as an object of type HashMap<String, JspPropertyGroup>)
+     * JSP property groups (as an object of type HashMap&lt;String, JspPropertyGroup&gt;)
      * for this application.
      */
     public static final String JSP_PROPERTY_GROUPS =
@@ -49,7 +49,7 @@ public class Constants {
 
     /**
      * The servlet context attribute under which we record the set of
-     * JSP tag libraries (as an object of type HashMap<String, TagLibraryInfo>)
+     * JSP tag libraries (as an object of type HashMap&lt;String, TagLibraryInfo&gt;)
      * for this application.
      */
     public static final String JSP_TAG_LIBRARIES =
