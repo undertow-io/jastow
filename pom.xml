@@ -47,7 +47,7 @@
 
         <version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>1.0.0.Final</version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.1_spec>
         <version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>1.0.1.Final</version.org.jboss.spec.javax.servlet.jsp.jboss-jsp-api_2.3_spec>
-        <version.org.eclipse.jdt.core.compiler.ecj>4.4.2</version.org.eclipse.jdt.core.compiler.ecj>
+        <version.org.eclipse.jdt.ecj>3.26.0</version.org.eclipse.jdt.ecj>
         <version.io.undertow>1.2.6.Final</version.io.undertow>
         <version.org.apache.httpcomponents>4.4.1</version.org.apache.httpcomponents>
         <version.junit>4.12</version.junit>
@@ -166,9 +166,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jdt.core.compiler</groupId>
+            <groupId>org.eclipse.jdt</groupId>
             <artifactId>ecj</artifactId>
-            <version>${version.org.eclipse.jdt.core.compiler.ecj}</version>
+            <version>${version.org.eclipse.jdt.ecj}</version>
         </dependency>
 
         <dependency>
