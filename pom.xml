@@ -48,11 +48,6 @@
         <version.io.undertow>1.2.6.Final</version.io.undertow>
         <version.org.apache.httpcomponents>4.4.1</version.org.apache.httpcomponents>
         <version.junit>4.12</version.junit>
-        <!-- Build configuration -->
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <!-- require JDK8 to build, so we can test lambda expression in tests -->
-        <jdk.min.version>1.8</jdk.min.version>
     </properties>
 
     <build>
@@ -84,15 +79,6 @@
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-injection-plugin</artifactId>
-                <version>1.0.2</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>bytecode</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <bytecodeInjections>
                         <bytecodeInjection>
