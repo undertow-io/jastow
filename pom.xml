@@ -150,22 +150,22 @@
         <dependency>
             <groupId>io.undertow</groupId>
             <artifactId>undertow-core</artifactId>
+            <version>${version.io.undertow}</version>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${version.io.undertow}</version>
         </dependency>
         <dependency>
             <groupId>io.undertow</groupId>
             <artifactId>undertow-servlet</artifactId>
+            <version>${version.io.undertow}</version>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${version.io.undertow}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <scope>test</scope>
             <version>${version.org.apache.httpcomponents}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
