@@ -1157,7 +1157,7 @@ class Validator {
                                         expectedClass = JspUtil.toClass(expectedType, loader);
                                     } catch (ClassNotFoundException e) {
                                         err.jspError
-                                            (n, MESSAGES.unknownAttributeType(tldAttr.getName(), expectedType));
+                                            (n, MESSAGES.unknownAttributeType(expectedType, tldAttr.getName()));
                                     }
                                     // Check casting - not possible for all types
                                     if (String.class.equals(expectedClass) ||

@@ -616,8 +616,8 @@ public interface JasperMessages {
     @Message(id = 4192, value = "A literal value was specified for attribute %s that is defined as a deferred method with a return type of void. JSP.2.3.4 does not permit literal values in this case")
     String errorUsingLiteralValueWithDeferredVoidReturnTyep(String attribute);
 
-    @Message(id = 4193, value = "Unknown attribute type (%s) for attribute %s")
-    String unknownAttributeType(String attribute, String attributeType);
+    @Message(id = 4193, value = "Unknown attribute type (%s) was declared for attribute %s")
+    String unknownAttributeType(String attributeType, String attribute);
 
     @Message(id = 4194, value = "Cannot coerce value (%s) to type (%s) for attribute %s")
     String errorCoercingAttributeValue(String attribute, String attributeType, String value);
