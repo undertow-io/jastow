@@ -124,7 +124,7 @@
             <!-- provided dependencies -->
             <dependency>
                 <groupId>io.undertow</groupId>
-                <artifactId>undertow-servlet</artifactId>
+                <artifactId>undertow-core</artifactId>
                 <version>${version.io.undertow}</version>
                 <scope>provided</scope>
             </dependency>
@@ -186,13 +186,6 @@
             <dependency>
                 <groupId>io.undertow</groupId>
                 <artifactId>undertow-core</artifactId>
-                <version>${version.io.undertow}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.undertow</groupId>
-                <artifactId>undertow-servlet</artifactId>
                 <version>${version.io.undertow}</version>
                 <type>test-jar</type>
                 <scope>test</scope>

@@ -461,7 +461,7 @@ public class TestELInJsp extends TomcatBaseTest {
                 "/test/bug5nnnn/bug57142.jsp");
 
         String result = res.toString();
-        // jakarrta.servlet
+        // jakarta.servlet
         assertEcho(result, "00-" + DispatcherType.ASYNC);
         // No obvious static fields for jakarta.servlet.http
         // Could hack something with HttpUtils...
