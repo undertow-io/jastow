@@ -66,7 +66,6 @@ import static org.apache.jasper.compiler.Constants.SERVLET_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.SET;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG_SUPPORT;
-import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
 import static org.apache.jasper.compiler.Constants.SKIP_PAGE_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.STRING;
 import static org.apache.jasper.compiler.Constants.STRING_READER;
@@ -112,6 +111,7 @@ import jakarta.servlet.jsp.tagext.VariableInfo;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
+import org.apache.jasper.JasperLogger;
 import org.apache.jasper.JasperMessages;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Node.NamedAttribute;
@@ -758,10 +758,6 @@ class Generator {
         out.printin("                 " + JSP_SOURCE_IMPORTS + ",");
         out.println();
         out.printin("                 " + JSP_SOURCE_DIRECTIVES);
-        if (!pageInfo.isThreadSafe()) {
-            out.println(",");
-            printinTwoPart(out, "                 ", SINGLE_THREAD_MODEL);
-        }
         out.println(" {");
         out.pushIndent();
 
@@ -778,7 +774,15 @@ class Generator {
         genPreambleMethods();
 
         // Now the service method
-        out.printin("public void ");
+        // Now the service method
+        if (pageInfo.isThreadSafe()) {
+            out.printin("public void ");
+        } else {
+            // This is unlikely to perform well.
+            out.printin("public synchronized void ");
+            // As required by JSP 3.1, log a warning
+            JasperLogger.ROOT_LOGGER.deprecatedIsThreadSafe(ctxt.getJspFile());
+        }
         out.print(serviceMethodName);
         printlnMultiPart(out, "(final ", HTTP_SERVLET_REQUEST, " request, final ", HTTP_SERVLET_RESPONSE, " response)");
         printlnThreePart(out, "        throws " + IO_EXCEPTION + ", ", SERVLET_EXCEPTION, " {");
