@@ -133,15 +133,6 @@ public class Constants {
         System.getProperty("org.apache.jasper.Constants.TAG_FILE_PACKAGE_NAME", "org.apache.jsp.tag");
 
     /**
-     * Default URLs to download the plugin for Netscape and IE.
-     */
-    public static final String NS_PLUGIN_URL =
-        "http://java.sun.com/products/plugin/";
-
-    public static final String IE_PLUGIN_URL =
-        "http://java.sun.com/products/plugin/1.2.2/jinstall-1_2_2-win.cab#Version=1,2,2,0";
-
-    /**
      * Prefix to use for generated temporary variable names
      */
     public static final String TEMP_VARIABLE_NAME_PREFIX =

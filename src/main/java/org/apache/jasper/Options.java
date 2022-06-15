@@ -93,14 +93,6 @@ public interface Options {
     public boolean getTrimSpaces();
 
     /**
-     * Gets the class-id value that is sent to Internet Explorer when using
-     * &lt;jsp:plugin&gt; tags.
-     *
-     * @return Class-id value
-     */
-    public String getIeClassId();
-
-    /**
      * What is my scratch dir?
      */
     public File getScratchDir();
