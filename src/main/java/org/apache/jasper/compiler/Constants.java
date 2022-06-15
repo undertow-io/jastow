@@ -78,8 +78,6 @@ final class Constants {
     static final String SERVLET_CONFIG = PACKAGE_JAVAX_SERVLET + ".ServletConfig";
     static final String SERVLET_CONTEXT = PACKAGE_JAVAX_SERVLET + ".ServletContext";
     static final String SERVLET_EXCEPTION = PACKAGE_JAVAX_SERVLET + ".ServletException";
-    static final String SINGLE_THREAD_MODEL = PACKAGE_JAVAX_SERVLET + ".SingleThreadModel";
-
     // jakarta.servlet.http
     private static final String PACKAGE_JAVAX_SERVLET_HTTP = "jakarta.servlet.http";
     static final String HTTP_SERVLET_REQUEST = PACKAGE_JAVAX_SERVLET_HTTP + ".HttpServletRequest";
