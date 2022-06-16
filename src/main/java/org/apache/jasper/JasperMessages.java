@@ -796,4 +796,9 @@ public interface JasperMessages {
     @Message(id = 4252, value = "The expression %s is not valid. Within a quoted String only [\\], ['] and [\"] may be escaped with [\\].")
     IllegalArgumentException invalidQuoting(String aString);
 
+    @Message(id = 4253, value = "Page directive: invalid value for errorOnELNotFound")
+    String invalidPageDirectiveErrorOnELNotFound();
+
+    @Message(id = 4254, value = "Tag directive: invalid value for errorOnELNotFound")
+    String invalidTagDirectiveErrorOnELNotFound();
 }

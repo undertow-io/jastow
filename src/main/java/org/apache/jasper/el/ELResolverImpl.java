@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper.el;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
 import java.util.Iterator;
+import java.util.Objects;
+
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ELResolver;
@@ -41,9 +42,7 @@ public final class ELResolverImpl extends ELResolver {
 
     @Override
     public Object getValue(ELContext context, Object base, Object property) {
-        if (context == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);
@@ -66,9 +65,7 @@ public final class ELResolverImpl extends ELResolver {
 
     @Override
     public Class<?> getType(ELContext context, Object base, Object property) {
-        if (context == null) {
-            throw MESSAGES.elResolverNullContext();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);
@@ -93,9 +90,7 @@ public final class ELResolverImpl extends ELResolver {
     @Override
     public void setValue(ELContext context, Object base, Object property,
             Object value) {
-        if (context == null) {
-            throw MESSAGES.elResolverNullContext();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);
@@ -109,9 +104,7 @@ public final class ELResolverImpl extends ELResolver {
 
     @Override
     public boolean isReadOnly(ELContext context, Object base, Object property) {
-        if (context == null) {
-            throw MESSAGES.elResolverNullContext();
-        }
+        Objects.requireNonNull(context);
 
         if (base == null) {
             context.setPropertyResolved(base, property);

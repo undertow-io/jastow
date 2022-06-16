@@ -49,10 +49,12 @@ import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.JspFactory;
 import jakarta.servlet.jsp.JspWriter;
 import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.el.NotFoundELResolver;
 import jakarta.servlet.jsp.tagext.BodyContent;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.el.ELContextImpl;
+import org.apache.jasper.runtime.JspContextWrapper.ELContextWrapper;
 import org.apache.jasper.security.SecurityUtil;
 
 /**
@@ -911,31 +913,27 @@ public class PageContextImpl extends PageContext {
             final ProtectedFunctionMapper functionMap)
 			throws ELException {
         final ExpressionFactory exprFactory = jspf.getJspApplicationContext(pageContext.getServletContext()).getExpressionFactory();
-                                ELContextImpl ctx = (ELContextImpl) pageContext.getELContext();
-        ctx.setFunctionMapper(functionMap);
-								ValueExpression ve = exprFactory.createValueExpression(ctx, expression, expectedType);
-                                return ve.getValue(ctx);
-							}
+        ELContext ctx = pageContext.getELContext();
+        ELContextImpl ctxImpl;
+        if (ctx instanceof ELContextWrapper) {
+            ctxImpl = (ELContextImpl) ((ELContextWrapper) ctx).getWrappedELContext();
+        } else {
+            ctxImpl = (ELContextImpl) ctx;
+        }
+        ctxImpl.setFunctionMapper(functionMap);
+		ValueExpression ve = exprFactory.createValueExpression(ctx, expression, expectedType);
+        return ve.getValue(ctx);
+	}
 
     @Override
     public ELContext getELContext() {
         if (elContext == null) {
             elContext = applicationContext.createELContext(this);
-            if (servlet instanceof JspSourceImports) {
-                ImportHandler ih = elContext.getImportHandler();
-                Set<String> packageImports = ((JspSourceImports) servlet).getPackageImports();
-                if (packageImports != null) {
-                    for (String packageImport : packageImports) {
-                        ih.importPackage(packageImport);
-                    }
-				}
-                Set<String> classImports = ((JspSourceImports) servlet).getClassImports();
-                if (classImports != null) {
-                    for (String classImport : classImports) {
-                        ih.importClass(classImport);
-			}
-		}
-	}
+            if (servlet instanceof JspSourceDirectives) {
+                if (((JspSourceDirectives) servlet).getErrorOnELNotFound()) {
+                    elContext.putContext(NotFoundELResolver.class, Boolean.TRUE);
+                }
+            }
 		}
 		return this.elContext;
 	}

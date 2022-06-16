@@ -80,6 +80,7 @@ class Validator {
             new JspUtil.ValidAttribute("contentType"),
             new JspUtil.ValidAttribute("pageEncoding"),
             new JspUtil.ValidAttribute("isELIgnored"),
+            new JspUtil.ValidAttribute("errorOnELNotFound"),
             new JspUtil.ValidAttribute("deferredSyntaxAllowedAsLiteral"),
             new JspUtil.ValidAttribute("trimDirectiveWhitespaces")
         };
@@ -172,6 +173,13 @@ class Validator {
                         err.jspError(n, MESSAGES.invalidConflictingPageDirectiveAttribute
                                 (attr, pageInfo.getIsELIgnored(), value));
                     }
+                } else if ("errorOnELNotFound".equals(attr)) {
+                    if (pageInfo.getErrorOnELNotFound() == null) {
+                        pageInfo.setErrorOnELNotFound(value, n, err, true);
+                    } else if (!pageInfo.getErrorOnELNotFound().equals(value)) {
+                        err.jspError(n, MESSAGES.invalidConflictingPageDirectiveAttribute
+                                (attr, pageInfo.getErrorOnELNotFound(), value));
+                    }
                 } else if ("isErrorPage".equals(attr)) {
                     if (pageInfo.getIsErrorPage() == null) {
                         pageInfo.setIsErrorPage(value, n, err);
@@ -256,6 +264,13 @@ class Validator {
                     } else if (!pageInfo.getIsELIgnored().equals(value)) {
                         err.jspError(n, MESSAGES.invalidConflictingTagDirectiveAttributeValues
                                 (attr, pageInfo.getIsELIgnored(), value));
+                    }
+                } else if ("errorOnELNotFound".equals(attr)) {
+                    if (pageInfo.getErrorOnELNotFound() == null) {
+                        pageInfo.setErrorOnELNotFound(value, n, err, false);
+                    } else if (!pageInfo.getErrorOnELNotFound().equals(value)) {
+                        err.jspError(n, MESSAGES.invalidConflictingTagDirectiveAttributeValues
+                                (attr, pageInfo.getErrorOnELNotFound(), value));
                     }
                 } else if ("pageEncoding".equals(attr)) {
                     if (pageEncodingSeen)
@@ -504,7 +519,8 @@ class Validator {
             String version = n.getTextAttribute("version");
             if (!version.equals("1.2") && !version.equals("2.0") &&
                     !version.equals("2.1") && !version.equals("2.2") &&
-                    !version.equals("2.3")) {
+                    !version.equals("2.3") && !version.equals("3.0") &&
+                    !version.equals("3.1")) {
                 err.jspError(n, MESSAGES.invalidJspVersionNumber(version));
             }
             visitBody(n);
