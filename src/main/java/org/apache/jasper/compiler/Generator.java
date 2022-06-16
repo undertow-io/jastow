@@ -50,6 +50,7 @@ import static org.apache.jasper.compiler.Constants.JSP_FRAGMENT_HELPER;
 import static org.apache.jasper.compiler.Constants.JSP_METHOD_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.JSP_RUNTIME_LIBRARY;
 import static org.apache.jasper.compiler.Constants.JSP_SOURCE_DEPENDENT;
+import static org.apache.jasper.compiler.Constants.JSP_SOURCE_DIRECTIVES;
 import static org.apache.jasper.compiler.Constants.JSP_SOURCE_IMPORTS;
 import static org.apache.jasper.compiler.Constants.JSP_TAG;
 import static org.apache.jasper.compiler.Constants.JSP_VALUE_EXPRESSION;
@@ -716,6 +717,17 @@ class Generator {
         out.printil("}");
         out.println();
 
+        // Implement JspSourceDirectives
+        out.printil("public boolean getErrorOnELNotFound() {");
+        out.pushIndent();
+        if (pageInfo.isErrorOnELNotFound()) {
+            out.printil("return true;");
+        } else {
+            out.printil("return false;");
+        }
+        out.popIndent();
+        out.printil("}");
+        out.println();
 
         generateInit();
         generateDestroy();
@@ -743,7 +755,9 @@ class Generator {
         out.println(pageInfo.getExtends());
         out.printin("    implements " + JSP_SOURCE_DEPENDENT + ",");
         out.println();
-        out.printin("                 " + JSP_SOURCE_IMPORTS);
+        out.printin("                 " + JSP_SOURCE_IMPORTS + ",");
+        out.println();
+        out.printin("                 " + JSP_SOURCE_DIRECTIVES);
         if (!pageInfo.isThreadSafe()) {
             out.println(",");
             printinTwoPart(out, "                 ", SINGLE_THREAD_MODEL);
@@ -778,7 +792,7 @@ class Generator {
             out.print("if (!\"GET\".equals(_jspx_method) && !\"POST\".equals(_jspx_method) && !\"HEAD\".equals(_jspx_method) && ");
             printlnThreePart(out, "!", DISPATCHER_TYPE, ".ERROR.equals(request.getDispatcherType())) {");
             out.pushIndent();
-            out.print("response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ");
+            out.print("response.sendError(" + HTTP_SERVLET_RESPONSE + ".SC_METHOD_NOT_ALLOWED, ");
             out.println("\"" + JasperMessages.MESSAGES.forbiddenHttpMethod()+ "\");");
             out.println("return;");
             out.popIndent();
@@ -3552,7 +3566,7 @@ class Generator {
         out.printil("} catch (" + IO_EXCEPTION + " e) {}");
         out.popIndent();
         out.printil("if (_jspx_page_context != null) _jspx_page_context.handlePageException(t);");
-        out.printil("else throw new ServletException(t);");
+        out.printil("else throw new " + SERVLET_EXCEPTION + "(t);");
         out.popIndent();
         out.printil("}");
         out.popIndent();
@@ -3699,6 +3713,8 @@ class Generator {
             out.println(",");
             printinTwoPart(out, "               ", DYNAMIC_ATTRIBUTES);
         }
+        out.println(",");
+        out.printin("    " + JSP_SOURCE_DIRECTIVES);
         out.println(" {");
         out.println();
         out.pushIndent();
@@ -3973,9 +3989,9 @@ class Generator {
             out.println(");");
         }
         if (aliasSeen) {
-            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, aliasMap);");
+            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(this, ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, aliasMap);");
         } else {
-            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, null);");
+            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(this, ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, null);");
         }
         out.popIndent();
         out.printil("}");

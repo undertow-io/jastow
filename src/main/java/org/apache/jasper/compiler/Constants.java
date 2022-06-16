@@ -124,6 +124,7 @@ final class Constants {
     static final String JSP_FRAGMENT_HELPER = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspFragmentHelper";
     static final String JSP_RUNTIME_LIBRARY = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspRuntimeLibrary";
     static final String JSP_SOURCE_DEPENDENT = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspSourceDependent";
+    static final String JSP_SOURCE_DIRECTIVES = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspSourceDirectives";
     static final String JSP_SOURCE_IMPORTS = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".JspSourceImports";
     static final String PAGE_CONTEXT_IMPL = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".PageContextImpl";
     static final String TAG_HANDLER_POOL = PACKAGE_ORG_APACHE_JASPER_RUNTIME + ".TagHandlerPool";
