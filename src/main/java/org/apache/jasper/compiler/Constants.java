@@ -66,44 +66,44 @@ final class Constants {
     static final String SET = PACKAGE_JAVA_UTIL + ".Set";
 
     // jakarta.el
-    private static final String PACKAGE_JAVAX_EL = "jakarta.el";
-    static final String EXPRESSION_FACTORY = PACKAGE_JAVAX_EL + ".ExpressionFactory";
-    static final String METHOD_EXPRESSION = PACKAGE_JAVAX_EL + ".MethodExpression";
-    static final String VALUE_EXPRESSION = PACKAGE_JAVAX_EL + ".ValueExpression";
-    static final String VARIABLE_MAPPER = PACKAGE_JAVAX_EL + ".VariableMapper";
+    private static final String PACKAGE_JAKARTA_EL = "jakarta.el";
+    static final String EXPRESSION_FACTORY = PACKAGE_JAKARTA_EL + ".ExpressionFactory";
+    static final String METHOD_EXPRESSION = PACKAGE_JAKARTA_EL + ".MethodExpression";
+    static final String VALUE_EXPRESSION = PACKAGE_JAKARTA_EL + ".ValueExpression";
+    static final String VARIABLE_MAPPER = PACKAGE_JAKARTA_EL + ".VariableMapper";
 
     // jakarta.servlet
-    private static final String PACKAGE_JAVAX_SERVLET = "jakarta.servlet";
-    static final String DISPATCHER_TYPE = PACKAGE_JAVAX_SERVLET + ".DispatcherType";
-    static final String SERVLET_CONFIG = PACKAGE_JAVAX_SERVLET + ".ServletConfig";
-    static final String SERVLET_CONTEXT = PACKAGE_JAVAX_SERVLET + ".ServletContext";
-    static final String SERVLET_EXCEPTION = PACKAGE_JAVAX_SERVLET + ".ServletException";
+    private static final String PACKAGE_JAKARTA_SERVLET = "jakarta.servlet";
+    static final String DISPATCHER_TYPE = PACKAGE_JAKARTA_SERVLET + ".DispatcherType";
+    static final String SERVLET_CONFIG = PACKAGE_JAKARTA_SERVLET + ".ServletConfig";
+    static final String SERVLET_CONTEXT = PACKAGE_JAKARTA_SERVLET + ".ServletContext";
+    static final String SERVLET_EXCEPTION = PACKAGE_JAKARTA_SERVLET + ".ServletException";
     // jakarta.servlet.http
-    private static final String PACKAGE_JAVAX_SERVLET_HTTP = "jakarta.servlet.http";
-    static final String HTTP_SERVLET_REQUEST = PACKAGE_JAVAX_SERVLET_HTTP + ".HttpServletRequest";
-    static final String HTTP_SERVLET_RESPONSE = PACKAGE_JAVAX_SERVLET_HTTP + ".HttpServletResponse";
-    static final String HTTP_SESSION = PACKAGE_JAVAX_SERVLET_HTTP + ".HttpSession";
+    private static final String PACKAGE_JAKARTA_SERVLET_HTTP = "jakarta.servlet.http";
+    static final String HTTP_SERVLET_REQUEST = PACKAGE_JAKARTA_SERVLET_HTTP + ".HttpServletRequest";
+    static final String HTTP_SERVLET_RESPONSE = PACKAGE_JAKARTA_SERVLET_HTTP + ".HttpServletResponse";
+    static final String HTTP_SESSION = PACKAGE_JAKARTA_SERVLET_HTTP + ".HttpSession";
 
     // jakarta.servlet.jsp
-    private static final String PACKAGE_JAVAX_SERVLET_JSP = "jakarta.servlet.jsp";
-    static final String JSP_CONTEXT = PACKAGE_JAVAX_SERVLET_JSP + ".JspContext";
-    static final String JSP_EXCEPTION = PACKAGE_JAVAX_SERVLET_JSP + ".JspException";
-    static final String JSP_FACTORY = PACKAGE_JAVAX_SERVLET_JSP + ".JspFactory";
-    static final String JSP_WRITER = PACKAGE_JAVAX_SERVLET_JSP + ".JspWriter";
-    static final String PAGE_CONTEXT = PACKAGE_JAVAX_SERVLET_JSP + ".PageContext";
-    static final String SKIP_PAGE_EXCEPTION = PACKAGE_JAVAX_SERVLET_JSP + ".SkipPageException";
+    private static final String PACKAGE_JAKARTA_SERVLET_JSP = "jakarta.servlet.jsp";
+    static final String JSP_CONTEXT = PACKAGE_JAKARTA_SERVLET_JSP + ".JspContext";
+    static final String JSP_EXCEPTION = PACKAGE_JAKARTA_SERVLET_JSP + ".JspException";
+    static final String JSP_FACTORY = PACKAGE_JAKARTA_SERVLET_JSP + ".JspFactory";
+    static final String JSP_WRITER = PACKAGE_JAKARTA_SERVLET_JSP + ".JspWriter";
+    static final String PAGE_CONTEXT = PACKAGE_JAKARTA_SERVLET_JSP + ".PageContext";
+    static final String SKIP_PAGE_EXCEPTION = PACKAGE_JAKARTA_SERVLET_JSP + ".SkipPageException";
 
     // jakarta.servlet.jsp.tagext
-    private static final String PACKAGE_JAVAX_SERVLET_JSP_TAGEXT = "jakarta.servlet.jsp.tagext";
-    static final String BODY_CONTENT = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".BodyContent";
-    static final String BODY_TAG = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".BodyTag";
-    static final String DYNAMIC_ATTRIBUTES = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".DynamicAttributes";
-    static final String JSP_FRAGMENT = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".JspFragment";
-    static final String JSP_TAG = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".JspTag";
-    static final String SIMPLE_TAG = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".SimpleTag";
-    static final String SIMPLE_TAG_SUPPORT = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".SimpleTagSupport";
-    static final String TAG = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".Tag";
-    static final String TAG_ADAPTER = PACKAGE_JAVAX_SERVLET_JSP_TAGEXT + ".TagAdapter";
+    private static final String PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT = "jakarta.servlet.jsp.tagext";
+    static final String BODY_CONTENT = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".BodyContent";
+    static final String BODY_TAG = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".BodyTag";
+    static final String DYNAMIC_ATTRIBUTES = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".DynamicAttributes";
+    static final String JSP_FRAGMENT = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".JspFragment";
+    static final String JSP_TAG = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".JspTag";
+    static final String SIMPLE_TAG = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".SimpleTag";
+    static final String SIMPLE_TAG_SUPPORT = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".SimpleTagSupport";
+    static final String TAG = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".Tag";
+    static final String TAG_ADAPTER = PACKAGE_JAKARTA_SERVLET_JSP_TAGEXT + ".TagAdapter";
 
     // org.apache.jasper.compiler
     private static final String PACKAGE_ORG_APACHE_JASPER_COMPILER = "org.apache.jasper.compiler";
