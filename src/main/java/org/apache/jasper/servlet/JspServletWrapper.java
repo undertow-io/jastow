@@ -518,7 +518,7 @@ public class JspServletWrapper {
             }
 
             // First identify the stack frame in the trace that represents the JSP
-            StackTraceElement[] frames = realException.getStackTrace();
+            StackTraceElement[] frames = realException != null? realException.getStackTrace(): new StackTraceElement[0];
             StackTraceElement jspFrame = null;
 
             for (int i=0; i<frames.length; ++i) {
