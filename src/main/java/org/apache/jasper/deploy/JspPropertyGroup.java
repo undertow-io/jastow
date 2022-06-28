@@ -69,10 +69,11 @@ public class JspPropertyGroup implements Serializable, JspPropertyGroupDescripto
         return elIgnored;
     }
 
-    @Override
-    public String getErrorOnELNotFound() {
-        return null; // TODO
+    private Boolean errorOnELNotFound = null;
+    public void setErrorOnELNotFound(String errorOnELNotFound) {
+        this.errorOnELNotFound = Boolean.valueOf(errorOnELNotFound);
     }
+    public String getErrorOnELNotFound() { return errorOnELNotFound == null ? "" : errorOnELNotFound.toString(); }
 
     public void setElIgnored(String elIgnored) {
         this.elIgnored = elIgnored;

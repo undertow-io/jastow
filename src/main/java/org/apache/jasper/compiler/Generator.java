@@ -50,6 +50,7 @@ import static org.apache.jasper.compiler.Constants.JSP_FRAGMENT_HELPER;
 import static org.apache.jasper.compiler.Constants.JSP_METHOD_EXPRESSION;
 import static org.apache.jasper.compiler.Constants.JSP_RUNTIME_LIBRARY;
 import static org.apache.jasper.compiler.Constants.JSP_SOURCE_DEPENDENT;
+import static org.apache.jasper.compiler.Constants.JSP_SOURCE_DIRECTIVES;
 import static org.apache.jasper.compiler.Constants.JSP_SOURCE_IMPORTS;
 import static org.apache.jasper.compiler.Constants.JSP_TAG;
 import static org.apache.jasper.compiler.Constants.JSP_VALUE_EXPRESSION;
@@ -65,7 +66,6 @@ import static org.apache.jasper.compiler.Constants.SERVLET_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.SET;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG;
 import static org.apache.jasper.compiler.Constants.SIMPLE_TAG_SUPPORT;
-import static org.apache.jasper.compiler.Constants.SINGLE_THREAD_MODEL;
 import static org.apache.jasper.compiler.Constants.SKIP_PAGE_EXCEPTION;
 import static org.apache.jasper.compiler.Constants.STRING;
 import static org.apache.jasper.compiler.Constants.STRING_READER;
@@ -111,6 +111,7 @@ import jakarta.servlet.jsp.tagext.VariableInfo;
 
 import org.apache.jasper.Constants;
 import org.apache.jasper.JasperException;
+import org.apache.jasper.JasperLogger;
 import org.apache.jasper.JasperMessages;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Node.NamedAttribute;
@@ -716,6 +717,17 @@ class Generator {
         out.printil("}");
         out.println();
 
+        // Implement JspSourceDirectives
+        out.printil("public boolean getErrorOnELNotFound() {");
+        out.pushIndent();
+        if (pageInfo.isErrorOnELNotFound()) {
+            out.printil("return true;");
+        } else {
+            out.printil("return false;");
+        }
+        out.popIndent();
+        out.printil("}");
+        out.println();
 
         generateInit();
         generateDestroy();
@@ -743,11 +755,9 @@ class Generator {
         out.println(pageInfo.getExtends());
         out.printin("    implements " + JSP_SOURCE_DEPENDENT + ",");
         out.println();
-        out.printin("                 " + JSP_SOURCE_IMPORTS);
-        if (!pageInfo.isThreadSafe()) {
-            out.println(",");
-            printinTwoPart(out, "                 ", SINGLE_THREAD_MODEL);
-        }
+        out.printin("                 " + JSP_SOURCE_IMPORTS + ",");
+        out.println();
+        out.printin("                 " + JSP_SOURCE_DIRECTIVES);
         out.println(" {");
         out.pushIndent();
 
@@ -764,7 +774,15 @@ class Generator {
         genPreambleMethods();
 
         // Now the service method
-        out.printin("public void ");
+        // Now the service method
+        if (pageInfo.isThreadSafe()) {
+            out.printin("public void ");
+        } else {
+            // This is unlikely to perform well.
+            out.printin("public synchronized void ");
+            // As required by JSP 3.1, log a warning
+            JasperLogger.ROOT_LOGGER.deprecatedIsThreadSafe(ctxt.getJspFile());
+        }
         out.print(serviceMethodName);
         printlnMultiPart(out, "(final ", HTTP_SERVLET_REQUEST, " request, final ", HTTP_SERVLET_RESPONSE, " response)");
         printlnThreePart(out, "        throws " + IO_EXCEPTION + ", ", SERVLET_EXCEPTION, " {");
@@ -778,7 +796,7 @@ class Generator {
             out.print("if (!\"GET\".equals(_jspx_method) && !\"POST\".equals(_jspx_method) && !\"HEAD\".equals(_jspx_method) && ");
             printlnThreePart(out, "!", DISPATCHER_TYPE, ".ERROR.equals(request.getDispatcherType())) {");
             out.pushIndent();
-            out.print("response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ");
+            out.print("response.sendError(" + HTTP_SERVLET_RESPONSE + ".SC_METHOD_NOT_ALLOWED, ");
             out.println("\"" + JasperMessages.MESSAGES.forbiddenHttpMethod()+ "\");");
             out.println("return;");
             out.popIndent();
@@ -1527,245 +1545,10 @@ class Generator {
             n.setEndJavaLine(out.getJavaLine());
         }
 
-        /**
-         * @return a string for the form 'attr = "value"'
-         */
-        private String makeAttr(String attr, String value) {
-            if (value == null)
-                return "";
-
-            return " " + attr + "=\"" + value + '\"';
-        }
-
         @Override
         public void visit(Node.PlugIn n) throws JasperException {
-
-            /**
-             * A visitor to handle &lt;jsp:param&gt; in a plugin
-             */
-            class ParamVisitor extends Node.Visitor {
-
-                private final boolean ie;
-
-                ParamVisitor(boolean ie) {
-                    this.ie = ie;
-                }
-
-                @Override
-                public void visit(Node.ParamAction n) throws JasperException {
-
-                    String name = n.getTextAttribute("name");
-                    if (name.equalsIgnoreCase("object"))
-                        name = "java_object";
-                    else if (name.equalsIgnoreCase("type"))
-                        name = "java_type";
-
-                    n.setBeginJavaLine(out.getJavaLine());
-                    // XXX - Fixed a bug here - value used to be output
-                    // inline, which is only okay if value is not an EL
-                    // expression. Also, key/value pairs for the
-                    // embed tag were not being generated correctly.
-                    // Double check that this is now the correct behavior.
-                    if (ie) {
-                        // We want something of the form
-                        // out.println( "<param name=\"blah\"
-                        // value=\"" + ... + "\">" );
-                        out.printil("out.write( \"<param name=\\\"" +
-                                escape(name) +
-                                "\\\" value=\\\"\" + " +
-                                attributeValue(n.getValue(), false,
-                                        String.class) +
-                                " + \"\\\">\" );");
-                        out.printil("out.write(\"\\n\");");
-                    } else {
-                        // We want something of the form
-                        // out.print( " blah=\"" + ... + "\"" );
-                        out.printil("out.write( \" " +
-                                escape(name) +
-                                "=\\\"\" + " +
-                                attributeValue(n.getValue(), false,
-                                        String.class) +
-                                " + \"\\\"\" );");
-                    }
-
-                    n.setEndJavaLine(out.getJavaLine());
-                }
-            }
-
-            String type = n.getTextAttribute("type");
-            String code = n.getTextAttribute("code");
-            String name = n.getTextAttribute("name");
-            Node.JspAttribute height = n.getHeight();
-            Node.JspAttribute width = n.getWidth();
-            String hspace = n.getTextAttribute("hspace");
-            String vspace = n.getTextAttribute("vspace");
-            String align = n.getTextAttribute("align");
-            String iepluginurl = n.getTextAttribute("iepluginurl");
-            String nspluginurl = n.getTextAttribute("nspluginurl");
-            String codebase = n.getTextAttribute("codebase");
-            String archive = n.getTextAttribute("archive");
-            String jreversion = n.getTextAttribute("jreversion");
-
-            String widthStr = null;
-            if (width != null) {
-                if (width.isNamedAttribute()) {
-                    widthStr = generateNamedAttributeValue(width
-                            .getNamedAttributeNode());
-                } else {
-                    widthStr = attributeValue(width, false, String.class);
-                }
-            }
-
-            String heightStr = null;
-            if (height != null) {
-                if (height.isNamedAttribute()) {
-                    heightStr = generateNamedAttributeValue(height
-                            .getNamedAttributeNode());
-                } else {
-                    heightStr = attributeValue(height, false, String.class);
-                }
-            }
-
-            if (iepluginurl == null)
-                iepluginurl = Constants.IE_PLUGIN_URL;
-            if (nspluginurl == null)
-                nspluginurl = Constants.NS_PLUGIN_URL;
-
+            // As of JSP 3.1, jsp:plugin must not generate any output
             n.setBeginJavaLine(out.getJavaLine());
-
-            // If any of the params have their values specified by
-            // jsp:attribute, prepare those values first.
-            // Look for a params node and prepare its param subelements:
-            Node.JspBody jspBody = findJspBody(n);
-            if (jspBody != null) {
-                Node.Nodes subelements = jspBody.getBody();
-                if (subelements != null) {
-                    for (int i = 0; i < subelements.size(); i++) {
-                        Node m = subelements.getNode(i);
-                        if (m instanceof Node.ParamsAction) {
-                            prepareParams(m);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // XXX - Fixed a bug here - width and height can be set
-            // dynamically. Double-check if this generation is correct.
-
-            // IE style plugin
-            // <object ...>
-            // First compose the runtime output string
-            String s0 = "<object"
-                    + makeAttr("classid", ctxt.getOptions().getIeClassId())
-                    + makeAttr("name", name);
-
-            String s1 = "";
-            if (width != null) {
-                s1 = " + \" width=\\\"\" + " + widthStr + " + \"\\\"\"";
-            }
-
-            String s2 = "";
-            if (height != null) {
-                s2 = " + \" height=\\\"\" + " + heightStr + " + \"\\\"\"";
-            }
-
-            String s3 = makeAttr("hspace", hspace) + makeAttr("vspace", vspace)
-                    + makeAttr("align", align)
-                    + makeAttr("codebase", iepluginurl) + '>';
-
-            // Then print the output string to the java file
-            out.printil("out.write(" + quote(s0) + s1 + s2 + " + " + quote(s3)
-                    + ");");
-            out.printil("out.write(\"\\n\");");
-
-            // <param > for java_code
-            s0 = "<param name=\"java_code\"" + makeAttr("value", code) + '>';
-            out.printil("out.write(" + quote(s0) + ");");
-            out.printil("out.write(\"\\n\");");
-
-            // <param > for java_codebase
-            if (codebase != null) {
-                s0 = "<param name=\"java_codebase\""
-                        + makeAttr("value", codebase) + '>';
-                out.printil("out.write(" + quote(s0) + ");");
-                out.printil("out.write(\"\\n\");");
-            }
-
-            // <param > for java_archive
-            if (archive != null) {
-                s0 = "<param name=\"java_archive\""
-                        + makeAttr("value", archive) + '>';
-                out.printil("out.write(" + quote(s0) + ");");
-                out.printil("out.write(\"\\n\");");
-            }
-
-            // <param > for type
-            s0 = "<param name=\"type\""
-                    + makeAttr("value", "application/x-java-"
-                            + type
-                            + ((jreversion == null) ? "" : ";version="
-                                    + jreversion)) + '>';
-            out.printil("out.write(" + quote(s0) + ");");
-            out.printil("out.write(\"\\n\");");
-
-            /*
-             * generate a <param> for each <jsp:param> in the plugin body
-             */
-            if (n.getBody() != null)
-                n.getBody().visit(new ParamVisitor(true));
-
-            /*
-             * Netscape style plugin part
-             */
-            out.printil("out.write(" + quote("<comment>") + ");");
-            out.printil("out.write(\"\\n\");");
-            s0 = "<EMBED"
-                    + makeAttr("type", "application/x-java-"
-                            + type
-                            + ((jreversion == null) ? "" : ";version="
-                                    + jreversion)) + makeAttr("name", name);
-
-            // s1 and s2 are the same as before.
-
-            s3 = makeAttr("hspace", hspace) + makeAttr("vspace", vspace)
-                    + makeAttr("align", align)
-                    + makeAttr("pluginspage", nspluginurl)
-                    + makeAttr("java_code", code)
-                    + makeAttr("java_codebase", codebase)
-                    + makeAttr("java_archive", archive);
-            out.printil("out.write(" + quote(s0) + s1 + s2 + " + " + quote(s3)
-                    + ");");
-
-            /*
-             * Generate a 'attr = "value"' for each <jsp:param> in plugin body
-             */
-            if (n.getBody() != null)
-                n.getBody().visit(new ParamVisitor(false));
-
-            out.printil("out.write(" + quote("/>") + ");");
-            out.printil("out.write(\"\\n\");");
-
-            out.printil("out.write(" + quote("<noembed>") + ");");
-            out.printil("out.write(\"\\n\");");
-
-            /*
-             * Fallback
-             */
-            if (n.getBody() != null) {
-                visitBody(n);
-                out.printil("out.write(\"\\n\");");
-            }
-
-            out.printil("out.write(" + quote("</noembed>") + ");");
-            out.printil("out.write(\"\\n\");");
-
-            out.printil("out.write(" + quote("</comment>") + ");");
-            out.printil("out.write(\"\\n\");");
-
-            out.printil("out.write(" + quote("</object>") + ");");
-            out.printil("out.write(\"\\n\");");
-
             n.setEndJavaLine(out.getJavaLine());
         }
 
@@ -3552,7 +3335,7 @@ class Generator {
         out.printil("} catch (" + IO_EXCEPTION + " e) {}");
         out.popIndent();
         out.printil("if (_jspx_page_context != null) _jspx_page_context.handlePageException(t);");
-        out.printil("else throw new ServletException(t);");
+        out.printil("else throw new " + SERVLET_EXCEPTION + "(t);");
         out.popIndent();
         out.printil("}");
         out.popIndent();
@@ -3699,6 +3482,8 @@ class Generator {
             out.println(",");
             printinTwoPart(out, "               ", DYNAMIC_ATTRIBUTES);
         }
+        out.println(",");
+        out.printin("    " + JSP_SOURCE_DIRECTIVES);
         out.println(" {");
         out.println();
         out.pushIndent();
@@ -3973,9 +3758,9 @@ class Generator {
             out.println(");");
         }
         if (aliasSeen) {
-            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, aliasMap);");
+            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(this, ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, aliasMap);");
         } else {
-            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, null);");
+            out.printil("this.jspContext = new " + JSP_CONTEXT_WRAPPER + "(this, ctx, _jspx_nested, _jspx_at_begin, _jspx_at_end, null);");
         }
         out.popIndent();
         out.printil("}");

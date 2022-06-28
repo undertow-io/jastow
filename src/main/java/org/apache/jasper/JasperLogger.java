@@ -213,4 +213,8 @@ public interface JasperLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 5039, value = "Invalid optimizeScriptlets value %s, must be true or false")
     void invalidOptimizeScriptletsValue(String optimiseScriptlets);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5040, value = "The \"isThreadSafe\" page directive attribute used in %s has been deprecated and will be removed in version 4.0 of the JSP specification")
+    void deprecatedIsThreadSafe(String value);
 }

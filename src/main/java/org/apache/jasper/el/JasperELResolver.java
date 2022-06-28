@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jasper.el;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.el.ArrayELResolver;
 import jakarta.el.BeanELResolver;
@@ -31,7 +31,10 @@ import jakarta.el.PropertyNotFoundException;
 import jakarta.el.ResourceBundleELResolver;
 import jakarta.el.StaticFieldELResolver;
 import jakarta.servlet.jsp.el.ImplicitObjectELResolver;
+import jakarta.servlet.jsp.el.ImportELResolver;
+import jakarta.servlet.jsp.el.NotFoundELResolver;
 import jakarta.servlet.jsp.el.ScopedAttributeELResolver;
+import org.apache.jasper.JasperLogger;
 
 /**
  * Jasper-specific CompositeELResolver that optimizes certain functions to avoid
@@ -39,17 +42,17 @@ import jakarta.servlet.jsp.el.ScopedAttributeELResolver;
  */
 public class JasperELResolver extends CompositeELResolver {
 
-    private static final int STANDARD_RESOLVERS_COUNT = 9;
+    // Keep aligned with class under test
+    private static final int STANDARD_RESOLVERS_COUNT = 11;
 
-    private int size;
-    private ELResolver[] resolvers;
+    private AtomicInteger resolversSize = new AtomicInteger(0);
+    private volatile ELResolver[] resolvers;
     private final int appResolversSize;
 
     public JasperELResolver(List<ELResolver> appResolvers,
             ELResolver streamResolver) {
         appResolversSize = appResolvers.size();
         resolvers = new ELResolver[appResolversSize + STANDARD_RESOLVERS_COUNT];
-        size = 0;
 
         add(new ImplicitObjectELResolver());
         for (ELResolver appResolver : appResolvers) {
@@ -63,11 +66,15 @@ public class JasperELResolver extends CompositeELResolver {
         add(new ArrayELResolver());
         add(new BeanELResolver());
         add(new ScopedAttributeELResolver());
+        add(new ImportELResolver());
+        add(new NotFoundELResolver());
     }
 
     @Override
     public synchronized void add(ELResolver elResolver) {
         super.add(elResolver);
+
+        int size = resolversSize.get();
 
         if (resolvers.length > size) {
             resolvers[size] = elResolver;
@@ -78,7 +85,7 @@ public class JasperELResolver extends CompositeELResolver {
 
             resolvers = nr;
         }
-        size ++;
+        resolversSize.incrementAndGet();
     }
 
     @Override
@@ -93,7 +100,11 @@ public class JasperELResolver extends CompositeELResolver {
             // call implicit and app resolvers
             int index = 1 /* implicit */ + appResolversSize;
             for (int i = 0; i < index; i++) {
-                result = resolvers[i].getValue(context, base, property);
+                try {
+                    result = resolvers[i].getValue(context, base, property);
+                } catch (RuntimeException t) {
+                    JasperLogger.ROOT_LOGGER.warn("base == " + base + " , property == " + property, t);
+                }
                 if (context.isPropertyResolved()) {
                     return result;
                 }
@@ -106,8 +117,13 @@ public class JasperELResolver extends CompositeELResolver {
             start = 1;
         }
 
+        int size = resolversSize.get();
         for (int i = start; i < size; i++) {
-            result = resolvers[i].getValue(context, base, property);
+            try {
+                result = resolvers[i].getValue(context, base, property);
+            } catch (RuntimeException t) {
+                JasperLogger.ROOT_LOGGER.warn("base == " + base + " , property == " + property, t);
+            }
             if (context.isPropertyResolved()) {
                 return result;
             }
@@ -143,6 +159,7 @@ public class JasperELResolver extends CompositeELResolver {
         // skip collection (map, resource, list, and array) resolvers
         index += 4;
         // call bean and the rest of resolvers
+        int size = resolversSize.get();
         for (int i = index; i < size; i++) {
             result = resolvers[i].invoke(
                     context, base, targetMethod, paramTypes, params);
@@ -154,8 +171,8 @@ public class JasperELResolver extends CompositeELResolver {
         return null;
     }
 
-    /**
-     * Copied from {@link org.apache.el.lang.ELSupport#coerceToString(Object)}.
+    /*
+     * Copied from org.apache.el.lang.ELSupport#coerceToString(ELContext,Object)
      */
     private static final String coerceToString(final Object obj) {
         if (obj == null) {
@@ -168,4 +185,5 @@ public class JasperELResolver extends CompositeELResolver {
             return obj.toString();
         }
     }
+
 }

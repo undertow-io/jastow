@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import jakarta.el.ELManager;
 import jakarta.el.ExpressionFactory;
 import jakarta.servlet.jsp.tagext.TagLibraryInfo;
 
@@ -79,7 +78,7 @@ class PageInfo {
     // JSP 2.1
     private String deferredSyntaxAllowedAsLiteralValue;
     private boolean deferredSyntaxAllowedAsLiteral = false;
-    private final ExpressionFactory expressionFactory = ELManager.getExpressionFactory();
+    private final ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     private String trimDirectiveWhitespacesValue;
     private boolean trimDirectiveWhitespaces = false;
 
@@ -100,6 +99,10 @@ class PageInfo {
 
     // JSP 2.2
     private boolean errorOnUndeclaredNamepsace = false;
+
+    // JSP 3.1
+    private String errorOnELNotFoundValue;
+    private boolean errorOnELNotFound = false;
 
     private final boolean isTagFile;
 
@@ -626,6 +629,28 @@ class PageInfo {
     }
 
     /*
+     * errorOnELNotFound
+     */
+    public void setErrorOnELNotFound(String value, Node n, ErrorDispatcher err,
+                   boolean pagedir)
+        throws JasperException {
+
+        if ("true".equalsIgnoreCase(value)) {
+            errorOnELNotFound = true;
+        } else if ("false".equalsIgnoreCase(value)) {
+            errorOnELNotFound = false;
+        } else {
+            if (pagedir) {
+                err.jspError(n, MESSAGES.invalidPageDirectiveErrorOnELNotFound());
+            } else {
+                err.jspError(n, MESSAGES.invalidTagDirectiveErrorOnELNotFound());
+            }
+        }
+
+        errorOnELNotFoundValue = value;
+    }
+
+    /*
      * deferredSyntaxAllowedAsLiteral
      */
     public void setDeferredSyntaxAllowedAsLiteral(String value, Node n, ErrorDispatcher err,
@@ -679,6 +704,17 @@ class PageInfo {
         return isELIgnored;
     }
 
+    public void setErrorOnELNotFound(boolean s) {
+        errorOnELNotFound = s;
+    }
+
+    public String getErrorOnELNotFound() {
+        return errorOnELNotFoundValue;
+    }
+
+    public boolean isErrorOnELNotFound() {
+        return errorOnELNotFound;
+    }
     public void putNonCustomTagPrefix(String prefix, Mark where) {
         nonCustomTagPrefixMap.put(prefix, where);
     }

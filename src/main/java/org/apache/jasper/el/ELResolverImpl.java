@@ -42,7 +42,7 @@ public final class ELResolverImpl extends ELResolver {
     @Override
     public Object getValue(ELContext context, Object base, Object property) {
         if (context == null) {
-            throw new NullPointerException();
+            throw MESSAGES.elResolverNullContext();
         }
 
         if (base == null) {
