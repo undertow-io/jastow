@@ -39,6 +39,8 @@ import org.apache.http.util.EntityUtils;
 import org.apache.jasper.deploy.JspPropertyGroup;
 import org.apache.jasper.deploy.TagLibraryInfo;
 import org.apache.jasper.servlet.JspServlet;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -145,4 +147,19 @@ public class SimpleJspTestCase {
             client.getConnectionManager().shutdown();
         }
     }
+
+    @Test
+    public void testInnerClassesJsp() throws IOException {
+        TestHttpClient client = new TestHttpClient();
+        try {
+            HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/inner-classes.jsp");
+            HttpResponse result = client.execute(get);
+            Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+            final String response = HttpClientUtils.readResponse(result);
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("555-2368<br/>"));
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
+
 }
