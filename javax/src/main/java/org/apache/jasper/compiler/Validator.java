@@ -1337,7 +1337,8 @@ class Validator {
                     result = new Node.JspAttribute(tai, qName, uri, localName,
                             value.substring(3, value.length() - 2), true, null,
                             dynamic);
-                }else if(!n.getRoot().isXmlSyntax()
+                } else if(!n.getRoot().isXmlSyntax()
+                        && !value.startsWith("${") // UNDERTOW-2146
                         && value.contains("<%=") && value.contains("%>") && (value.indexOf("<%=") < value.indexOf("%>"))) {
                     result = new Node.JspAttribute(tai, qName, uri, localName,
                             partialScriptletExpression(value), true, null,
