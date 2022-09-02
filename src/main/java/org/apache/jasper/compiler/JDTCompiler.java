@@ -271,8 +271,7 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
 
             };
 
-        final IErrorHandlingPolicy policy =
-            DefaultErrorHandlingPolicies.proceedWithAllProblems();
+        final IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.proceedWithAllProblems();
 
         final Map<String,String> settings = new HashMap<>();
         settings.put(CompilerOptions.OPTION_LineNumberAttribute,
@@ -294,90 +293,64 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
         if(ctxt.getOptions().getCompilerSourceVM() != null) {
             String opt = ctxt.getOptions().getCompilerSourceVM();
             if(opt.equals("1.1")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_1);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_1);
             } else if(opt.equals("1.2")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_2);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_2);
             } else if(opt.equals("1.3")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_3);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_3);
             } else if(opt.equals("1.4")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_4);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
             } else if(opt.equals("1.5")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_5);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
             } else if(opt.equals("1.6")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_6);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_6);
             } else if(opt.equals("1.7")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                             CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
             } else if(opt.equals("1.8")) {
-                settings.put(CompilerOptions.OPTION_Source,
-                        CompilerOptions.VERSION_1_8);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_8);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownSourceJvm(opt);
-                settings.put(CompilerOptions.OPTION_Source,
-                        CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
             }
         } else {
             // Default to 1.7
-            settings.put(CompilerOptions.OPTION_Source,
-                    CompilerOptions.VERSION_1_7);
+            settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
         }
 
         // Target JVM
         if(ctxt.getOptions().getCompilerTargetVM() != null) {
             String opt = ctxt.getOptions().getCompilerTargetVM();
             if(opt.equals("1.1")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_1);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
             } else if(opt.equals("1.2")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_2);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_2);
             } else if(opt.equals("1.3")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_3);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_3);
             } else if(opt.equals("1.4")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_4);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
             } else if(opt.equals("1.5")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_5);
-                settings.put(CompilerOptions.OPTION_Compliance,
-                        CompilerOptions.VERSION_1_5);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
             } else if(opt.equals("1.6")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_6);
-                settings.put(CompilerOptions.OPTION_Compliance,
-                        CompilerOptions.VERSION_1_6);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_6);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_6);
             } else if(opt.equals("1.7")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                             CompilerOptions.VERSION_1_7);
-                settings.put(CompilerOptions.OPTION_Compliance,
-                        CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_7);
             } else if(opt.equals("1.8")) {
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                        CompilerOptions.VERSION_1_8);
-                settings.put(CompilerOptions.OPTION_Compliance,
-                        CompilerOptions.VERSION_1_8);
+                 settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+                 settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_8);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownTargetJvm(opt);
-                settings.put(CompilerOptions.OPTION_TargetPlatform,
-                        CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
             }
         } else {
             // Default to 1.7
-            settings.put(CompilerOptions.OPTION_TargetPlatform,
-                    CompilerOptions.VERSION_1_7);
-            settings.put(CompilerOptions.OPTION_Compliance,
-                    CompilerOptions.VERSION_1_7);
+            settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
+            settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_7);
         }
 
-        final IProblemFactory problemFactory =
-            new DefaultProblemFactory(Locale.getDefault());
+        final IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
 
         final ICompilerRequestor requestor = new ICompilerRequestor() {
                 @Override
