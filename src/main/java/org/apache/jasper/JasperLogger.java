@@ -217,4 +217,13 @@ public interface JasperLogger extends BasicLogger {
     @LogMessage(level = WARN)
     @Message(id = 5040, value = "The \"isThreadSafe\" page directive attribute used in %s has been deprecated and will be removed in version 4.0 of the JSP specification")
     void deprecatedIsThreadSafe(String value);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5041, value = "Unsupported source VM %s requested, using %s")
+    void errorUnsupportedSourceVM(String requestedVM, String actualVM);
+
+    @LogMessage(level = WARN)
+    @Message(id = 5042, value = "Unsupported target VM %s requested, using %s")
+    void errorUnsupportedTargetVM(String requestedVM, String actualVM);
+
 }

@@ -459,6 +459,25 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
             compilationUnits[i] = new CompilationUnit(fileNames[i], className);
         }
         CompilerOptions cOptions = new CompilerOptions(settings);
+
+        // Check source/target JDK versions as the newest versions are allowed
+        // in WildFly configuration but may not be supported by the ECJ version
+        // being used.
+        String requestedSource = ctxt.getOptions().getCompilerSourceVM();
+        if (requestedSource != null) {
+            String actualSource = CompilerOptions.versionFromJdkLevel(cOptions.sourceLevel);
+            if (!requestedSource.equals(actualSource)) {
+                JasperLogger.COMPILER_LOGGER.errorUnsupportedSourceVM(requestedSource, actualSource);
+            }
+        }
+        String requestedTarget = ctxt.getOptions().getCompilerTargetVM();
+        if (requestedTarget != null) {
+            String actualTarget = CompilerOptions.versionFromJdkLevel(cOptions.targetJDK);
+            if (!requestedTarget.equals(actualTarget)) {
+                JasperLogger.COMPILER_LOGGER.errorUnsupportedTargetVM(requestedTarget, actualTarget);
+            }
+        }
+
         cOptions.parseLiteralExpressionsAsConstants = true;
         Compiler compiler = new Compiler(env,
                                          policy,
