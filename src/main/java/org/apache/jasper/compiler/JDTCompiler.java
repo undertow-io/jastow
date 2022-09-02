@@ -16,6 +16,8 @@
  */
 package org.apache.jasper.compiler;
 
+import static org.apache.jasper.JasperMessages.MESSAGES;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -488,7 +490,10 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
 
         if (!ctxt.keepGenerated()) {
             File javaFile = new File(ctxt.getServletJavaFileName());
-            javaFile.delete();
+            if (!javaFile.delete()) {
+                JasperLogger.COMPILER_LOGGER.failedToDeleteGeneratedFile(javaFile);
+                throw new JasperException(MESSAGES.errorCannotDeleteFile(javaFile.getAbsolutePath()));
+            }
         }
 
         if (!problemList.isEmpty()) {

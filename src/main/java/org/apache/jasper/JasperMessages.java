@@ -801,4 +801,8 @@ public interface JasperMessages {
 
     @Message(id = 4254, value = "Tag directive: invalid value for errorOnELNotFound")
     String invalidTagDirectiveErrorOnELNotFound();
+
+    @Message(id = 4255, value = "Failed to delete generated Java file '%s'")
+    String errorCannotDeleteFile(String file);
+
 }
