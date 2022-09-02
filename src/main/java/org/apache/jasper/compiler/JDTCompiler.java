@@ -330,11 +330,11 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                  settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_18);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownSourceJvm(opt);
-                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_11);
             }
         } else {
-            // Default to 1.7
-            settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
+            // Default to 11
+            settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_11);
         }
 
         // Target JVM
@@ -392,12 +392,12 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                  settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_18);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownTargetJvm(opt);
-                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_11);
             }
         } else {
-            // Default to 1.7
-            settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
-            settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_7);
+            // Default to 11
+            settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_11);
+            settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_11);
         }
 
         final IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
