@@ -27,6 +27,7 @@ import jakarta.el.CompositeELResolver;
 import jakarta.el.ELContext;
 import jakarta.el.ELContextEvent;
 import jakarta.el.ELContextListener;
+import jakarta.el.ELManager;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;
 import jakarta.servlet.ServletContext;
@@ -47,7 +48,7 @@ public class JspApplicationContextImpl implements JspApplicationContext {
     private static final String KEY = JspApplicationContextImpl.class.getName();
 
     private final ExpressionFactory expressionFactory =
-            ExpressionFactory.newInstance();
+            ELManager.getExpressionFactory();
 
     private final List<ELContextListener> contextListeners = new ArrayList<>();
 
