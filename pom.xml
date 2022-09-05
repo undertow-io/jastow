@@ -51,7 +51,7 @@
         <version.io.undertow>2.3.0.Alpha2</version.io.undertow>
         <version.junit>4.13.2</version.junit>
         <version.org.apache.httpcomponents>4.5.13</version.org.apache.httpcomponents>
-        <version.org.eclipse.jdt.ecj>3.26.0</version.org.eclipse.jdt.ecj>
+        <version.org.eclipse.jdt.ecj>3.30.0</version.org.eclipse.jdt.ecj>
         <version.jakarta.el.jakarta-el-api>5.0.0-RC1</version.jakarta.el.jakarta-el-api>
         <version.org.glassfish.expressly>5.0.0-M2</version.org.glassfish.expressly>
         <version.jakarta.servlet.jakarta-servlet-api>6.0.0</version.jakarta.servlet.jakarta-servlet-api>
