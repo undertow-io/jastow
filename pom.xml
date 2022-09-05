@@ -28,7 +28,7 @@
 
     <groupId>io.undertow.jastow</groupId>
     <artifactId>jastow</artifactId>
-    <version>2.2.3.Final</version>
+    <version>2.2.4.Final-SNAPSHOT</version>
     <name>Jastow</name>
     <description>JSP Container</description>
     <packaging>jar</packaging>
