@@ -16,4 +16,15 @@
     <function-signature>java.lang.Runtime getRuntime()</function-signature>
   </function>
 
+  <tag>
+    <name>out</name>
+    <tag-class>io.undertow.test.jsp.taglib.MyOutTag</tag-class>
+    <body-content>empty</body-content>
+    <attribute>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
 </taglib>
