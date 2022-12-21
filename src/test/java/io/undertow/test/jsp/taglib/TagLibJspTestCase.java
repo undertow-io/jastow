@@ -39,7 +39,11 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.jasper.deploy.FunctionInfo;
 import org.apache.jasper.deploy.JspPropertyGroup;
+import org.apache.jasper.deploy.TagAttributeInfo;
+import org.apache.jasper.deploy.TagInfo;
 import org.apache.jasper.deploy.TagLibraryInfo;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -78,6 +82,16 @@ public class TagLibJspTestCase {
         functionInfo.setFunctionSignature("java.lang.Runtime getRuntime()");
         functionInfo.setFunctionClass("java.lang.Runtime");
         bugTld.addFunctionInfo(functionInfo);
+        TagInfo tagInfo = new TagInfo();
+        tagInfo.setTagName("out");
+        tagInfo.setTagClassName(MyOutTag.class.getName());
+        tagInfo.setBodyContent("empty");
+        TagAttributeInfo attr = new TagAttributeInfo();
+        attr.setName("value");
+        attr.setRequired("true");
+        attr.setReqTime("true");
+        tagInfo.addTagAttributeInfo(attr);
+        bugTld.addTagInfo(tagInfo);
         tags.put("/bug.tld", bugTld);
 
         JspServletBuilder.setupDeployment(builder, new HashMap<String, JspPropertyGroup>(), tags, new HackInstanceManager());
@@ -102,6 +116,24 @@ public class TagLibJspTestCase {
             Assert.assertEquals(200, result.getStatusLine().getStatusCode());
             final String response = HttpClientUtils.readResponse(result);
             Assert.assertTrue(response.contains("java.lang.Runtime"));
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
+
+    @Test
+    public void testScriptletExpression() throws IOException {
+        TestHttpClient client = new TestHttpClient();
+        try {
+            HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/scriptlet-expression.jsp");
+            HttpResponse result = client.execute(get);
+            Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+            final String response = HttpClientUtils.readResponse(result);
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("Line1|interpreted true|Line1"));
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("Line2|not interpreted <%= Boolean.TRUE %>|Line2"));
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("Line3|not interpreted true <%= Boolean.TRUE %>|Line3"));
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("Line4|\"function(<%= Boolean.TRUE %>, true})\"|Line4"));
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("Line5|interpreted true true|Line5"));
         } finally {
             client.getConnectionManager().shutdown();
         }
