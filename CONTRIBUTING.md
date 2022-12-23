@@ -1,4 +1,4 @@
-First off, thank you for considering contributing to Jastow. It's people like you that make Jastow such a great tool. Jastow  is an open source project, and we love to receive contributions from our community — you! There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into Jastow itself.
+First off, thank you for considering contributing to Jastow. It's people like you that make Jastow such a great tool. Jastow is an open source project, and we love to receive contributions from our community — you! There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into Jastow itself.
 
 We expect all contributors and users to follow our [Code of Conduct](CODE_OF_CONDUCT.md) when communicating through project channels. These include, but are not limited to: chat, issues, code.
 
@@ -10,7 +10,7 @@ If you don't have one already, head to https://github.com/
 
 ## Fork Jastow
 
-Fork https://github.com/undertow-io/jastow/fork into your GitHub account.
+Fork https://github.com/undertow-io/jastow/ into your GitHub account.
 
 ## Clone your newly forked repository onto your local machine
 
