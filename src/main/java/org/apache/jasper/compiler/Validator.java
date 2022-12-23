@@ -1353,11 +1353,6 @@ class Validator {
                     result = new Node.JspAttribute(tai, qName, uri, localName,
                             value.substring(3, value.length() - 2), true, null,
                             dynamic);
-                }else if(!n.getRoot().isXmlSyntax()
-                        && value.contains("<%=") && value.contains("%>") && (value.indexOf("<%=") < value.indexOf("%>"))) {
-                    result = new Node.JspAttribute(tai, qName, uri, localName,
-                            partialScriptletExpression(value), true, null,
-                            dynamic);
                 } else {
                     if (!pageInfo.isELIgnored()) {
                     // The attribute can contain expressions but is not a
@@ -1436,16 +1431,6 @@ class Validator {
             }
 
             return result;
-        }
-
-        // [UNDERTOW-1319]
-        private String partialScriptletExpression(String url) {
-            String result = "\"" + url.replaceAll("<%=", "\"+").replaceAll("%>", "+\"");
-            if (result.lastIndexOf("+\"") == result.length() - 2) {
-                return result.substring(0, result.length() - 2);
-            } else {
-                return result + "\"";
-            }
         }
 
 
