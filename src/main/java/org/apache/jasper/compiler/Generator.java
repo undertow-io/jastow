@@ -971,7 +971,7 @@ class Generator {
             if (attr.isExpression()) {
                 if (encode) {
                     return JSP_RUNTIME_LIBRARY + ".URLEncode(String.valueOf("
-                            + v + "), request.getCharacterEncoding())";
+                            + v + "), " + JSP_RUNTIME_LIBRARY + ".getURLCharacterEncoding(request))";
                 }
                 return v;
             } else if (attr.isELInterpreterInput()) {
@@ -979,7 +979,7 @@ class Generator {
                         expectedType, attr.getEL().getMapName());
                 if (encode) {
                     return JSP_RUNTIME_LIBRARY + ".URLEncode("
-                            + v + ", request.getCharacterEncoding())";
+                            + v + ", " + JSP_RUNTIME_LIBRARY + ".getURLCharacterEncoding(request))";
                 }
                 return v;
             } else if (attr.isNamedAttribute()) {
@@ -987,7 +987,7 @@ class Generator {
             } else {
                 if (encode) {
                     return JSP_RUNTIME_LIBRARY + ".URLEncode("
-                            + quote(v) + ", request.getCharacterEncoding())";
+                            + quote(v) + ", " + JSP_RUNTIME_LIBRARY + ".getURLCharacterEncoding(request))";
                 }
                 return quote(v);
             }
@@ -1019,7 +1019,7 @@ class Generator {
                     out.print(" + ");
                     out.print(JSP_RUNTIME_LIBRARY
                             + ".URLEncode(" + quote(n.getTextAttribute("name"))
-                            + ", request.getCharacterEncoding())");
+                            + ", " + JSP_RUNTIME_LIBRARY + ".getURLCharacterEncoding(request))");
                     out.print("+ \"=\" + ");
                     out.print(attributeValue(n.getValue(), true, String.class));
 
