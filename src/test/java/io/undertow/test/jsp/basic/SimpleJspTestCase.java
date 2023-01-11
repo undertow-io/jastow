@@ -161,4 +161,19 @@ public class SimpleJspTestCase {
             client.getConnectionManager().shutdown();
         }
     }
+
+    @Test
+    public void testURLCharacterEncoding() throws IOException {
+        TestHttpClient client = new TestHttpClient();
+        try {
+            HttpGet get = new HttpGet(DefaultServer.getDefaultServerURL() + "/servletContext/include-parent.jsp");
+            HttpResponse result = client.execute(get);
+            Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+            final String response = HttpClientUtils.readResponse(result);
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("euro=€"));
+            MatcherAssert.assertThat(response, CoreMatchers.containsString("acutes=áéíóú"));
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
 }

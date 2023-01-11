@@ -19,12 +19,16 @@ package org.apache.jasper.runtime;
 
 import static org.apache.jasper.JasperMessages.MESSAGES;
 
+import io.undertow.UndertowOptions;
+import io.undertow.servlet.spec.HttpServletRequestImpl;
+
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -33,6 +37,7 @@ import java.util.Enumeration;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -983,4 +988,22 @@ public class JspRuntimeLibrary {
 	return false;
     }
 
+    /**
+     * Returns the URL character encoding used in the undertow connection.
+     * If the request is a ServletRequestWrapper it is unwrapped to get the
+     * final undertow implementation.
+     *
+     * @param request The servlet request being processed
+     * @return The URL charset used in undertow, default is UTF-8
+     */
+    public static String getURLCharacterEncoding(ServletRequest request) {
+        while (request instanceof ServletRequestWrapper) {
+            request = ((ServletRequestWrapper) request).getRequest();
+        }
+        if (request instanceof HttpServletRequestImpl) {
+            return ((HttpServletRequestImpl) request).getExchange().getConnection()
+                    .getUndertowOptions().get(UndertowOptions.URL_CHARSET, StandardCharsets.UTF_8.name());
+        }
+        return StandardCharsets.UTF_8.name();
+    }
 }
