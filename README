@@ -1,8 +1,0 @@
-Integration work in a Servlet container requires:
-- Creating the needed metadata (org.apache.jasper.deploy package) that represents portions of the merged web.xml descriptor (JspPropertyGroup), as well as the TLD files that are available to the webapp
-- Having the Servlet container pass the metadata using the appropriate Servlet context attributes:
-  - org.apache.jasper.SERVLET_VERSION: webapp Servlet spec version
-  - org.apache.jasper.JSP_PROPERTY_GROUPS: HashMap<String, JspPropertyGroup>
-  - org.apache.jasper.JSP_TAG_LIBRARIES: HashMap<String, TagLibraryInfo>
-- Providing an instance manager (org.apache.tomcat.InstanceManager) available in the Servlet context
-- A periodic call to the PeriodicEvent interface on the JasperServlet instance
