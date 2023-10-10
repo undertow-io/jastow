@@ -330,6 +330,8 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                  settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_17);
             } else if (opt.equals("18")) {
                  settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_18);
+            } else if (opt.equals("19")) {
+                 settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_19);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownSourceJvm(opt);
                 settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_11);
@@ -392,6 +394,9 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
             } else if (opt.equals("18")) {
                  settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_18);
                  settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_18);
+            } else if (opt.equals("19")) {
+                 settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_19);
+                 settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_19);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownTargetJvm(opt);
                 settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_11);
