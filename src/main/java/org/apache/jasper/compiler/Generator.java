@@ -2404,10 +2404,6 @@ class Generator {
                 writeNewInstance(tagHandlerVar, tagHandlerClassName);
             }
 
-            // Wrap use of tag in try/finally to ensure clean-up takes place
-            out.printil("try {");
-            out.pushIndent();
-
             // includes setting the context
             generateSetters(n, tagHandlerVar, handlerInfo, false);
 
@@ -2571,6 +2567,18 @@ class Generator {
             out.print(tagHandlerVar);
             printlnThreePart(out, ".doEndTag() == ", TAG, ".SKIP_PAGE) {");
             out.pushIndent();
+            if (!n.implementsTryCatchFinally()) {
+                if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
+                    out.printin(n.getTagHandlerPoolName());
+                    out.print(".reuse(");
+                    out.print(tagHandlerVar);
+                    out.println(");");
+                } else {
+                    out.printin(tagHandlerVar);
+                    out.println(".release();");
+                    writeDestroyInstance(tagHandlerVar);
+                }
+            }
             if (isTagFile || isFragment) {
                 printilThreePart(out, "throw new ", SKIP_PAGE_EXCEPTION, "();");
             } else {
@@ -2603,12 +2611,6 @@ class Generator {
                 out.println(".doFinally();");
             }
 
-            if (n.implementsTryCatchFinally()) {
-                out.popIndent();
-                out.printil("}");
-            }
-
-            // Print tag reuse
             if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
                 out.printin(n.getTagHandlerPoolName());
                 out.print(".reuse(");
@@ -2637,8 +2639,10 @@ class Generator {
                 out.printil("}");
             }
 
-            out.popIndent();
-            out.printil("}");
+            if (n.implementsTryCatchFinally()) {
+                out.popIndent();
+                out.printil("}");
+            }
 
             // Declare and synchronize AT_END scripting variables (must do this
             // outside the try/catch/finally block)
