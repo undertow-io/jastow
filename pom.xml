@@ -48,7 +48,9 @@
     </scm>
 
     <properties>
-        <version.io.undertow>2.3.18.Final</version.io.undertow>
+        <version.io.undertow>2.3.19.Final</version.io.undertow>
+        <!-- TODO remove this dependency once XNIO (provided via Undertow) upgrades to latest JBoss Threads -->
+        <version.org.jboss.threads>3.9.1</version.org.jboss.threads>
         <version.jakarta.servlet.jakarta-servlet-api>6.0.0</version.jakarta.servlet.jakarta-servlet-api>
         <version.jakarta.servlet.jsp.jakarta-servlet-jsp-api>3.1.1</version.jakarta.servlet.jsp.jakarta-servlet-jsp-api>
         <version.junit>4.13.2</version.junit>
@@ -172,6 +174,18 @@
             <scope>provided</scope>
         </dependency>
         <!-- test dependencies -->
+        <dependency>
+            <groupId>org.jboss.threads</groupId>
+            <artifactId>jboss-threads</artifactId>
+            <version>${version.org.jboss.threads}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.wildfly.common</groupId>
+                    <artifactId>wildfly-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.jboss.logmanager</groupId>
             <artifactId>jboss-logmanager</artifactId>
