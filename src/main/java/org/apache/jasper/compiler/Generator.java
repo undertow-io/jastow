@@ -2184,10 +2184,6 @@ class Generator {
                 writeNewInstance(tagHandlerVar, tagHandlerClassName);
             }
 
-            // Wrap use of tag in try/finally to ensure clean-up takes place
-            out.printil("try {");
-            out.pushIndent();
-
             // includes setting the context
             generateSetters(n, tagHandlerVar, handlerInfo, false);
 
@@ -2351,6 +2347,18 @@ class Generator {
             out.print(tagHandlerVar);
             printlnThreePart(out, ".doEndTag() == ", TAG, ".SKIP_PAGE) {");
             out.pushIndent();
+            if (!n.implementsTryCatchFinally()) {
+                if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
+                    out.printin(n.getTagHandlerPoolName());
+                    out.print(".reuse(");
+                    out.print(tagHandlerVar);
+                    out.println(");");
+                } else {
+                    out.printin(tagHandlerVar);
+                    out.println(".release();");
+                    writeDestroyInstance(tagHandlerVar);
+                }
+            }
             if (isTagFile || isFragment) {
                 printilThreePart(out, "throw new ", SKIP_PAGE_EXCEPTION, "();");
             } else {
@@ -2383,15 +2391,6 @@ class Generator {
                 out.println(".doFinally();");
             }
 
-            if (n.implementsTryCatchFinally()) {
-                out.popIndent();
-                out.printil("}");
-            }
-
-            // Ensure clean-up takes place
-            out.popIndent();
-            out.printil("} finally {");
-            out.pushIndent();
             if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
                 out.printin(n.getTagHandlerPoolName());
                 out.print(".reuse(");
@@ -2403,8 +2402,10 @@ class Generator {
                 writeDestroyInstance(tagHandlerVar);
             }
 
-            out.popIndent();
-            out.printil("}");
+            if (n.implementsTryCatchFinally()) {
+                out.popIndent();
+                out.printil("}");
+            }
 
             // Declare and synchronize AT_END scripting variables (must do this
             // outside the try/catch/finally block)
@@ -2429,8 +2430,14 @@ class Generator {
             declareScriptingVars(n, VariableInfo.AT_BEGIN);
             saveScriptingVars(n, VariableInfo.AT_BEGIN);
 
+            // Declare AT_END scripting variables
+            declareScriptingVars(n, VariableInfo.AT_END);
+
             String tagHandlerClassName = tagHandlerClass.getCanonicalName();
             writeNewInstance(tagHandlerVar, tagHandlerClassName);
+
+            out.printil("try {");
+            out.pushIndent();
 
             generateSetters(n, tagHandlerVar, handlerInfo, true);
 
@@ -2479,12 +2486,18 @@ class Generator {
             // Synchronize AT_BEGIN scripting variables
             syncScriptingVars(n, VariableInfo.AT_BEGIN);
 
-            // Declare and synchronize AT_END scripting variables
-            declareScriptingVars(n, VariableInfo.AT_END);
+            // Synchronize AT_END scripting variables
             syncScriptingVars(n, VariableInfo.AT_END);
+
+            out.popIndent();
+            out.printil("} finally {");
+            out.pushIndent();
 
             // Resource injection
             writeDestroyInstance(tagHandlerVar);
+
+            out.popIndent();
+            out.printil("}");
 
             n.setEndJavaLine(out.getJavaLine());
         }
