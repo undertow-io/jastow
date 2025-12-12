@@ -38,7 +38,7 @@ jobs:
         java-version: ${{ matrix.jdk-version }}
     - name: Run Tests
       run: mvn -ntp -U -B -fae clean install
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: surefire-${{ matrix.jdk-distribution }}-${{ matrix.jdk-version }}-${{ matrix.os }}
