@@ -2180,9 +2180,17 @@ class Generator {
                 out.print(".get(");
                 out.print(tagHandlerClassName);
                 out.println(".class);");
+                out.printin("boolean ");
+                out.print(tagHandlerVar);
+                out.println("_reused = false;");
             } else {
                 writeNewInstance(tagHandlerVar, tagHandlerClassName);
             }
+
+            // Wrap use of tag in try/finally to ensure clean-up takes place
+            // Required to prevent UNDERTOW-2401 leaks
+            out.printil("try {");
+            out.pushIndent();
 
             // includes setting the context
             generateSetters(n, tagHandlerVar, handlerInfo, false);
@@ -2347,18 +2355,6 @@ class Generator {
             out.print(tagHandlerVar);
             printlnThreePart(out, ".doEndTag() == ", TAG, ".SKIP_PAGE) {");
             out.pushIndent();
-            if (!n.implementsTryCatchFinally()) {
-                if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
-                    out.printin(n.getTagHandlerPoolName());
-                    out.print(".reuse(");
-                    out.print(tagHandlerVar);
-                    out.println(");");
-                } else {
-                    out.printin(tagHandlerVar);
-                    out.println(".release();");
-                    writeDestroyInstance(tagHandlerVar);
-                }
-            }
             if (isTagFile || isFragment) {
                 printilThreePart(out, "throw new ", SKIP_PAGE_EXCEPTION, "();");
             } else {
@@ -2391,21 +2387,42 @@ class Generator {
                 out.println(".doFinally();");
             }
 
+            if (n.implementsTryCatchFinally()) {
+                out.popIndent();
+                out.printil("}");
+            }
+
+            // Print tag reuse
             if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
                 out.printin(n.getTagHandlerPoolName());
                 out.print(".reuse(");
                 out.print(tagHandlerVar);
                 out.println(");");
-            } else {
-                out.printin(tagHandlerVar);
-                out.println(".release();");
-                writeDestroyInstance(tagHandlerVar);
+                out.print(tagHandlerVar);
+                out.println("_reused = true;");
             }
 
-            if (n.implementsTryCatchFinally()) {
+            // Ensure clean-up takes place
+            // Required to prevent UNDERTOW-2401 leaks
+            out.popIndent();
+            out.printil("} finally {");
+            out.pushIndent();
+            if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
+                out.printin("if (!");
+                out.print(tagHandlerVar);
+                out.println("_reused) {");
+                out.pushIndent();
+            }
+            out.printin(tagHandlerVar);
+            out.println(".release();");
+            writeDestroyInstance(tagHandlerVar);
+            if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
                 out.popIndent();
                 out.printil("}");
             }
+
+            out.popIndent();
+            out.printil("}");
 
             // Declare and synchronize AT_END scripting variables (must do this
             // outside the try/catch/finally block)
