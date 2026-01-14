@@ -48,7 +48,7 @@
     </scm>
 
     <properties>
-        <version.io.undertow>2.3.20.Final</version.io.undertow>
+        <version.io.undertow>2.3.21.Final</version.io.undertow>
         <!-- TODO remove this dependency once XNIO (provided via Undertow) upgrades to latest JBoss Threads -->
         <version.org.jboss.threads>3.9.2</version.org.jboss.threads>
         <version.jakarta.servlet.jakarta-servlet-api>6.0.0</version.jakarta.servlet.jakarta-servlet-api>
