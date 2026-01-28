@@ -292,7 +292,7 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
         }
 
         // Source JVM
-        if(ctxt.getOptions().getCompilerSourceVM() != null) {
+        if (ctxt.getOptions().getCompilerSourceVM() != null) {
             String opt = ctxt.getOptions().getCompilerSourceVM();
             if(opt.equals("1.1")) {
                 settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_1);
@@ -332,17 +332,25 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                  settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_18);
             } else if (opt.equals("19")) {
                  settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_19);
+            } else if (opt.equals("20")) {
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_20);
+            } else if (opt.equals("21")) {
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_21);
+            } else if (opt.equals("22")) {
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_22);
+            } else if (opt.equals("23")) {
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_23);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownSourceJvm(opt);
-                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_11);
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_17);
             }
         } else {
-            // Default to 11
-            settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_11);
+            // Default to 17
+            settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_17);
         }
 
         // Target JVM
-        if(ctxt.getOptions().getCompilerTargetVM() != null) {
+        if (ctxt.getOptions().getCompilerTargetVM() != null) {
             String opt = ctxt.getOptions().getCompilerTargetVM();
             if(opt.equals("1.1")) {
                 settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
@@ -397,14 +405,26 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
             } else if (opt.equals("19")) {
                  settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_19);
                  settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_19);
+            } else if (opt.equals("20")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_20);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_20);
+            } else if (opt.equals("21")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_21);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_21);
+            } else if (opt.equals("22")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_22);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_22);
+            } else if (opt.equals("23")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_23);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_23);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownTargetJvm(opt);
-                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_11);
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_17);
             }
         } else {
-            // Default to 11
-            settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_11);
-            settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_11);
+            // Default to 17
+            settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_17);
+            settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_17);
         }
 
         final IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
