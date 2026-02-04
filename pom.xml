@@ -23,15 +23,18 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>47</version>
+        <version>50</version>
     </parent>
 
     <groupId>io.undertow.jastow</groupId>
     <artifactId>jastow</artifactId>
-    <version>2.2.9.Final-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
     <name>Jastow</name>
     <description>JSP Container</description>
-    <packaging>jar</packaging>
+    <url>https://github.com/undertow-io/jastow</url>
+
+    <version>2.2.9.Final-SNAPSHOT</version>
 
     <licenses>
         <license>
@@ -45,9 +48,15 @@
         <connection>scm:git:https://github.com:undertow-io/jastow.git</connection>
         <developerConnection>scm:git:git://github.com/undertow-io/jastow.git</developerConnection>
         <url>https://github.com/undertow-io/jastow.git</url>
+        <tag>${nexus.staging.tag}</tag>
     </scm>
 
     <properties>
+        <!-- Repository Deployment Settings -->
+        <nexus.repository.staging>jboss-io</nexus.repository.staging>
+        <nexus.repository.release>releases</nexus.repository.release>
+        <nexus.staging.tag>jastow-${project.version}</nexus.staging.tag>
+        <!-- Dependency versions -->
         <version.io.undertow>2.3.19.Final</version.io.undertow>
         <version.org.jboss.threads>3.5.0.Final</version.org.jboss.threads>
         <version.jakarta.servlet.jakarta-servlet-api>6.0.0</version.jakarta.servlet.jakarta-servlet-api>
