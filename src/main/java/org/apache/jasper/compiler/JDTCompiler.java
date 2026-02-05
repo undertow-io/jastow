@@ -51,6 +51,8 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 
 /**
@@ -150,6 +152,16 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
             @Override
             public boolean ignoreOptionalProblems() {
                 return false;
+            }
+
+            @Override
+            public ModuleBinding module(LookupEnvironment environment) {
+                return environment.getModule(ModuleBinding.UNNAMED);
+            }
+
+            @Override
+            public char[] getModuleName() {
+                return ModuleBinding.UNNAMED;
             }
         }
 
@@ -340,6 +352,10 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
                 settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_22);
             } else if (opt.equals("23")) {
                 settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_23);
+            } else if (opt.equals("24")) {
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_24);
+            } else if (opt.equals("25")) {
+                settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_25);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownSourceJvm(opt);
                 settings.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_17);
@@ -417,6 +433,12 @@ public class JDTCompiler extends org.apache.jasper.compiler.Compiler {
             } else if (opt.equals("23")) {
                 settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_23);
                 settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_23);
+            } else if (opt.equals("24")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_24);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_24);
+            } else if (opt.equals("25")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_25);
+                settings.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_25);
             } else {
                 JasperLogger.COMPILER_LOGGER.unknownTargetJvm(opt);
                 settings.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_17);
