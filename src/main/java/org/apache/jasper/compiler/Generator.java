@@ -2397,6 +2397,9 @@ class Generator {
                 out.print(".get(");
                 out.print(tagHandlerClassName);
                 out.println(".class);");
+                out.printin("boolean ");
+                out.print(tagHandlerVar);
+                out.println("_reused = false;");
             } else {
                 writeNewInstance(tagHandlerVar, tagHandlerClassName);
             }
@@ -2605,20 +2608,35 @@ class Generator {
                 out.printil("}");
             }
 
-            // Ensure clean-up takes place
-            out.popIndent();
-            out.printil("} finally {");
-            out.pushIndent();
+            // Print tag reuse
             if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
                 out.printin(n.getTagHandlerPoolName());
                 out.print(".reuse(");
                 out.print(tagHandlerVar);
                 out.println(");");
-            } else {
-                out.printin(tagHandlerVar);
-                out.println(".release();");
-                writeDestroyInstance(tagHandlerVar);
+                out.print(tagHandlerVar);
+                out.println("_reused = true;");
             }
+
+            // Ensure clean-up takes place
+            // Required to prevent UNDERTOW-2401 leaks
+            out.popIndent();
+            out.printil("} finally {");
+            out.pushIndent();
+            if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
+                out.printin("if (!");
+                out.print(tagHandlerVar);
+                out.println("_reused) {");
+                out.pushIndent();
+            }
+            out.printin(tagHandlerVar);
+            out.println(".release();");
+            writeDestroyInstance(tagHandlerVar);
+            if (isPoolingEnabled && !(n.implementsJspIdConsumer())) {
+                out.popIndent();
+                out.printil("}");
+            }
+
             out.popIndent();
             out.printil("}");
 
