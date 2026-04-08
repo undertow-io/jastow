@@ -666,13 +666,6 @@ public class PageContextImpl extends PageContext {
 	}
 
     @Override
-    @Deprecated
-    public jakarta.servlet.jsp.el.VariableResolver getVariableResolver() {
-        return new org.apache.jasper.el.VariableResolverImpl(
-                this.getELContext());
-	}
-
-    @Override
 	public void forward(final String relativeUrlPath) throws ServletException,
 			IOException {
 		if (SecurityUtil.isPackageProtectionEnabled()) {
@@ -772,18 +765,6 @@ public class PageContextImpl extends PageContext {
 		return out;
 	}
 
-	/**
-	 * Provides programmatic access to the ExpressionEvaluator. The JSP
-	 * Container must return a valid instance of an ExpressionEvaluator that can
-	 * parse EL expressions.
-	 */
-    @Override
-    @Deprecated
-    public jakarta.servlet.jsp.el.ExpressionEvaluator getExpressionEvaluator() {
-        return new org.apache.jasper.el.ExpressionEvaluatorImpl(
-                this.applicationContext.getExpressionFactory());
-	}
-
     @Override
 	public void handlePageException(Exception ex) throws IOException,
 			ServletException {
@@ -878,8 +859,7 @@ public class PageContextImpl extends PageContext {
 				throw (RuntimeException) t;
 
 			Throwable rootCause = null;
-            if (t instanceof JspException || t instanceof ELException ||
-                    t instanceof jakarta.servlet.jsp.el.ELException) {
+            if (t instanceof JspException || t instanceof ELException) {
                 rootCause =t.getCause();
 			}
 
