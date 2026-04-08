@@ -774,15 +774,7 @@ class Generator {
         genPreambleMethods();
 
         // Now the service method
-        // Now the service method
-        if (pageInfo.isThreadSafe()) {
-            out.printin("public void ");
-        } else {
-            // This is unlikely to perform well.
-            out.printin("public synchronized void ");
-            // As required by JSP 3.1, log a warning
-            JasperLogger.ROOT_LOGGER.deprecatedIsThreadSafe(ctxt.getJspFile());
-        }
+        out.printin("public void ");
         out.print(serviceMethodName);
         printlnMultiPart(out, "(final ", HTTP_SERVLET_REQUEST, " request, final ", HTTP_SERVLET_RESPONSE, " response)");
         printlnThreePart(out, "        throws " + IO_EXCEPTION + ", ", SERVLET_EXCEPTION, " {");

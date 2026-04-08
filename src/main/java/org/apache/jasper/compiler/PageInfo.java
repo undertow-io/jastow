@@ -63,8 +63,6 @@ class PageInfo {
     private int buffer = 8*1024;
     private String autoFlush;
     private boolean isAutoFlush = true;
-    private String isThreadSafeValue;
-    private boolean isThreadSafe = true;
     private String isErrorPageValue;
     private boolean isErrorPage = false;
     private String errorPage = null;
@@ -531,31 +529,6 @@ class PageInfo {
 
     public boolean isAutoFlush() {
         return isAutoFlush;
-    }
-
-
-    /*
-     * isThreadSafe
-     */
-    public void setIsThreadSafe(String value, Node n, ErrorDispatcher err)
-        throws JasperException {
-
-        if ("true".equalsIgnoreCase(value))
-            isThreadSafe = true;
-        else if ("false".equalsIgnoreCase(value))
-            isThreadSafe = false;
-        else
-            err.jspError(n, MESSAGES.invalidPageDirectiveIsThreadSafe());
-
-        isThreadSafeValue = value;
-    }
-
-    public String getIsThreadSafe() {
-        return isThreadSafeValue;
-    }
-
-    public boolean isThreadSafe() {
-        return isThreadSafe;
     }
 
 
