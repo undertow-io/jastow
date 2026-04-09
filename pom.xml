@@ -57,7 +57,8 @@
         <nexus.repository.release>releases</nexus.repository.release>
         <nexus.staging.tag>jastow-${project.version}</nexus.staging.tag>
         <!-- Dependency versions -->
-        <version.io.undertow>2.3.23.Final</version.io.undertow>
+        <version.io.undertow>2.4.0.RC4</version.io.undertow>
+        <version.io.undertow.ee>2.0.0.RC1</version.io.undertow.ee>
         <version.org.jboss.threads>3.9.2</version.org.jboss.threads>
         <version.jakarta.servlet.jakarta-servlet-api>6.0.0</version.jakarta.servlet.jakarta-servlet-api>
         <version.jakarta.servlet.jsp.jakarta-servlet-jsp-api>4.0.0</version.jakarta.servlet.jsp.jakarta-servlet-jsp-api>
@@ -134,9 +135,9 @@
     <dependencies>
         <!-- provided dependencies -->
         <dependency>
-            <groupId>io.undertow</groupId>
+            <groupId>io.undertow.ee</groupId>
             <artifactId>undertow-servlet</artifactId>
-            <version>${version.io.undertow}</version>
+            <version>${version.io.undertow.ee}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -208,9 +209,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.undertow</groupId>
+            <groupId>io.undertow.ee</groupId>
             <artifactId>undertow-servlet</artifactId>
-            <version>${version.io.undertow}</version>
+            <version>${version.io.undertow.ee}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
