@@ -127,11 +127,20 @@ public class SmapStratum {
     // Constructor
 
     /**
+     * Constructs a new SmapStratum object with the stratum name JSP.
+     */
+    public SmapStratum() {
+        this("JSP");
+    }
+
+    /**
      * Constructs a new SmapStratum object for the given stratum name
      * (e.g., JSP).
      *
      * @param stratumName the name of the stratum (e.g., JSP)
+     * @deprecated Use the no-arg constructor
      */
+    @Deprecated
     public SmapStratum(String stratumName) {
         this.stratumName = stratumName;
         fileNameList = new ArrayList<>();
