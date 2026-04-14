@@ -107,6 +107,7 @@ public final class ProtectedFunctionMapper extends jakarta.el.FunctionMapper {
      *            The arguments of the Java method
      * @throws RuntimeException
      *             if no method with the given signature could be found.
+     * @return the mapped function
      */
     public static ProtectedFunctionMapper getMapForFunction(String fnQName,
             final Class<?> c, final String methodName, final Class<?>[] args) {

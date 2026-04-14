@@ -57,14 +57,18 @@ public class SymbolTable {
     // Constants
     //
 
-    /** Default table size. */
+    /**
+     * Default table size.
+     */
     private static final int TABLE_SIZE = 101;
 
     //
     // Data
     //
 
-    /** Buckets. */
+    /**
+     * Buckets.
+     */
     private final Entry[] fBuckets;
 
     // actual table size
@@ -74,12 +78,17 @@ public class SymbolTable {
     // Constructors
     //
 
-    /** Constructs a symbol table with a default number of buckets. */
+    /**
+     * Constructs a symbol table with a default number of buckets.
+     */
     public SymbolTable() {
         this(TABLE_SIZE);
     }
 
-    /** Constructs a symbol table with a specified number of buckets. */
+    /**
+     * Constructs a symbol table with a specified number of buckets.
+     * @param tableSize The table size (default is 101)
+     */
     public SymbolTable(int tableSize) {
         fTableSize = tableSize;
         fBuckets = new Entry[fTableSize];
@@ -96,6 +105,7 @@ public class SymbolTable {
      * guarantee that symbol references remain unique.
      *
      * @param symbol The new symbol.
+     * @return the symbol added
      */
     public String addSymbol(String symbol) {
 
@@ -159,6 +169,7 @@ public class SymbolTable {
      * with the character array that comprises the symbol string.
      *
      * @param symbol The symbol to hash.
+     * @return the hash value
      */
     public int hash(String symbol) {
 
@@ -259,7 +270,9 @@ public class SymbolTable {
         // Data
         //
 
-        /** Symbol. */
+        /**
+         * Symbol.
+         */
         private final String symbol;
 
         /**
@@ -268,7 +281,9 @@ public class SymbolTable {
          */
         private final char[] characters;
 
-        /** The next entry. */
+        /**
+         * The next entry.
+         */
         private final Entry next;
 
         //
