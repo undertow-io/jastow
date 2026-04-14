@@ -902,7 +902,7 @@ class Generator {
     private class GenerateVisitor extends Node.Visitor {
 
         /*
-         * Hashtable containing introspection information on tag handlers:
+         * Map containing introspection information on tag handlers:
          * <key>: tag prefix <value>: hashtable containing introspection on tag
          * handlers: <key>: tag short name <value>: introspection info of tag
          * handler for <prefix:shortName> tag
