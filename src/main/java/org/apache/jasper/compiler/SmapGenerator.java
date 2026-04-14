@@ -148,7 +148,7 @@ public class SmapGenerator {
     public static void main(String args[]) {
 	SmapGenerator g = new SmapGenerator();
 	g.setOutputFileName("foo.java");
-	SmapStratum s = new SmapStratum("JSP");
+	SmapStratum s = new SmapStratum();
 	s.addFile("foo.jsp");
 	s.addFile("bar.jsp", "/foo/foo/bar.jsp");
 	s.addLineData(1, "foo.jsp", 1, 1, 1);
@@ -162,7 +162,7 @@ public class SmapGenerator {
 
 	SmapGenerator embedded = new SmapGenerator();
 	embedded.setOutputFileName("blargh.tier2");
-	s = new SmapStratum("Tier2");
+	s = new SmapStratum();
 	s.addFile("1.tier2");
 	s.addLineData(1, "1.tier2", 1, 1, 1);
 	embedded.addStratum(s, true);
