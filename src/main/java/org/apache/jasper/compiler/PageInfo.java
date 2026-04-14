@@ -331,12 +331,8 @@ class PageInfo {
      * @param uri The URI to be pushed onto the stack
      */
     public void pushPrefixMapping(String prefix, String uri) {
-        LinkedList<String> stack = xmlPrefixMapper.get(prefix);
-        if (stack == null) {
-            stack = new LinkedList<>();
-            xmlPrefixMapper.put(prefix, stack);
-        }
-        stack.addFirst(uri);
+        // Must be LinkedList as it needs to accept nulls
+        xmlPrefixMapper.computeIfAbsent(prefix, k -> new LinkedList<>()).addFirst(uri);
     }
 
     /*
