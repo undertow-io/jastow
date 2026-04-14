@@ -746,7 +746,7 @@ abstract class Node implements TagConstants {
     }
 
     /**
-     * Represents a <jsp:invoke> tag file action
+     * Represents a &lt;jsp:invoke> tag file action
      */
     public static class InvokeAction extends Node {
 
@@ -768,7 +768,7 @@ abstract class Node implements TagConstants {
     }
 
     /**
-     * Represents a <jsp:doBody> tag file action
+     * Represents a &lt;jsp:doBody> tag file action
      */
     public static class DoBodyAction extends Node {
 
@@ -1170,7 +1170,7 @@ abstract class Node implements TagConstants {
     }
 
     /**
-     * Represents a <jsp:element>.
+     * Represents a &lt;jsp:element>.
      */
     public static class JspElement extends Node {
 
@@ -1218,7 +1218,7 @@ abstract class Node implements TagConstants {
     }
 
     /**
-     * Represents a <jsp:output>.
+     * Represents a &lt;jsp:output>.
      */
     public static class JspOutput extends Node {
 
