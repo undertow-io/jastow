@@ -923,8 +923,13 @@ public class PageContextImpl extends PageContext {
                 }
                 Set<String> classImports = ((JspSourceImports) servlet).getClassImports();
                 if (classImports != null) {
-                    for (String classImport : classImports) {
-                        ih.importClass(classImport);
+                    for (String classImport : classImports){
+                        if (classImport.startsWith("static ")) {
+                            classImport = classImport.substring(7);
+                            ih.importStatic(classImport);
+                        } else {
+                            ih.importClass(classImport);
+                        }
                     }
                 }
             }

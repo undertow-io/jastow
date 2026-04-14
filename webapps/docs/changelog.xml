@@ -4065,6 +4065,10 @@
   <subsection name="Coyote">
     <changelog>
       <fix>
+        <bug>66441</bug>: Make imports of static fields in JSPs visible to any
+        EL expressions used on the page. (markt)
+      </fix>
+      <fix>
         Handle the case in the NIO2 connector where the required TLS buffer
         sizes increase after the connection has been initiated. (markt/remm)
       </fix>
