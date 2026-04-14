@@ -49,7 +49,6 @@ public class SmapGenerator {
     private String defaultStratum = "Java";
     private final List<SmapStratum> strata = new ArrayList<>();
     private final List<String> embedded = new ArrayList<>();
-    private boolean doEmbedded = true;
 
     //*********************************************************************
     // Methods for adding mapping data
@@ -95,15 +94,6 @@ public class SmapGenerator {
            + "*C " + stratumName + "\n");
     }
 
-    /**
-     * Instructs the SmapGenerator whether to actually print any embedded
-     * SMAPs or not.  Intended for situations without an SMAP resolver.
-     *
-     * @param status If <tt>false</tt>, ignore any embedded SMAPs.
-     */
-    public void setDoEmbedded(boolean status) {
-	doEmbedded = status;
-    }
 
     //*********************************************************************
     // Methods for serializing the logical SMAP
@@ -121,11 +111,9 @@ public class SmapGenerator {
         out.append(defaultStratum + '\n');
 
         // include embedded SMAPs
-        if (doEmbedded) {
-            int nEmbedded = embedded.size();
-            for (int i = 0; i < nEmbedded; i++) {
-                out.append(embedded.get(i));
-            }
+        int nEmbedded = embedded.size();
+        for (int i = 0; i < nEmbedded; i++) {
+            out.append(embedded.get(i));
         }
 
         // print our StratumSections, FileSections, and LineSections
