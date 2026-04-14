@@ -60,7 +60,7 @@
         <version.io.undertow>2.4.0.RC4</version.io.undertow>
         <version.io.undertow.ee>2.0.0.RC1</version.io.undertow.ee>
         <version.org.jboss.threads>3.9.2</version.org.jboss.threads>
-        <version.jakarta.servlet.jakarta-servlet-api>6.0.0</version.jakarta.servlet.jakarta-servlet-api>
+        <version.jakarta.servlet.jakarta-servlet-api>6.1.0</version.jakarta.servlet.jakarta-servlet-api>
         <version.jakarta.servlet.jsp.jakarta-servlet-jsp-api>4.0.0</version.jakarta.servlet.jsp.jakarta-servlet-jsp-api>
         <version.junit>4.13.2</version.junit>
         <version.org.apache.httpcomponents>4.5.14</version.org.apache.httpcomponents>
