@@ -16,21 +16,16 @@
  */
 package io.undertow.test.jsp.compiler;
 
-import org.apache.jasper.compiler.SmapGenerator;
 import org.apache.jasper.compiler.SmapStratum;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestSmapGenerator {
+public class TestSmapStratum {
 
-    @Ignore @Test
-    // FIXME
+    @Test
     public void test01() {
         // Formerly part of the main() method in SmapGenerator
 
-        SmapGenerator g = new SmapGenerator();
-        g.setOutputFileName("foo.java");
         SmapStratum s = new SmapStratum();
         s.addFile("foo.jsp");
         s.addFile("bar.jsp", "/foo/foo/bar.jsp");
@@ -38,7 +33,7 @@ public class TestSmapGenerator {
         s.addLineData(2, "foo.jsp", 1, 6, 1);
         s.addLineData(3, "foo.jsp", 2, 10, 5);
         s.addLineData(20, "/foo/foo/bar.jsp", 1, 30, 1);
-        g.addStratum(s, true);
+        s.setOutputFileName("foo.java");
 
         Assert.assertEquals(
                 "SMAP\n" +
@@ -56,6 +51,6 @@ public class TestSmapGenerator {
                         "3,2:10,5\n" +
                         "20#1:30\n" +
                         "*E\n",
-                g.getString());
+                s.getSmapString());
     }
 }
