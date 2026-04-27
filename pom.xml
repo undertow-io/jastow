@@ -34,7 +34,7 @@
     <description>JSP Container</description>
     <url>https://github.com/undertow-io/jastow</url>
 
-    <version>2.3.0.Final-SNAPSHOT</version>
+    <version>2.3.0.Beta1</version>
 
     <licenses>
         <license>
