@@ -65,15 +65,17 @@ import org.apache.jasper.util.FastRemovalDequeue;
  */
 public final class JspRuntimeContext {
 
-    // Logger
+    /**
+     * Logger
+     */
     private final JasperLogger log = JasperLogger.ROOT_LOGGER;
 
-    /*
+    /**
      * Counts how many times the webapp's JSPs have been reloaded.
      */
     private final AtomicInteger jspReloadCount = new AtomicInteger(0);
 
-    /*
+    /**
      * Counts how many times JSPs have been unloaded in this webapp.
      */
     private final AtomicInteger jspUnloadCount = new AtomicInteger(0);
@@ -116,6 +118,7 @@ public final class JspRuntimeContext {
      * Loads in any previously generated dependencies from file.
      *
      * @param context ServletContext for web application
+     * @param options The main Jasper options
      */
     public JspRuntimeContext(ServletContext context, Options options) {
 
@@ -194,6 +197,14 @@ public final class JspRuntimeContext {
      * Keeps JSP pages ordered by last access.
      */
     private FastRemovalDequeue<JspServletWrapper> jspQueue = null;
+
+    /**
+     * Map of class name to associated source map. This is maintained here as
+     * multiple JSPs can depend on the same file (included JSP, tag file, etc.)
+     * so a web application scoped Map is required.
+     */
+    private final Map<String,SmapStratum> smaps = new ConcurrentHashMap<>();
+
 
     // ------------------------------------------------------ Public Methods
 
@@ -401,25 +412,29 @@ public final class JspRuntimeContext {
     }
 
     /**
-     * The classpath that is passed off to the Java compiler.
+     * @return the classpath that is passed off to the Java compiler.
      */
     public String getClassPath() {
         return classpath;
     }
 
     /**
-     * Last time the update background task has run
+     * @return Last time the update background task has run
      */
     public long getLastJspQueueUpdate() {
         return lastJspQueueUpdate;
     }
 
+    public Map<String,SmapStratum> getSmaps() {
+        return smaps;
+    }
+
 
     // -------------------------------------------------------- Private Methods
 
-
     /**
      * Method used to initialize classpath for compiles.
+     * @return the compilation classpath
      */
     private String initClassPath() {
 
@@ -459,7 +474,9 @@ public final class JspRuntimeContext {
         return path;
     }
 
-    // Helper class to allow initSecurity() to return two items
+    /**
+     * Helper class to allow initSecurity() to return two items
+     */
     private static class SecurityHolder{
         private final CodeSource cs;
         private final PermissionCollection pc;

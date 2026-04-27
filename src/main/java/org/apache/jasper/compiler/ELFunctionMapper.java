@@ -49,6 +49,7 @@ public class ELFunctionMapper {
      * Creates the functions mappers for all EL expressions in the JSP page.
      *
      * @param page The current compilation unit.
+     * @throws JasperException EL error
      */
     public static void map(Node.Nodes page)
                 throws JasperException {
@@ -109,13 +110,6 @@ public class ELFunctionMapper {
         @Override
         public void visit(Node.UseBean n) throws JasperException {
             doMap(n.getBeanName());
-            visitBody(n);
-        }
-
-        @Override
-        public void visit(Node.PlugIn n) throws JasperException {
-            doMap(n.getHeight());
-            doMap(n.getWidth());
             visitBody(n);
         }
 

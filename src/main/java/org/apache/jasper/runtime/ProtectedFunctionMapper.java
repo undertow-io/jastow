@@ -22,8 +22,6 @@ import static org.apache.jasper.JasperMessages.MESSAGES;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import jakarta.servlet.jsp.el.FunctionMapper;
-
 /**
  * Maps EL functions to their Java method counterparts. Keeps the actual Method
  * objects protected so that JSP pages can't indirectly do reflection.
@@ -31,9 +29,7 @@ import jakarta.servlet.jsp.el.FunctionMapper;
  * @author Mark Roth
  * @author Kin-man Chung
  */
-@SuppressWarnings("deprecation") // Have to support old JSP EL API
-public final class ProtectedFunctionMapper extends jakarta.el.FunctionMapper
-        implements FunctionMapper {
+public final class ProtectedFunctionMapper extends jakarta.el.FunctionMapper {
 
     /**
      * Maps "prefix:name" to java.lang.Method objects.
@@ -111,6 +107,7 @@ public final class ProtectedFunctionMapper extends jakarta.el.FunctionMapper
      *            The arguments of the Java method
      * @throws RuntimeException
      *             if no method with the given signature could be found.
+     * @return the mapped function
      */
     public static ProtectedFunctionMapper getMapForFunction(String fnQName,
             final Class<?> c, final String methodName, final Class<?>[] args) {

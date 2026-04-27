@@ -65,6 +65,16 @@
         that Jasper correctly parses the expression. Patch provided by Ricardo
         Martin Camarero. (markt)
       </fix>
+      <fix>
+        <bug>49176</bug>: When generating JSP runtime error messages that quote
+        the relevant JSP source code, switch from using the results of the JSP
+        page parsing process to using the JSR 045 source map data to identify
+        the correct part of the JSP source from the stack trace. This
+        significantly reduces the memory footprint of Jasper in development
+        mode, provides a small performance improvement for error page generation
+        and enables source quotes to continue to be provided after a Tomcat
+        restart. (markt)
+      </fix>
     </changelog>
   </subsection>
   <subsection name="Coyote">
@@ -4064,6 +4074,10 @@
   </subsection>
   <subsection name="Coyote">
     <changelog>
+      <fix>
+        <bug>66441</bug>: Make imports of static fields in JSPs visible to any
+        EL expressions used on the page. (markt)
+      </fix>
       <fix>
         Handle the case in the NIO2 connector where the required TLS buffer
         sizes increase after the connection has been initiated. (markt/remm)

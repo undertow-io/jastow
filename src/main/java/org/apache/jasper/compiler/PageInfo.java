@@ -63,8 +63,6 @@ class PageInfo {
     private int buffer = 8*1024;
     private String autoFlush;
     private boolean isAutoFlush = true;
-    private String isThreadSafeValue;
-    private boolean isThreadSafe = true;
     private String isErrorPageValue;
     private boolean isErrorPage = false;
     private String errorPage = null;
@@ -333,12 +331,8 @@ class PageInfo {
      * @param uri The URI to be pushed onto the stack
      */
     public void pushPrefixMapping(String prefix, String uri) {
-        LinkedList<String> stack = xmlPrefixMapper.get(prefix);
-        if (stack == null) {
-            stack = new LinkedList<>();
-            xmlPrefixMapper.put(prefix, stack);
-        }
-        stack.addFirst(uri);
+        // Must be LinkedList as it needs to accept nulls
+        xmlPrefixMapper.computeIfAbsent(prefix, k -> new LinkedList<>()).addFirst(uri);
     }
 
     /*
@@ -531,31 +525,6 @@ class PageInfo {
 
     public boolean isAutoFlush() {
         return isAutoFlush;
-    }
-
-
-    /*
-     * isThreadSafe
-     */
-    public void setIsThreadSafe(String value, Node n, ErrorDispatcher err)
-        throws JasperException {
-
-        if ("true".equalsIgnoreCase(value))
-            isThreadSafe = true;
-        else if ("false".equalsIgnoreCase(value))
-            isThreadSafe = false;
-        else
-            err.jspError(n, MESSAGES.invalidPageDirectiveIsThreadSafe());
-
-        isThreadSafeValue = value;
-    }
-
-    public String getIsThreadSafe() {
-        return isThreadSafeValue;
-    }
-
-    public boolean isThreadSafe() {
-        return isThreadSafe;
     }
 
 

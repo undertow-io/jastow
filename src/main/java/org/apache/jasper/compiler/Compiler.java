@@ -26,6 +26,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.JarURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Iterator;
@@ -80,24 +81,30 @@ public abstract class Compiler {
 
     // --------------------------------------------------------- Public Methods
 
-    /**
-     * <p>
-     * Retrieves the parsed nodes of the JSP page, if they are available. May
-     * return null. Used in development mode for generating detailed error
-     * messages. http://bz.apache.org/bugzilla/show_bug.cgi?id=37062.
-     * </p>
-     */
-    public Node.Nodes getPageNodes() {
-        return this.pageNodes;
+    public SmapStratum getSmap(String className) {
+
+        Map<String,SmapStratum> smaps = ctxt.getRuntimeContext().getSmaps();
+        SmapStratum smap = smaps.get(className);
+
+        if (smap == null && !options.isSmapSuppressed()) {
+            // Tomcat was restarted so cached SMAP has been lost. However, it
+            // was written to the class file so it can be recovered.
+            smap = SmapUtil.loadSmap(className, ctxt.getJspLoader());
+            if (smap != null) {
+                smaps.put(className, smap);
+            }
+        }
+
+        return smap;
     }
+
 
     /**
      * Compile the jsp file into equivalent servlet in .java file
      *
-     * @return a smap for the current JSP page, if one is generated, null
-     *         otherwise
+     * @throws Exception Error generating Java source
      */
-    protected String[] generateJava() throws Exception {
+    protected Map<String,SmapStratum> generateJava() throws Exception {
 
         String[] smapStr = null;
 
@@ -213,7 +220,6 @@ public abstract class Compiler {
                 // generate prototype .java file for the tag file
                 try (ServletWriter writer = setupContextWriter(javaFileName)) {
                 Generator.generate(writer, this, pageNodes);
-                return null;
             }
             }
 
@@ -277,9 +283,14 @@ public abstract class Compiler {
             throw e;
         }
 
+        Map<String,SmapStratum> smaps = null;
+
         // JSR45 Support
         if (!options.isSmapSuppressed()) {
-            smapStr = SmapUtil.generateSmap(ctxt, pageNodes);
+            smaps = SmapUtil.generateSmap(ctxt, pageNodes);
+            // Add them to the web application wide cache for future lookup in
+            // error handling etc.
+            ctxt.getRuntimeContext().getSmaps().putAll(smaps);
         }
 
         // If any proto type .java and .class files was generated,
@@ -289,7 +300,7 @@ public abstract class Compiler {
         // generate .class again from the new .java file just generated.
         tfp.removeProtoTypeFiles(ctxt.getClassFileName());
 
-        return smapStr;
+        return smaps;
     }
 
 	private ServletWriter setupContextWriter(String javaFileName)
@@ -312,13 +323,24 @@ public abstract class Compiler {
 	}
 
     /**
-     * Compile the servlet from .java file to .class file
+     * Servlet compilation. This compiles the generated sources into
+     * Servlets.
+     *
+     * @param smaps The source maps for the class(es) generated from the source
+     *              file
+     *
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
-    protected abstract void generateClass(String[] smap)
+    protected abstract void generateClass(Map<String,SmapStratum> smaps)
             throws FileNotFoundException, JasperException, Exception;
 
     /**
-     * Compile the jsp file from the current engine context
+     * Compile the jsp file from the current engine context.
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     public void compile() throws FileNotFoundException, JasperException,
             Exception {
@@ -332,6 +354,9 @@ public abstract class Compiler {
      * @param compileClass
      *            If true, generate both .java and .class file If false,
      *            generate only .java file
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     public void compile(boolean compileClass) throws FileNotFoundException,
             JasperException, Exception {
@@ -347,6 +372,9 @@ public abstract class Compiler {
      *            generate only .java file
      * @param jspcMode
      *            true if invoked from JspC, false otherwise
+     * @throws FileNotFoundException Source files not found
+     * @throws JasperException Compilation error
+     * @throws Exception Some other error
      */
     public void compile(boolean compileClass, boolean jspcMode)
             throws FileNotFoundException, JasperException, Exception {
@@ -355,12 +383,12 @@ public abstract class Compiler {
         }
 
         try {
-            String[] smap = generateJava();
+            Map<String,SmapStratum> smaps = generateJava();
             File javaFile = new File(ctxt.getServletJavaFileName());
             Long jspLastModified = ctxt.getLastModified(ctxt.getJspFile());
             javaFile.setLastModified(jspLastModified.longValue());
             if (compileClass) {
-                generateClass(smap);
+                generateClass(smaps);
                 // Fix for bugzilla 41606
                 // Set JspServletWrapper.servletClassLastModifiedTime after successful compile
                 String targetFileName = ctxt.getClassFileName();
@@ -387,13 +415,7 @@ public abstract class Compiler {
             errDispatcher = null;
             pageInfo = null;
 
-            // Only get rid of the pageNodes if in production.
-            // In development mode, they are used for detailed
-            // error messages.
-            // http://bz.apache.org/bugzilla/show_bug.cgi?id=37062
-            if (!this.options.getDevelopment()) {
-                pageNodes = null;
-            }
+            pageNodes = null;
 
             if (ctxt.getWriter() != null) {
                 ctxt.getWriter().close();
@@ -405,6 +427,8 @@ public abstract class Compiler {
     /**
      * This is a protected method intended to be overridden by subclasses of
      * Compiler. This is used by the compile method to do all the compilation.
+     * @return <code>true</code> if the source generation and compilation
+     *  should occur
      */
     public boolean isOutDated() {
         return isOutDated(true);
@@ -419,6 +443,8 @@ public abstract class Compiler {
      * @param checkClass
      *            If true, check against .class file, if false, check against
      *            .java file.
+     * @return <code>true</code> if the source generation and compilation
+     *  should occur
      */
     public boolean isOutDated(boolean checkClass) {
 
@@ -487,12 +513,12 @@ public abstract class Compiler {
                     // Assume we constructed this correctly
                     int entryStart = key.lastIndexOf("!/");
                     String entry = key.substring(entryStart + 2);
-                    try (Jar jar = JarFactory.newInstance(new URL(key.substring(4, entryStart)))) {
+                    try (Jar jar = JarFactory.newInstance(new URI(key.substring(4, entryStart)).toURL())) {
                         includeLastModified = jar.getLastModified(entry);
                     }
                 } else {
                     if (key.startsWith("jar:") || key.startsWith("file:")) {
-                        includeUrl = new URL(key);
+                        includeUrl = new URI(key).toURL();
                     } else {
                         includeUrl = ctxt.getResource(include.getKey());
                     }
@@ -525,14 +551,14 @@ public abstract class Compiler {
     }
 
     /**
-     * Gets the error dispatcher.
+     * @return the error dispatcher.
      */
     public ErrorDispatcher getErrorDispatcher() {
         return errDispatcher;
     }
 
     /**
-     * Gets the info about the page under compilation
+     * @return the info about the page under compilation
      */
     public PageInfo getPageInfo() {
         return pageInfo;

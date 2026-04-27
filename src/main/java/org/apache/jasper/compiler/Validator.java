@@ -73,7 +73,6 @@ class Validator {
             new JspUtil.ValidAttribute("session"),
             new JspUtil.ValidAttribute("buffer"),
             new JspUtil.ValidAttribute("autoFlush"),
-            new JspUtil.ValidAttribute("isThreadSafe"),
             new JspUtil.ValidAttribute("info"),
             new JspUtil.ValidAttribute("errorPage"),
             new JspUtil.ValidAttribute("isErrorPage"),
@@ -158,13 +157,6 @@ class Validator {
                     } else if (!pageInfo.getAutoFlush().equals(value)) {
                         err.jspError(n, MESSAGES.invalidConflictingPageDirectiveAttribute
                                 (attr, pageInfo.getAutoFlush(), value));
-                    }
-                } else if ("isThreadSafe".equals(attr)) {
-                    if (pageInfo.getIsThreadSafe() == null) {
-                        pageInfo.setIsThreadSafe(value, n, err);
-                    } else if (!pageInfo.getIsThreadSafe().equals(value)) {
-                        err.jspError(n, MESSAGES.invalidConflictingPageDirectiveAttribute
-                                (attr, pageInfo.getIsThreadSafe(), value));
                     }
                 } else if ("isELIgnored".equals(attr)) {
                     if (pageInfo.getIsELIgnored() == null) {
@@ -461,21 +453,6 @@ class Validator {
                 new JspUtil.ValidAttribute("type"),
                 new JspUtil.ValidAttribute("beanName", false) };
 
-        private static final JspUtil.ValidAttribute[] plugInAttrs = {
-                new JspUtil.ValidAttribute("type", true),
-                new JspUtil.ValidAttribute("code", true),
-                new JspUtil.ValidAttribute("codebase"),
-                new JspUtil.ValidAttribute("align"),
-                new JspUtil.ValidAttribute("archive"),
-                new JspUtil.ValidAttribute("height", false),
-                new JspUtil.ValidAttribute("hspace"),
-                new JspUtil.ValidAttribute("jreversion"),
-                new JspUtil.ValidAttribute("name"),
-                new JspUtil.ValidAttribute("vspace"),
-                new JspUtil.ValidAttribute("width", false),
-                new JspUtil.ValidAttribute("nspluginurl"),
-                new JspUtil.ValidAttribute("iepluginurl") };
-
         private static final JspUtil.ValidAttribute[] attributeAttrs = {
                 new JspUtil.ValidAttribute("name", true),
                 new JspUtil.ValidAttribute("trim"),
@@ -560,16 +537,6 @@ class Validator {
         }
 
         @Override
-        public void visit(Node.ParamsAction n) throws JasperException {
-            // Make sure we've got at least one nested jsp:param
-            Node.Nodes subElems = n.getBody();
-            if (subElems == null) {
-                err.jspError(n, MESSAGES.invalidEmptyJspParams());
-            }
-            visitBody(n);
-        }
-
-        @Override
         public void visit(Node.IncludeAction n) throws JasperException {
             JspUtil.checkAttributes(TagConstants.INCLUDE_ACTION, n, includeActionAttrs,
                     err);
@@ -643,42 +610,6 @@ class Validator {
                 className = type;
 
             beanInfo.addBean(n, name, className, scope);
-
-            visitBody(n);
-        }
-
-        @SuppressWarnings("null") // type can't be null after initial test
-        @Override
-        public void visit(Node.PlugIn n) throws JasperException {
-            JspUtil.checkAttributes(TagConstants.PLUGIN_ACTION, n, plugInAttrs, err);
-
-            throwErrorIfExpression(n, "type", "jsp:plugin");
-            throwErrorIfExpression(n, "code", "jsp:plugin");
-            throwErrorIfExpression(n, "codebase", "jsp:plugin");
-            throwErrorIfExpression(n, "align", "jsp:plugin");
-            throwErrorIfExpression(n, "archive", "jsp:plugin");
-            throwErrorIfExpression(n, "hspace", "jsp:plugin");
-            throwErrorIfExpression(n, "jreversion", "jsp:plugin");
-            throwErrorIfExpression(n, "name", "jsp:plugin");
-            throwErrorIfExpression(n, "vspace", "jsp:plugin");
-            throwErrorIfExpression(n, "nspluginurl", "jsp:plugin");
-            throwErrorIfExpression(n, "iepluginurl", "jsp:plugin");
-
-            String type = n.getTextAttribute("type");
-            if (type == null)
-                err.jspError(n, MESSAGES.missingPluginType());
-            if (!type.equals("bean") && !type.equals("applet"))
-                err.jspError(n, MESSAGES.badPluginType(type));
-            if (n.getTextAttribute("code") == null)
-                err.jspError(n, MESSAGES.missingPluginCode());
-
-            Node.JspAttribute width = getJspAttribute(null, "width", null,
-                    null, n.getAttributeValue("width"), n, null, false);
-            n.setWidth(width);
-
-            Node.JspAttribute height = getJspAttribute(null, "height", null,
-                    null, n.getAttributeValue("height"), n, null, false);
-            n.setHeight(height);
 
             visitBody(n);
         }

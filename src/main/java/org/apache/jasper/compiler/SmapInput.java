@@ -14,24 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jasper.el;
+package org.apache.jasper.compiler;
 
-import jakarta.el.ELContext;
-import jakarta.servlet.jsp.el.ELException;
-import jakarta.servlet.jsp.el.VariableResolver;
+public class SmapInput {
 
-@Deprecated
-public final class VariableResolverImpl implements VariableResolver {
+    private final String fileName;
+    private final int lineNumber;
 
-    private final ELContext ctx;
 
-    public VariableResolverImpl(ELContext ctx) {
-        this.ctx = ctx;
+    public SmapInput(String fileName, int lineNumber) {
+        this.fileName = fileName;
+        this.lineNumber = lineNumber;
     }
 
-    @Override
-    public Object resolveVariable(String pName) throws ELException {
-        return this.ctx.getELResolver().getValue(this.ctx, null, pName);
+
+    public String getFileName() {
+        return fileName;
     }
 
+
+    public int getLineNumber() {
+        return lineNumber;
+    }
 }

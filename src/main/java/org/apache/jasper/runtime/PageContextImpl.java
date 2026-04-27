@@ -666,13 +666,6 @@ public class PageContextImpl extends PageContext {
 	}
 
     @Override
-    @Deprecated
-    public jakarta.servlet.jsp.el.VariableResolver getVariableResolver() {
-        return new org.apache.jasper.el.VariableResolverImpl(
-                this.getELContext());
-	}
-
-    @Override
 	public void forward(final String relativeUrlPath) throws ServletException,
 			IOException {
 		if (SecurityUtil.isPackageProtectionEnabled()) {
@@ -772,18 +765,6 @@ public class PageContextImpl extends PageContext {
 		return out;
 	}
 
-	/**
-	 * Provides programmatic access to the ExpressionEvaluator. The JSP
-	 * Container must return a valid instance of an ExpressionEvaluator that can
-	 * parse EL expressions.
-	 */
-    @Override
-    @Deprecated
-    public jakarta.servlet.jsp.el.ExpressionEvaluator getExpressionEvaluator() {
-        return new org.apache.jasper.el.ExpressionEvaluatorImpl(
-                this.applicationContext.getExpressionFactory());
-	}
-
     @Override
 	public void handlePageException(Exception ex) throws IOException,
 			ServletException {
@@ -840,10 +821,9 @@ public class PageContextImpl extends PageContext {
             request.setAttribute(PageContext.EXCEPTION, t);
             request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE,
 					new Integer(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
-            request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI,
-					((HttpServletRequest) request).getRequestURI());
-            request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME,
-                    config.getServletName());
+            request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, ((HttpServletRequest) request).getRequestURI());
+			request.setAttribute(RequestDispatcher.ERROR_QUERY_STRING, ((HttpServletRequest) request).getQueryString());
+			request.setAttribute(RequestDispatcher.ERROR_SERVLET_NAME, config.getServletName());
 			try {
 				forward(errorPageURL);
 			} catch (IllegalStateException ise) {
@@ -878,8 +858,7 @@ public class PageContextImpl extends PageContext {
 				throw (RuntimeException) t;
 
 			Throwable rootCause = null;
-            if (t instanceof JspException || t instanceof ELException ||
-                    t instanceof jakarta.servlet.jsp.el.ELException) {
+            if (t instanceof JspException || t instanceof ELException) {
                 rootCause =t.getCause();
 			}
 
@@ -944,8 +923,13 @@ public class PageContextImpl extends PageContext {
                 }
                 Set<String> classImports = ((JspSourceImports) servlet).getClassImports();
                 if (classImports != null) {
-                    for (String classImport : classImports) {
-                        ih.importClass(classImport);
+                    for (String classImport : classImports){
+                        if (classImport.startsWith("static ")) {
+                            classImport = classImport.substring(7);
+                            ih.importStatic(classImport);
+                        } else {
+                            ih.importClass(classImport);
+                        }
                     }
                 }
             }
