@@ -57,7 +57,7 @@
         <nexus.repository.release>releases</nexus.repository.release>
         <nexus.staging.tag>jastow-${project.version}</nexus.staging.tag>
         <!-- Dependency versions -->
-        <version.io.undertow>2.4.0.RC4</version.io.undertow>
+        <version.io.undertow>2.4.0.Final</version.io.undertow>
         <version.io.undertow.ee>2.0.0.RC1</version.io.undertow.ee>
         <version.org.jboss.threads>3.9.2</version.org.jboss.threads>
         <version.jakarta.servlet.jakarta-servlet-api>6.1.0</version.jakarta.servlet.jakarta-servlet-api>
