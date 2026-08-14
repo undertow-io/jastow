@@ -409,29 +409,26 @@ public class JspServlet extends HttpServlet implements PeriodicEventListener, Re
 
 
     private void handleMissingResource(HttpServletRequest request,
-            HttpServletResponse response, String jspUri)
-            throws ServletException, IOException {
+                                       HttpServletResponse response, String jspUri)
+        throws ServletException, IOException {
 
-        String includeRequestUri =
-            (String)request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI);
-
-                        if (includeRequestUri != null) {
-                            // This file was included. Throw an exception as
-                            // a response.sendError() will be ignored
-                            String msg = MESSAGES.fileNotFound(jspUri);
-                            // Strictly, filtering this is an application
-                            // responsibility but just in case...
-                            throw new ServletException(SecurityUtil.filter(msg));
-                        } else {
-                            try {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                                        request.getRequestURI());
-                            } catch (IllegalStateException ise) {
-                                JasperLogger.SERVLET_LOGGER.fileNotFound(jspUri);
-                            }
-                        }
-                        return;
-                    }
+        String includeRequestUri = (String)request.getAttribute(RequestDispatcher.INCLUDE_REQUEST_URI);
+        if (includeRequestUri != null) {
+            // This file was included. Throw an exception as
+            // a response.sendError() will be ignored
+            String msg = MESSAGES.fileNotFound(jspUri);
+            // Strictly, filtering this is an application
+            // responsibility but just in case...
+            throw new ServletException(SecurityUtil.filter(msg));
+        } else {
+            try {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, SecurityUtil.filter(request.getRequestURI()));
+            } catch (IllegalStateException ise) {
+                JasperLogger.SERVLET_LOGGER.fileNotFound(jspUri);
+            }
+        }
+        return;
+    }
 
     @Override
     public void handleChanges(Collection<ResourceChangeEvent> changes) {
